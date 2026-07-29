@@ -35,6 +35,14 @@ Ninguna de estas clases debe conocer los detalles internos de las otras — se c
 
 No hace falta aplicar los 5 principios SOLID de forma dogmática — el criterio es siempre KISS primero.
 
+## Idioma
+
+Regla fija del proyecto, sin excepciones:
+
+- **Código en inglés**: nombres de clases, variables, funciones, parámetros, y comentarios dentro del código (`.hx`, HScript). Es el estándar de la industria y el idioma en el que están los repos de referencia usados en este proyecto (Codename Engine, Haxe Foundation).
+- **Documentación en español**: `README.md`, ADRs, este documento, `context.md`, mensajes de commit. El TFM y sus evaluadores son de habla hispana.
+- No mezclar: nada de `nombrePersonaje` ni `player_score` a medias — o todo el identificador en inglés, o no se hace merge.
+
 ## Convenciones específicas de Haxe
 
 - Un archivo `.hx` por clase, el nombre del archivo coincide exactamente con el nombre de la clase (mayúsculas incluidas).

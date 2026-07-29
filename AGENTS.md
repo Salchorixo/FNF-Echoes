@@ -14,6 +14,7 @@ Mod/juego de ritmo basado en Friday Night Funkin', TFM del Máster de Desarrollo
 
 ## Reglas duras (no negociables)
 
+- Código (nombres de clases/variables/funciones, comentarios en el código) siempre en **inglés**. Documentación (README, ADRs, commits) siempre en **español**. No se mezcla.
 - No se edita el código fuente del motor Codename Engine directamente. Si algo parece requerirlo, para y pregunta — probablemente hay una forma vía scripting.
 - No se duplica lógica. Si vas a copiar/pegar un bloque de código, extráelo primero.
 - No se añaden dependencias/librerías nuevas sin justificar por qué no basta con lo que ya ofrece el motor.
