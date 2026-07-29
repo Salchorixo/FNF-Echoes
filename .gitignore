@@ -1,0 +1,30 @@
+# === FNF_Echoes — .gitignore ===
+
+# --- Documento personal de checklist de entrega del TFM ---
+# No forma parte del entregable público del proyecto.
+TFM-Requisitos.md
+
+# --- Build artifacts de Codename Engine (Haxe/HaxeFlixel/OpenFL) ---
+export/
+dump/
+latest/*
+.haxelib/
+dev-libs/
+docs/doc.xml
+
+# --- Mods: se ignoran por defecto (convención del engine), se permite el propio ---
+mods/*
+!mods/fnf-echoes/
+
+# --- Addons: no usados en este proyecto ---
+addons/*
+!addons/readme.txt
+
+# --- Editor ---
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+
+# --- Sistema operativo ---
+.DS_Store
+Thumbs.db
