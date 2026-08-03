@@ -43,6 +43,26 @@ Regla fija del proyecto, sin excepciones:
 - **Documentación en español**: `README.md`, ADRs, este documento, `context.md`, mensajes de commit. El TFM y sus evaluadores son de habla hispana.
 - No mezclar: nada de `nombrePersonaje` ni `player_score` a medias — o todo el identificador en inglés, o no se hace merge.
 
+## Por qué NO Clean Architecture / Hexagonal (y qué se usa en su lugar)
+
+Clean Architecture y Hexagonal (Ports & Adapters) resuelven un problema que este proyecto no tiene: proteger la lógica de negocio de que cambien la base de datos, el framework web, o el proveedor externo. Aquí el motor (Codename Engine) es una decisión permanente, no una pieza a intercambiar — y las capas de abstracción que exige ese estilo (interfaces por todos lados, inyección de dependencias, repositorios) cuestan rendimiento real, justo lo que el criterio de "sin lag en dispositivos modestos" pide cuidar.
+
+En su lugar, este proyecto usa los patrones propios de desarrollo de juegos:
+
+- **Arquitectura basada en estados/escenas**: ya la trae HaxeFlixel (`FlxState`, `FlxSubState`). `StoryMapState` es un ejemplo directo, no algo que haya que inventar.
+- **Observer para eventos**: por ejemplo, que `ProgressManager` avise "nodo completado" sin que el tablero pregunte constantemente (ver [HaxeFoundation/code-cookbook](https://github.com/HaxeFoundation/code-cookbook)).
+- **ECS**: deliberadamente no se usa — es para juegos con muchísimas entidades dinámicas; con las pocas entidades bien definidas de este proyecto sería sobre-ingeniería.
+
+Lo que sí se toma prestado de Hexagonal, aplicado solo donde aporta: sistemas que son lógica/datos puros (`ProgressManager`, `MapNode`) se escriben como clases Haxe sin depender de `FlxSprite` ni de renderizado. Eso los hace testeables y portables sin necesidad de adoptar el patrón completo — la idea de fondo, no la ceremonia.
+
+## Testing: selectivo, no total
+
+No se testea todo el juego — no tiene sentido ni es práctico. Lo que se ve/siente (shaders, animaciones, sincronía audio-nota) se valida jugando, no con asserts.
+
+Sí se testean las piezas de lógica pura, exactamente las mismas que se aislaron del motor en la sección anterior: `ProgressManager` (reglas de desbloqueo), `MapNode` (transiciones de estado), y cualquier lógica de guardado/carga. Son baratas de testear porque ya están separadas del motor, y un bug ahí es silencioso (ej. una tarjeta que se desbloquea con solo 2 de 3 canciones) — el tipo de error que un playtest manual puede no notar nunca.
+
+Herramienta: [utest](https://github.com/haxe-utest/utest), la librería de testing más usada en Haxe.
+
 ## Convenciones específicas de Haxe
 
 - Un archivo `.hx` por clase, el nombre del archivo coincide exactamente con el nombre de la clase (mayúsculas incluidas).

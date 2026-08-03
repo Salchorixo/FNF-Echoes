@@ -37,4 +37,6 @@ Mod/juego de ritmo basado en Friday Night Funkin', TFM del Máster de Desarrollo
 - `docs/adr/0001-motor-y-stack-tecnologico.md` — por qué Codename Engine.
 - `docs/CODING_STANDARDS.md` — reglas de código.
 - `docs/PROJECT_STRUCTURE.md` — estructura de carpetas.
+- `docs/WORKFLOW.md` — división de trabajo Cowork ↔ Claude Code.
+- `docs/GIT_WORKFLOW.md` — ramas, commits y Pull Requests (equipo de 2, `main` protegida).
 - [Codename Engine Wiki](https://codename-engine.com/wiki/) — docs oficiales del motor.

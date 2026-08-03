@@ -2,7 +2,7 @@
 
 **Status:** Accepted
 **Date:** 2026-07-29
-**Deciders:** Juan David Hoyos Ruiz
+**Deciders:** Salchorixo
 
 ## Contexto
 
