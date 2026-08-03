@@ -1,6 +1,6 @@
 # Context — Organización de la documentación del proyecto
 
-Este documento explica, para quien esté revisando este TFM, cómo está organizada la documentación técnica del repositorio y por qué se estructuró así. No es el README del proyecto (eso es `README.md`) — es la explicación de la metodología de trabajo con agentes de IA usada durante el desarrollo, que es parte de lo que este TFM (Máster de Desarrollo con IA) busca demostrar.
+Este documento explica, para quien esté revisando este Proyecto, cómo está organizada la documentación técnica del repositorio y por qué se estructuró así. No es el README del proyecto (eso es `README.md`) — es la explicación de la metodología de trabajo con agentes de IA usada durante el desarrollo, que es parte de lo que este Proyecto (TFM) busca demostrar.
 
 ## El problema que resuelve esta organización
 
@@ -12,7 +12,7 @@ La organización de este repositorio sigue el estándar **AGENTS.md**, adoptado 
 
 | Documento | Para quién | Contenido |
 |---|---|---|
-| `README.md` | Personas | Entregable oficial del TFM: descripción, stack, instalación, funcionalidades. |
+| `README.md` | Personas | Entregable oficial para el TFM: descripción, stack, instalación, funcionalidades. |
 | `AGENTS.md` | Cualquier agente de IA | Fuente única de verdad: reglas de trabajo, principios de código, qué no se debe tocar. Markdown plano, sin sintaxis especial, para que cualquier herramienta lo entienda. |
 | `CLAUDE.md` | Claude Code específicamente | Una sola línea: `@AGENTS.md` (importa el archivo anterior). Evita mantener dos copias de las mismas reglas. |
 | `docs/adr/000X-*.md` | Personas y agentes | Registro de decisiones técnicas (ej. elección de motor de juego): contexto, opciones consideradas, trade-offs, consecuencias. |
