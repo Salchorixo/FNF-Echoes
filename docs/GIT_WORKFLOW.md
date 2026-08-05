@@ -8,7 +8,7 @@ Complementa a `docs/WORKFLOW.md` (que reparte el trabajo entre Cowork y Claude C
 
 | Persona | Usuario GitHub | Rol |
 |---|---|---|
-| Juan David | `Salchorixo` | Dueño del repo |
+| Salchorizo | `Salchorixo` | Dueño del repo |
 | Compañero | `nakamuraj471-stack` | Colaborador |
 
 En cada PR, el autor pide review al otro. No hay excepción por tamaño del cambio.
@@ -66,7 +66,7 @@ Ver la sección "Sincronización: git, no magia" en `docs/WORKFLOW.md` — la di
 
 ## Ejemplo completo, paso a paso
 
-Supongamos que a Juan David le toca prototipar el shader VHS (pendiente de `docs/WORKFLOW.md`):
+Supongamos que a Salchorizo le toca prototipar el shader VHS (pendiente de `docs/WORKFLOW.md`):
 
 ```bash
 git checkout main
