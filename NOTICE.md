@@ -2,7 +2,7 @@
 
 ## Licencia del código
 
-El código propio de este proyecto (`mods/fnf-echoes/`) está bajo licencia **Apache License 2.0** (ver `LICENSE`), la misma licencia usada por Codename Engine y por el código fuente de Friday Night Funkin' original.
+El código propio de este proyecto (`mods/fnf-echoes/`) está bajo licencia **Apache License 2.0** (ver `LICENSE.md`), la misma licencia usada por Codename Engine y por el código fuente de Friday Night Funkin' original.
 
 ## Motor y atribución
 
@@ -10,7 +10,7 @@ Este proyecto usa [**Codename Engine**](https://github.com/CodenameCrew/Codename
 
 ## Assets propios del proyecto
 
-Todo el arte, música, personajes, escenarios y skins creados específicamente para FNF_Echoes son obra original del autor (Juan David Hoyos Ruiz) y quedan bajo **todos los derechos reservados**, salvo que se indique lo contrario en un archivo específico. Esto es independiente de la licencia del código: la licencia Apache 2.0 cubre el código fuente, no los assets artísticos.
+Todo el arte, música, personajes, escenarios y skins creados específicamente para FNF_Echoes son obra original del autor (Salchorizo) y quedan bajo **todos los derechos reservados**, salvo que se indique lo contrario en un archivo específico. Esto es independiente de la licencia del código: la licencia Apache 2.0 cubre el código fuente, no los assets artísticos.
 
 ## Aviso sobre el estilo visual (inspirado en Minecraft)
 

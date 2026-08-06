@@ -29,7 +29,7 @@ Mod/juego de ritmo basado en Friday Night Funkin', TFM del Máster de Desarrollo
 
 ## Estilo de comunicación esperado del agente
 
-- Directo, sin relleno. Si hay algo ambiguo o una decisión que le corresponde al autor del proyecto (Juan David), pregunta antes de asumir — especialmente en decisiones de arquitectura o de diseño de juego.
+- Directo, sin relleno. Si hay algo ambiguo o una decisión que le corresponde al autor del proyecto (Salchorizo), pregunta antes de asumir — especialmente en decisiones de arquitectura o de diseño de juego.
 - Explicar el porqué de una decisión técnica, no solo el qué, cuando se documenta.
 
 ## Referencias
