@@ -55,6 +55,9 @@ FNF_Echoes/
         │   │   │                    # Script.create() entre MainMenuState y EchoSelectState
         │   │   └── nodeArtPanel.hx  # Panel de arte del tablero-mapa (slide-in + fade),
         │   │                        # compartido igual, para cuando haya más de un mapa
+        │   ├── effects/
+        │   │   └── vhsShader.hx     # Adjunta VHSShader.frag a la cámara — cada estado lo
+        │   │                        # llama en su propio create() (ver regla 7)
         │   └── gameplay/           # Scripts de gameplay (eventos, notetypes propios)
         │
         ├── shaders/               # Shaders GLSL propios
@@ -73,3 +76,4 @@ FNF_Echoes/
 4. Si se añade una carpeta de primer nivel nueva, se actualiza este documento en el mismo commit (regla fijada en `AGENTS.md`).
 5. **No hay `meta.json` de mod** — Codename Engine no lee ningún archivo de metadata para mods (a diferencia de `songs/<song>/meta.json`, que sí existe pero es otro esquema, de canciones). El nombre del mod se declara en `[Common] NAME=` dentro de `modpack.ini`.
 6. **Para probar localmente**, el `.app` compilado busca `mods/` junto a su propio ejecutable (`CodenameEngine.app/Contents/Resources/mods/`), no en la raíz del repo. Se enlaza (symlink) `mods/fnf-echoes/` del repo ahí — el repo sigue siendo la única fuente de verdad, y los cambios se reflejan sin recompilar el motor.
+7. **El shader VHS se adjunta por-estado, no globalmente.** El motor tiene un hook pensado exactamente para esto (`data/global/LIB_$modName.hx`, disparado por `postStateSwitch`) pero en esta sesión nunca se ejecutó — ni ese hook ni un `update()` simple en el mismo archivo llegaron a dispararse, sin error ni explicación visible, con el archivo confirmado en el lugar correcto. Quedó sin diagnosticar. Mientras tanto, cada estado llama `Script.create(Paths.script('scripts/effects/vhsShader')).call('attach')` al inicio de su propio `create()` — mismo patrón de composición que `cardMenu`/`nodeArtPanel`, solo que repetido en cada estado en vez de centralizado. Si algún día se resuelve el misterio del global script, esto se puede consolidar ahí.

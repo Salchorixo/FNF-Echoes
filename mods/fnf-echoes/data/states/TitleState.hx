@@ -5,6 +5,7 @@ import flixel.util.FlxColor;
 import flixel.util.FlxTimer;
 import flixel.tweens.FlxTween;
 import flixel.tweens.FlxEase;
+import funkin.backend.scripting.Script;
 import funkin.menus.MainMenuState;
 
 // Placeholder for the real animated eye sprites (to be swapped in later).
@@ -21,18 +22,34 @@ var separateDistance:Float = 90;
 
 // Stand-in for real window transparency (see ADR-0003: not available yet on this
 // engine build). Flashes behind the eye to sell the glitch without hiding it.
-// Only runs while the eye is actively fracturing/separating.
+// Capped at glitchMaxDuration regardless of how long fracture/separate take.
+//
+// The eye always inverts against the flash — black eye on the white flash,
+// white eye on the normal black background. Done here via a color tint
+// (setGlitchFrame) since it's still a placeholder rectangle; the real
+// version will swap between two separate animated sprite sequences (a
+// black-eye take and a white-eye take) on every flash toggle instead —
+// setGlitchFrame is the one place that decision plugs into later.
 var glitchFlash:FlxSprite;
-var glitchFrameCounts:Array<Int> = [3, 14, 1, 20, 4, 10, 2, 18, 1, 8];
+// Pairs are (black hold, white flash) — flashes stay short (1-3 frames) so
+// the white never sits long enough to read as a held cut, only a flicker.
+var glitchFrameCounts:Array<Int> = [10, 2, 4, 1, 16, 3, 6, 1, 20, 2, 8, 1, 5, 3];
 var glitchStep:Int = 0;
 var glitchFrameTimer:Int = 0;
 var glitchActive:Bool = false;
+var glitchMaxDuration:Float = 2.0;
 
 var pressKeyText:FlxText;
 var phase:String = "idle";
 
 function create() {
 	bgColor = FlxColor.BLACK;
+
+	FlxG.fullscreen = true;
+
+	var vhsFx = Script.create(Paths.script('scripts/effects/vhsShader'));
+	vhsFx.load();
+	vhsFx.call('attach');
 
 	glitchFlash = new FlxSprite(0, 0);
 	glitchFlash.makeGraphic(FlxG.width, FlxG.height, FlxColor.WHITE);
@@ -77,9 +94,22 @@ function startFracture() {
 	glitchActive = true;
 	glitchStep = 0;
 	glitchFrameTimer = 0;
+	new FlxTimer().start(glitchMaxDuration, (_) -> stopGlitch());
 
 	FlxTween.tween(eyeLeft, {x: eyeLeft.x - fractureGap}, 1.4, {ease: FlxEase.quadInOut});
 	FlxTween.tween(eyeRight, {x: eyeRight.x + fractureGap}, 1.4, {ease: FlxEase.quadInOut, onComplete: (_) -> startSeparate()});
+}
+
+function stopGlitch() {
+	glitchActive = false;
+	setGlitchFrame(false);
+}
+
+function setGlitchFrame(flashVisible:Bool) {
+	glitchFlash.visible = flashVisible;
+	var eyeColor = flashVisible ? FlxColor.BLACK : FlxColor.WHITE;
+	eyeLeft.color = eyeColor;
+	eyeRight.color = eyeColor;
 }
 
 function startSeparate() {
@@ -90,8 +120,7 @@ function startSeparate() {
 
 function startFadeOut() {
 	phase = "fading";
-	glitchActive = false;
-	glitchFlash.visible = false;
+	stopGlitch();
 
 	FlxTween.tween(eyeLeft, {alpha: 0}, 1.2);
 	FlxTween.tween(eyeRight, {alpha: 0}, 1.2, {onComplete: (_) -> new FlxTimer().start(2.0, (_) -> showPrompt())});
@@ -108,7 +137,7 @@ function update(elapsed) {
 		if (glitchFrameTimer >= glitchFrameCounts[glitchStep % glitchFrameCounts.length]) {
 			glitchFrameTimer = 0;
 			glitchStep++;
-			glitchFlash.visible = !glitchFlash.visible;
+			setGlitchFrame(!glitchFlash.visible);
 		}
 	}
 
