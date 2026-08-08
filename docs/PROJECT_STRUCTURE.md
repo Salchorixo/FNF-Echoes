@@ -40,6 +40,7 @@ FNF_Echoes/
         │       ├── TitleState.hx      # Intro/boot (reemplaza el TitleState nativo)
         │       ├── MainMenuState.hx   # Menú de 3 tarjetas
         │       ├── EchoSelectState.hx # Selección de Echo/temporada (solo Echo 1 desbloqueado)
+        │       ├── LoadingState.hx    # Pantalla de carga (Fase 4) — ojo estático + barra placeholder
         │       └── StoryMapState.hx   # Tablero-mapa con nodos y progreso
         │
         ├── images/              # Sprites: personajes, escenarios, UI
