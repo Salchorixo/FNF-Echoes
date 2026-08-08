@@ -39,6 +39,7 @@ FNF_Echoes/
         │       │                    # no elegible (Paths.script('data/states/$name')).
         │       ├── TitleState.hx      # Intro/boot (reemplaza el TitleState nativo)
         │       ├── MainMenuState.hx   # Menú de 3 tarjetas
+        │       ├── EchoSelectState.hx # Selección de Echo/temporada (solo Echo 1 desbloqueado)
         │       └── StoryMapState.hx   # Tablero-mapa con nodos y progreso
         │
         ├── images/              # Sprites: personajes, escenarios, UI
@@ -52,6 +53,9 @@ FNF_Echoes/
         │   │   ├── MapNode.hx       # Modelo de datos de un punto del tablero
         │   │   ├── MapToken.hx      # Ficha visual + movimiento entre nodos
         │   │   └── ProgressManager.hx  # Progreso guardado + lógica de desbloqueo
+        │   ├── ui/
+        │   │   └── cardMenu.hx      # Grilla de tarjetas + selección, compartida vía
+        │   │                        # Script.create() entre MainMenuState y EchoSelectState
         │   └── gameplay/           # Scripts de gameplay (eventos, notetypes propios)
         │
         ├── shaders/               # Shaders GLSL propios

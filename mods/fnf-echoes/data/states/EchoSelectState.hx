@@ -1,29 +1,47 @@
-import flixel.text.FlxText;
 import flixel.util.FlxColor;
 import flixel.util.FlxTimer;
 import funkin.backend.scripting.ModState;
+import funkin.backend.scripting.Script;
 import funkin.menus.MainMenuState;
 
-// Placeholder for Fase 3 (selección de Echo/temporada). Only Echo 1 will be
-// unlockable there; Echo 2 and 3 are reserved for a future full version.
-var placeholderText:FlxText;
+// Only Echo 1 is playable — Echo 2 and 3 are reserved for a future full
+// version of the mod, shown here as locked placeholders.
+var echoLabels:Array<String> = ["ECHO 1", "ECHO 2", "ECHO 3"];
+var echoUnlocked:Array<Bool> = [true, false, false];
+var cardMenu:Script;
 
 // Guards against the key press that opened this state still being
 // "justPressed" on this state's very first update() — without this, the
-// same physical key press that confirmed "ECHOES" would immediately bounce
-// back to the menu.
-var canContinue:Bool = false;
+// same physical ACCEPT press that confirmed "ECHOES" on the previous menu
+// would immediately confirm a card here too.
+var canConfirm:Bool = false;
 
 function create() {
-	placeholderText = new FlxText(0, 0, FlxG.width, "ECHO SELECT\n(Fase 3 — próximamente)\n\npress any key to go back");
-	placeholderText.setFormat(Paths.font("vcr.ttf"), 18, FlxColor.WHITE, "center");
-	placeholderText.screenCenter();
-	add(placeholderText);
+	bgColor = FlxColor.BLACK;
 
-	new FlxTimer().start(0.2, (_) -> canContinue = true);
+	cardMenu = Script.create(Paths.script('scripts/ui/cardMenu'));
+	cardMenu.load();
+	cardMenu.call("create", [echoLabels, echoUnlocked]);
+
+	new FlxTimer().start(0.2, (_) -> canConfirm = true);
+}
+
+function confirmSelection() {
+	if (!canConfirm || !cardMenu.call("isSelectedUnlocked"))
+		return;
+
+	FlxG.switchState(new ModState("StoryMapState"));
 }
 
 function update(elapsed) {
-	if (canContinue && FlxG.keys.justPressed.ANY)
+	if (controls.LEFT_P)
+		cardMenu.call("changeSelection", [-1]);
+	else if (controls.RIGHT_P)
+		cardMenu.call("changeSelection", [1]);
+
+	if (controls.ACCEPT)
+		confirmSelection();
+
+	if (controls.BACK)
 		FlxG.switchState(new ModState("MainMenuState"));
 }
