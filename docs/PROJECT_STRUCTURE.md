@@ -50,13 +50,11 @@ FNF_Echoes/
         │       └── mapa/          # Assets propios del tablero-mapa (nodos, ficha, tarjetas)
         │
         ├── scripts/              # Lógica de sistemas propios (softcoded, no toca el core)
-        │   ├── map/
-        │   │   ├── MapNode.hx       # Modelo de datos de un punto del tablero
-        │   │   ├── MapToken.hx      # Ficha visual + movimiento entre nodos
-        │   │   └── ProgressManager.hx  # Progreso guardado + lógica de desbloqueo
         │   ├── ui/
-        │   │   └── cardMenu.hx      # Grilla de tarjetas + selección, compartida vía
-        │   │                        # Script.create() entre MainMenuState y EchoSelectState
+        │   │   ├── cardMenu.hx      # Grilla de tarjetas + selección, compartida vía
+        │   │   │                    # Script.create() entre MainMenuState y EchoSelectState
+        │   │   └── nodeArtPanel.hx  # Panel de arte del tablero-mapa (slide-in + fade),
+        │   │                        # compartido igual, para cuando haya más de un mapa
         │   └── gameplay/           # Scripts de gameplay (eventos, notetypes propios)
         │
         ├── shaders/               # Shaders GLSL propios
@@ -71,7 +69,7 @@ FNF_Echoes/
 
 1. **`engine/` es intocable** salvo decisión documentada en un ADR nuevo. Todo lo demás (contenido y sistemas propios) vive en `mods/fnf-echoes/`. Actualizar la versión del motor implica `git submodule update` a un nuevo commit + nota en el ADR-0001 — nunca editar archivos dentro de `engine/` directamente.
 2. **`data/states/` y `scripts/` son código softcoded** (HScript), no requieren recompilar el motor — coherente con la arquitectura elegida en el ADR-0001. Para reemplazar completamente un estado nativo (no solo agregarle lógica), hace falta además la entrada correspondiente en `[StateRedirects]` de `data/config/modpack.ini`.
-3. **Un sistema nuevo del juego = una carpeta dentro de `scripts/`**, con sus clases siguiendo POO/SRP (ver `CODING_STANDARDS.md`). El tablero-mapa ya sigue este patrón como ejemplo (`scripts/map/`).
+3. **No existen clases Haxe propias importables entre archivos de mod.** El contenido de un mod se carga en runtime como HScript, nunca pasa por el compilador de Haxe — `import MiClase;` sobre un archivo dentro de `mods/` no resuelve (`Type.resolveClass` solo ve el classpath compilado). La única forma real de compartir comportamiento entre estados/scripts es composición vía `Script.create(Paths.script('scripts/.../archivo'))` + `.call()/.get()/.set()` (el mismo mecanismo que usa el motor para `Character`/`Stage`), como `scripts/ui/cardMenu.hx` y `scripts/ui/nodeArtPanel.hx`. Si un sistema nuevo solo lo usa un estado, la lógica va inline en ese estado — separar en un script aparte recién cuando hay un segundo consumidor real.
 4. Si se añade una carpeta de primer nivel nueva, se actualiza este documento en el mismo commit (regla fijada en `AGENTS.md`).
 5. **No hay `meta.json` de mod** — Codename Engine no lee ningún archivo de metadata para mods (a diferencia de `songs/<song>/meta.json`, que sí existe pero es otro esquema, de canciones). El nombre del mod se declara en `[Common] NAME=` dentro de `modpack.ini`.
 6. **Para probar localmente**, el `.app` compilado busca `mods/` junto a su propio ejecutable (`CodenameEngine.app/Contents/Resources/mods/`), no en la raíz del repo. Se enlaza (symlink) `mods/fnf-echoes/` del repo ahí — el repo sigue siendo la única fuente de verdad, y los cambios se reflejan sin recompilar el motor.
