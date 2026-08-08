@@ -57,7 +57,7 @@ function create() {
 	add(eyeRight);
 
 	pressKeyText = new FlxText(0, 0, FlxG.width, "PRESS ANY KEY TO CONTINUE");
-	pressKeyText.setFormat(null, 18, FlxColor.WHITE, "center");
+	pressKeyText.setFormat(Paths.font("vcr.ttf"), 18, FlxColor.WHITE, "center");
 	pressKeyText.y = FlxG.height * 0.8;
 	pressKeyText.alpha = 0;
 	add(pressKeyText);
