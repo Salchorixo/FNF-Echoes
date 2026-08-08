@@ -15,9 +15,9 @@ var cards:Array<FlxSprite> = [];
 var labels:Array<FlxText> = [];
 var selectedIndex:Int = 0;
 
-var cardWidth:Int = 260;
-var cardHeight:Int = 380;
-var cardGap:Int = 40;
+var cardWidth:Int = 180;
+var cardHeight:Int = 260;
+var cardGap:Int = 60;
 
 function create() {
 	bgColor = FlxColor.BLACK;
@@ -33,7 +33,7 @@ function create() {
 		cards.push(card);
 
 		var label = new FlxText(card.x, card.y + (cardHeight / 2) - 12, cardWidth, cardLabels[i]);
-		label.setFormat(Paths.font("vcr.ttf"), 22, FlxColor.BLACK, "center");
+		label.setFormat(Paths.font("vcr.ttf"), 16, FlxColor.BLACK, "center");
 		add(label);
 		labels.push(label);
 	}
