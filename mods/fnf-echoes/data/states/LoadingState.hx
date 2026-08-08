@@ -4,6 +4,7 @@ import flixel.util.FlxAxes;
 import flixel.util.FlxColor;
 import flixel.util.FlxTimer;
 import funkin.backend.scripting.ModState;
+import funkin.backend.scripting.Script;
 
 // Loading screen shown between selecting a song and starting to play it.
 // Static eye placeholder (no animation yet — that's for the real animated
@@ -24,6 +25,10 @@ var barFillRatio:Float = 0.45;
 
 function create() {
 	bgColor = FlxColor.BLACK;
+
+	var vhsFx = Script.create(Paths.script('scripts/effects/vhsShader'));
+	vhsFx.load();
+	vhsFx.call('attach');
 
 	var eyeVariant:String = (data != null && data.eyeVariant != null) ? data.eyeVariant : "zyraEye";
 	var nextState:String = (data != null && data.nextState != null) ? data.nextState : "StoryMapState";

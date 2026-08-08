@@ -76,10 +76,16 @@ function showArt(index:Int, unlocked:Bool = true) {
 	buildLayerGraphic(frontLayer, index);
 	frontLayer.alpha = 0;
 
+	// Copied to a local var: HScript closures don't reliably capture
+	// function *parameters* (confirmed error — "Unknown variable: index"
+	// inside this same onComplete closure when referencing the parameter
+	// directly), only locals declared with var.
+	var settledIndex = index;
+
 	FlxTween.cancelTweensOf(frontLayer);
 	FlxTween.tween(frontLayer, {alpha: 1}, 0.35, {
 		onComplete: (_) -> {
-			buildLayerGraphic(backLayer, index);
+			buildLayerGraphic(backLayer, settledIndex);
 			frontLayer.alpha = 0;
 		}
 	});

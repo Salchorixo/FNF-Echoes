@@ -45,6 +45,10 @@ var isHopping:Bool = false;
 function create() {
 	bgColor = FlxColor.BLACK;
 
+	var vhsFx = Script.create(Paths.script('scripts/effects/vhsShader'));
+	vhsFx.load();
+	vhsFx.call('attach');
+
 	artPanel = Script.create(Paths.script('scripts/ui/nodeArtPanel'));
 	artPanel.load();
 	artPanel.call("create", [0.4]);

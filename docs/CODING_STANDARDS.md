@@ -11,27 +11,31 @@ La solución más simple que resuelve el problema es la correcta. Nada de abstra
 - Preferir código explícito y legible sobre código "ingenioso".
 
 ### DRY (Don't Repeat Yourself)
-Ninguna lógica se copia y pega. Si el mismo bloque aparece dos veces, se extrae a una función, clase o script compartido.
-- Ejemplo en este proyecto: la lógica de "desplazar la ficha de un punto a otro del tablero" vive en un único lugar (`MapToken`), no se reimplementa por cada tablero o nivel.
-- Datos repetidos (posiciones de nodos, canciones por punto) van en estructuras de datos (JSON/arrays), no hardcodeados en múltiples archivos.
+Ninguna lógica se copia y pega. Si el mismo bloque aparece dos veces, se extrae a un script compartido.
+- Ejemplo real en este proyecto: la grilla de tarjetas vive en un único lugar (`scripts/ui/cardMenu.hx`), compartida por `MainMenuState` y `EchoSelectState` vía `Script.create()` — no se reimplementa por cada pantalla.
+- Datos repetidos (posiciones de nodos, canciones por punto) van en estructuras de datos (objetos/arrays), no hardcodeados en múltiples archivos.
 
 ### POO (Programación Orientada a Objetos)
-Cada sistema del juego se modela como una clase con responsabilidad única (principio SRP de SOLID). Ejemplo aplicado a los sistemas propios de FNF_Echoes:
 
-| Clase | Responsabilidad única |
+El contenido de mod en Codename Engine es **HScript puro, interpretado en runtime** — no pasa por el compilador de Haxe. Esto tiene una consecuencia real que cambia cómo se aplica POO aquí, distinta de lo planeado al inicio del proyecto: **HScript no puede declarar clases ni typedefs propios, ni importar entre archivos de mod** (ver `docs/PROJECT_STRUCTURE.md`, regla 3). No existe `class MapNode { ... }` posible dentro de `mods/fnf-echoes/`.
+
+Responsabilidad única se sigue aplicando — a nivel de **archivo/script**, no de clase:
+
+| Archivo | Responsabilidad única |
 |---|---|
-| `StoryMapState` | Renderizar y controlar la pantalla del tablero-mapa |
-| `MapNode` | Representar un punto del tablero: posición, canciones asociadas, estado (bloqueado/completado) |
-| `MapToken` | La ficha visual y su animación/movimiento entre nodos |
-| `ProgressManager` | Guardar y leer el progreso del jugador; decide cuándo se desbloquea una tarjeta |
-| `VHSShader` | Encapsular el shader de distorsión, sin lógica de gameplay dentro |
+| `data/states/StoryMapState.hx` | Controlar la pantalla del tablero-mapa: navegación entre nodos, desbloqueo |
+| `scripts/ui/cardMenu.hx` | Grilla de tarjetas + selección, reutilizada por cualquier estado que necesite tarjetas |
+| `scripts/ui/nodeArtPanel.hx` | Panel de arte del nodo seleccionado (slide-in + fade), reutilizado por cualquier mapa |
+| `scripts/effects/vhsShader.hx` | Adjuntar el shader de distorsión a la cámara, sin lógica de gameplay dentro |
 
-Ninguna de estas clases debe conocer los detalles internos de las otras — se comunican por métodos públicos claros, no accediendo a variables internas ajenas.
+Regla de cuándo separar en un script aparte vs. dejar inline en el estado: **solo cuando hay un segundo consumidor real**. Datos usados por una sola pantalla (como los nodos del tablero en `StoryMapState`) van como objeto anónimo ahí mismo — crear un archivo aparte para eso sería peso muerto, no POO. `cardMenu.hx` y `nodeArtPanel.hx` están separados porque a la fecha ya los usa o va a usar más de una pantalla.
+
+La comunicación entre scripts se hace por composición explícita (`Script.create(Paths.script('...'))` + `.call()`/`.get()`/`.set()`), nunca accediendo a variables internas de otro script — el mismo espíritu de encapsulamiento de POO, con la herramienta que el motor realmente ofrece.
 
 ### Principios SOLID (extensión de POO, aplicar donde tenga sentido)
-- **S** — Cada clase, una responsabilidad (ver tabla arriba).
+- **S** — Cada script/archivo, una responsabilidad (ver tabla arriba).
 - **O** — Nuevo contenido (canciones, nodos, personajes) se añade sin modificar el código ya probado, mediante datos/scripts (softcoding, ver abajo).
-- **D** — Los sistemas dependen de interfaces/contratos simples, no de implementaciones concretas de otros sistemas, cuando haya más de una implementación posible.
+- **D** — Los sistemas se comunican por el contrato de `Script.create()`/`.call()`, no accediendo a variables internas de otro script, cuando haya más de una implementación posible.
 
 No hace falta aplicar los 5 principios SOLID de forma dogmática — el criterio es siempre KISS primero.
 
@@ -39,9 +43,9 @@ No hace falta aplicar los 5 principios SOLID de forma dogmática — el criterio
 
 Regla fija del proyecto, sin excepciones:
 
-- **Código en inglés**: nombres de clases, variables, funciones, parámetros, y comentarios dentro del código (`.hx`, HScript). Es el estándar de la industria y el idioma en el que están los repos de referencia usados en este proyecto (Codename Engine, Haxe Foundation).
-- **Documentación en español**: `README.md`, ADRs, este documento, `context.md`, mensajes de commit. El TFM y sus evaluadores son de habla hispana.
-- No mezclar: nada de `nombrePersonaje` ni `player_score` a medias — o todo el identificador en inglés, o no se hace merge.
+- **Código en inglés**: nombres de variables, funciones, parámetros, y **comentarios dentro del código** (`.hx`, HScript) — sí, esto incluye los comentarios, no solo los identificadores. Es el estándar de la industria y el idioma en el que están los repos de referencia usados en este proyecto (Codename Engine, Haxe Foundation). Un archivo dentro de `mods/` con comentarios en inglés está cumpliendo la regla correctamente, no es una excepción ni un error a corregir.
+- **Documentación en español**: archivos `.md` en la raíz y en `docs/` (`README.md`, ADRs, este documento, `context.md`), y mensajes de commit. El TFM y sus evaluadores son de habla hispana. Esta regla aplica a documentos separados del código, no a lo que hay dentro de un archivo `.hx`/HScript.
+- No mezclar dentro del código: nada de `nombrePersonaje` ni `player_score` a medias — o todo el identificador en inglés, o no se hace merge.
 
 ## Por qué NO Clean Architecture / Hexagonal (y qué se usa en su lugar)
 
@@ -50,18 +54,18 @@ Clean Architecture y Hexagonal (Ports & Adapters) resuelven un problema que este
 En su lugar, este proyecto usa los patrones propios de desarrollo de juegos:
 
 - **Arquitectura basada en estados/escenas**: ya la trae HaxeFlixel (`FlxState`, `FlxSubState`). `StoryMapState` es un ejemplo directo, no algo que haya que inventar.
-- **Observer para eventos**: por ejemplo, que `ProgressManager` avise "nodo completado" sin que el tablero pregunte constantemente (ver [HaxeFoundation/code-cookbook](https://github.com/HaxeFoundation/code-cookbook)).
+- **Observer para eventos**: por ejemplo, que el script de un nodo avise "nodo completado" vía `.call()` sin que el tablero pregunte constantemente (ver [HaxeFoundation/code-cookbook](https://github.com/HaxeFoundation/code-cookbook)).
 - **ECS**: deliberadamente no se usa — es para juegos con muchísimas entidades dinámicas; con las pocas entidades bien definidas de este proyecto sería sobre-ingeniería.
 
-Lo que sí se toma prestado de Hexagonal, aplicado solo donde aporta: sistemas que son lógica/datos puros (`ProgressManager`, `MapNode`) se escriben como clases Haxe sin depender de `FlxSprite` ni de renderizado. Eso los hace testeables y portables sin necesidad de adoptar el patrón completo — la idea de fondo, no la ceremonia.
+La idea original era ir más lejos y tomar prestado de Hexagonal el aislar lógica/datos puros (reglas de desbloqueo, progreso) en clases Haxe compiladas, separadas de `FlxSprite`/renderizado, para que fueran testeables. **Eso no resultó viable tal cual**: como se explica en la sección de POO, el contenido de mod (`mods/fnf-echoes/`) es HScript interpretado, sin classpath compilado propio — no hay dónde poner esas clases sin agregar una fuente Haxe nueva al build del motor. La idea de fondo (separar reglas de datos del código de render) se mantiene, pero hoy se expresa como scripts/funciones HScript ordenados por responsabilidad (ver `confirmSelection()` en `StoryMapState.hx`), no como clases Haxe aisladas.
 
-## Testing: selectivo, no total
+## Testing: por qué hoy es manual, no automatizado
 
 No se testea todo el juego — no tiene sentido ni es práctico. Lo que se ve/siente (shaders, animaciones, sincronía audio-nota) se valida jugando, no con asserts.
 
-Sí se testean las piezas de lógica pura, exactamente las mismas que se aislaron del motor en la sección anterior: `ProgressManager` (reglas de desbloqueo), `MapNode` (transiciones de estado), y cualquier lógica de guardado/carga. Son baratas de testear porque ya están separadas del motor, y un bug ahí es silencioso (ej. una tarjeta que se desbloquea con solo 2 de 3 canciones) — el tipo de error que un playtest manual puede no notar nunca.
+El plan original era testear con `utest` la lógica pura (reglas de desbloqueo, transiciones de estado) aislada en clases Haxe compiladas. Al implementar se confirmó que eso no es posible sin trabajo adicional: el contenido de mod es HScript sin classpath compilado propio, y `utest` solo puede testear clases Haxe reales, no funciones HScript sueltas dentro de un estado.
 
-Herramienta: [utest](https://github.com/haxe-utest/utest), la librería de testing más usada en Haxe.
+Mientras eso no cambie: la lógica de estado (¿se desbloquea el nodo correcto?, ¿la ficha llega al índice esperado?) se valida **manual, jugando** — y cualquier bug de este tipo se documenta en el commit que lo arregla, no se pretende tener cobertura automatizada que hoy no es alcanzable sin romper KISS. Si en algún momento se justifica agregar un classpath Haxe compilado propio (fuera de `mods/`, fuera de `engine/`) específicamente para lógica testeable con `utest`, esa decisión se documenta como ADR nuevo antes de implementarse — es un cambio del mismo calibre que el parche de transparencia de ventana (ver ADR-0003), no un ajuste de estilo.
 
 ## Convenciones específicas de Haxe
 
@@ -75,7 +79,7 @@ Herramienta: [utest](https://github.com/haxe-utest/utest), la librería de testi
 Codename Engine permite añadir contenido (canciones, personajes, escenarios, notetypes, eventos) mediante **HScript**, sin tocar el código fuente del motor. Regla del proyecto:
 
 - Si es contenido (una canción nueva, un personaje, un nodo del mapa) → va en datos o script (HScript), **no** en el core.
-- Si es un sistema nuevo del juego (el tablero-mapa, el manager de progreso) → va en clases Haxe propias, documentadas, dentro de una carpeta separada del motor (ver documento de estructura de carpetas).
+- Si es un sistema nuevo del juego (el tablero-mapa, paneles reutilizables) → va en HScript dentro de `mods/fnf-echoes/scripts/`, compuesto vía `Script.create()` cuando lo usa más de una pantalla; inline en el estado si solo lo usa esa pantalla (ver sección de POO arriba y `docs/PROJECT_STRUCTURE.md`, regla 3).
 - Nunca se edita el código fuente de Codename Engine directamente salvo necesidad justificada y documentada en un ADR.
 
 Referencia oficial de scripting: [Codename Engine Wiki — Scripting](https://codename-engine.com/wiki/modding/scripting/) y [API Docs](https://codename-engine.com/api-docs/).
@@ -89,7 +93,7 @@ Referencia oficial de scripting: [Codename Engine Wiki — Scripting](https://co
 
 ## Checklist antes de dar por cerrada una funcionalidad
 
-1. [ ] ¿Cada clase nueva tiene una única responsabilidad clara?
+1. [ ] ¿Cada script/módulo nuevo tiene una única responsabilidad clara?
 2. [ ] ¿Hay lógica o datos duplicados que se puedan extraer?
 3. [ ] ¿La solución es la más simple posible para el problema actual (no para un futuro hipotético)?
 4. [ ] ¿El contenido (no el sistema) está en scripts/datos y no hardcodeado en el core?

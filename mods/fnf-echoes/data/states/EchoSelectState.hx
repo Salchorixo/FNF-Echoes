@@ -19,6 +19,10 @@ var canConfirm:Bool = false;
 function create() {
 	bgColor = FlxColor.BLACK;
 
+	var vhsFx = Script.create(Paths.script('scripts/effects/vhsShader'));
+	vhsFx.load();
+	vhsFx.call('attach');
+
 	cardMenu = Script.create(Paths.script('scripts/ui/cardMenu'));
 	cardMenu.load();
 	cardMenu.call("create", [echoLabels, echoUnlocked]);
