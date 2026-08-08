@@ -41,7 +41,8 @@ FNF_Echoes/
         │       ├── MainMenuState.hx   # Menú de 3 tarjetas
         │       ├── EchoSelectState.hx # Selección de Echo/temporada (solo Echo 1 desbloqueado)
         │       ├── LoadingState.hx    # Pantalla de carga (Fase 4) — ojo estático + barra placeholder
-        │       └── StoryMapState.hx   # Tablero-mapa con nodos y progreso
+        │       ├── StoryMapState.hx   # Tablero-mapa con nodos y progreso
+        │       └── OptionsState.hx    # Controles, idioma, gameplay — reemplaza el OptionsMenu nativo
         │
         ├── images/              # Sprites: personajes, escenarios, UI
         │   ├── characters/
@@ -53,8 +54,12 @@ FNF_Echoes/
         │   ├── ui/
         │   │   ├── cardMenu.hx      # Grilla de tarjetas + selección, compartida vía
         │   │   │                    # Script.create() entre MainMenuState y EchoSelectState
-        │   │   └── nodeArtPanel.hx  # Panel de arte del tablero-mapa (slide-in + fade),
-        │   │                        # compartido igual, para cuando haya más de un mapa
+        │   │   ├── nodeArtPanel.hx  # Panel de arte del tablero-mapa (slide-in + fade),
+        │   │   │                    # compartido igual, para cuando haya más de un mapa
+        │   │   └── translate.hx     # Diccionario EN/ES de textos propios de la UI,
+        │   │                        # compartido entre MainMenuState y OptionsState —
+        │   │                        # "ECHOES"/"ECHO" nunca pasan por acá (regla fija:
+        │   │                        # esos nombres quedan en inglés siempre)
         │   ├── effects/
         │   │   └── vhsShader.hx     # Adjunta VHSShader.frag a la cámara — cada estado lo
         │   │                        # llama en su propio create() (ver regla 7)
@@ -72,8 +77,9 @@ FNF_Echoes/
 
 1. **`engine/` es intocable** salvo decisión documentada en un ADR nuevo. Todo lo demás (contenido y sistemas propios) vive en `mods/fnf-echoes/`. Actualizar la versión del motor implica `git submodule update` a un nuevo commit + nota en el ADR-0001 — nunca editar archivos dentro de `engine/` directamente.
 2. **`data/states/` y `scripts/` son código softcoded** (HScript), no requieren recompilar el motor — coherente con la arquitectura elegida en el ADR-0001. Para reemplazar completamente un estado nativo (no solo agregarle lógica), hace falta además la entrada correspondiente en `[StateRedirects]` de `data/config/modpack.ini`.
-3. **No existen clases Haxe propias importables entre archivos de mod.** El contenido de un mod se carga en runtime como HScript, nunca pasa por el compilador de Haxe — `import MiClase;` sobre un archivo dentro de `mods/` no resuelve (`Type.resolveClass` solo ve el classpath compilado). La única forma real de compartir comportamiento entre estados/scripts es composición vía `Script.create(Paths.script('scripts/.../archivo'))` + `.call()/.get()/.set()` (el mismo mecanismo que usa el motor para `Character`/`Stage`), como `scripts/ui/cardMenu.hx` y `scripts/ui/nodeArtPanel.hx`. Si un sistema nuevo solo lo usa un estado, la lógica va inline en ese estado — separar en un script aparte recién cuando hay un segundo consumidor real.
+3. **No existen clases Haxe propias importables entre archivos de mod.** El contenido de un mod se carga en runtime como HScript, nunca pasa por el compilador de Haxe — `import MiClase;` sobre un archivo dentro de `mods/` no resuelve (`Type.resolveClass` solo ve el classpath compilado). La única forma real de compartir comportamiento entre estados/scripts es composición vía `Script.create(Paths.script('scripts/.../archivo'))` + `.call()/.get()/.set()` (el mismo mecanismo que usa el motor para `Character`/`Stage`), como `scripts/ui/cardMenu.hx`, `scripts/ui/nodeArtPanel.hx` y `scripts/ui/translate.hx`. Si un sistema nuevo solo lo usa un estado, la lógica va inline en ese estado — separar en un script aparte recién cuando hay un segundo consumidor real.
 4. Si se añade una carpeta de primer nivel nueva, se actualiza este documento en el mismo commit (regla fijada en `AGENTS.md`).
 5. **No hay `meta.json` de mod** — Codename Engine no lee ningún archivo de metadata para mods (a diferencia de `songs/<song>/meta.json`, que sí existe pero es otro esquema, de canciones). El nombre del mod se declara en `[Common] NAME=` dentro de `modpack.ini`.
 6. **Para probar localmente**, el `.app` compilado busca `mods/` junto a su propio ejecutable (`CodenameEngine.app/Contents/Resources/mods/`), no en la raíz del repo. Se enlaza (symlink) `mods/fnf-echoes/` del repo ahí — el repo sigue siendo la única fuente de verdad, y los cambios se reflejan sin recompilar el motor.
 7. **El shader VHS se adjunta por-estado, no globalmente.** El motor tiene un hook pensado exactamente para esto (`data/global/LIB_$modName.hx`, disparado por `postStateSwitch`) pero en esta sesión nunca se ejecutó — ni ese hook ni un `update()` simple en el mismo archivo llegaron a dispararse, sin error ni explicación visible, con el archivo confirmado en el lugar correcto. Quedó sin diagnosticar. Mientras tanto, cada estado llama `Script.create(Paths.script('scripts/effects/vhsShader')).call('attach')` al inicio de su propio `create()` — mismo patrón de composición que `cardMenu`/`nodeArtPanel`, solo que repetido en cada estado en vez de centralizado. Si algún día se resuelve el misterio del global script, esto se puede consolidar ahí.
+8. **`cardMenu.hx` desplaza la cámara levemente según la tarjeta seleccionada** (izquierda/centro/derecha) y no la resetea al salir — es responsabilidad de **cada pantalla propia** resetear `FlxG.camera.scroll.set(0, 0)` al inicio de su propio `create()`, no de quien la llama. Ya lo hacen `TitleState`, `OptionsState`, `StoryMapState` y `LoadingState`. Cualquier estado nuevo que pueda alcanzarse después de una pantalla de tarjetas (`MainMenuState`/`EchoSelectState`) debe hacer lo mismo — así cada pantalla garantiza su propio punto de partida en vez de que cada llamador tenga que acordarse de limpiar.

@@ -26,6 +26,10 @@ var barFillRatio:Float = 0.45;
 function create() {
 	bgColor = FlxColor.BLACK;
 
+	// The card menus pan the camera slightly on selection (see cardMenu.hx)
+	// — reset here so this screen never inherits a leftover shift from them.
+	FlxG.camera.scroll.set(0, 0);
+
 	var vhsFx = Script.create(Paths.script('scripts/effects/vhsShader'));
 	vhsFx.load();
 	vhsFx.call('attach');
