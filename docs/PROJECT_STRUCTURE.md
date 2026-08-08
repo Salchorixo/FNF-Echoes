@@ -22,26 +22,30 @@ FNF_Echoes/
 │
 └── mods/
     └── fnf-echoes/             # El mod/juego en sí — todo el contenido y sistemas propios
-        ├── meta.json            # Metadata del mod (nombre, versión, autor)
-        │
         ├── songs/               # Canciones: Inst.ogg, Voices.ogg por dificultad
         │   └── <song-name>/
         │
         ├── charts/              # Charts (.json) por canción y dificultad
         │
-        ├── data/                # Definiciones sin código: personajes y escenarios (XML)
-        │   ├── characters/
-        │   └── stages/
+        ├── data/                # Definiciones sin código + estados custom softcodeados
+        │   ├── characters/         # XML de personajes
+        │   ├── stages/             # XML de escenarios
+        │   ├── config/
+        │   │   └── modpack.ini       # Config del mod: [StateRedirects] (qué HScript reemplaza
+        │   │                         # qué estado nativo), nombre del mod, etc.
+        │   └── states/              # Pantallas custom — HScript plano (funciones sueltas
+        │       │                    # create/update/destroy, SIN "class ... extends"),
+        │       │                    # corrido vía ModState del motor. Path fijado por el motor,
+        │       │                    # no elegible (Paths.script('data/states/$name')).
+        │       ├── TitleState.hx      # Intro/boot (reemplaza el TitleState nativo)
+        │       ├── MainMenuState.hx   # Menú de 3 tarjetas
+        │       └── StoryMapState.hx   # Tablero-mapa con nodos y progreso
         │
         ├── images/              # Sprites: personajes, escenarios, UI
         │   ├── characters/
         │   ├── stages/
         │   └── ui/
         │       └── mapa/          # Assets propios del tablero-mapa (nodos, ficha, tarjetas)
-        │
-        ├── states/              # Pantallas custom softcoded (.hx vía HScript)
-        │   ├── MainMenuState.hx    # Menú de 3 tarjetas
-        │   └── StoryMapState.hx    # Tablero-mapa con nodos y progreso
         │
         ├── scripts/              # Lógica de sistemas propios (softcoded, no toca el core)
         │   ├── map/
@@ -61,6 +65,8 @@ FNF_Echoes/
 ## Reglas de esta estructura
 
 1. **`engine/` es intocable** salvo decisión documentada en un ADR nuevo. Todo lo demás (contenido y sistemas propios) vive en `mods/fnf-echoes/`. Actualizar la versión del motor implica `git submodule update` a un nuevo commit + nota en el ADR-0001 — nunca editar archivos dentro de `engine/` directamente.
-2. **`states/` y `scripts/` son código softcoded** (HScript), no requieren recompilar el motor — coherente con la arquitectura elegida en el ADR-0001.
+2. **`data/states/` y `scripts/` son código softcoded** (HScript), no requieren recompilar el motor — coherente con la arquitectura elegida en el ADR-0001. Para reemplazar completamente un estado nativo (no solo agregarle lógica), hace falta además la entrada correspondiente en `[StateRedirects]` de `data/config/modpack.ini`.
 3. **Un sistema nuevo del juego = una carpeta dentro de `scripts/`**, con sus clases siguiendo POO/SRP (ver `CODING_STANDARDS.md`). El tablero-mapa ya sigue este patrón como ejemplo (`scripts/map/`).
 4. Si se añade una carpeta de primer nivel nueva, se actualiza este documento en el mismo commit (regla fijada en `AGENTS.md`).
+5. **No hay `meta.json` de mod** — Codename Engine no lee ningún archivo de metadata para mods (a diferencia de `songs/<song>/meta.json`, que sí existe pero es otro esquema, de canciones). El nombre del mod se declara en `[Common] NAME=` dentro de `modpack.ini`.
+6. **Para probar localmente**, el `.app` compilado busca `mods/` junto a su propio ejecutable (`CodenameEngine.app/Contents/Resources/mods/`), no en la raíz del repo. Se enlaza (symlink) `mods/fnf-echoes/` del repo ahí — el repo sigue siendo la única fuente de verdad, y los cambios se reflejan sin recompilar el motor.
