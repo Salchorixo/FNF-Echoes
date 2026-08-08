@@ -16,7 +16,8 @@ FNF_Echoes/
 │   └── adr/                   # Architecture Decision Records
 │       └── 0001-motor-y-stack-tecnologico.md
 │
-├── engine/                    # Código fuente de Codename Engine (submódulo o vendored)
+├── engine/                    # Código fuente de Codename Engine — git submodule pineado a un
+│                               # commit fijo (no sigue main). Ver docs/adr/0001-motor-y-stack-tecnologico.md.
 │                               # NO SE EDITA salvo ADR que lo justifique
 │
 └── mods/
@@ -59,7 +60,7 @@ FNF_Echoes/
 
 ## Reglas de esta estructura
 
-1. **`engine/` es intocable** salvo decisión documentada en un ADR nuevo. Todo lo demás (contenido y sistemas propios) vive en `mods/fnf-echoes/`.
+1. **`engine/` es intocable** salvo decisión documentada en un ADR nuevo. Todo lo demás (contenido y sistemas propios) vive en `mods/fnf-echoes/`. Actualizar la versión del motor implica `git submodule update` a un nuevo commit + nota en el ADR-0001 — nunca editar archivos dentro de `engine/` directamente.
 2. **`states/` y `scripts/` son código softcoded** (HScript), no requieren recompilar el motor — coherente con la arquitectura elegida en el ADR-0001.
 3. **Un sistema nuevo del juego = una carpeta dentro de `scripts/`**, con sus clases siguiendo POO/SRP (ver `CODING_STANDARDS.md`). El tablero-mapa ya sigue este patrón como ejemplo (`scripts/map/`).
 4. Si se añade una carpeta de primer nivel nueva, se actualiza este documento en el mismo commit (regla fijada en `AGENTS.md`).
