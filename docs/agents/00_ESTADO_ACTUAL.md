@@ -5,7 +5,7 @@
 > Si algo de aquí no coincide con el repo, **manda el repo**: corrige este
 > archivo y dilo en el relevo.
 
-**Última actualización:** 2026-10-02 (manual de agentes y workflow de Linear/PR).
+**Última actualización:** 2026-10-03 (`git done` y worktrees documentados, BE-6).
 
 ---
 
@@ -52,7 +52,9 @@ Entre los dos bloques de Kiyu van los crasheos y una cutscene (ver
 
 - `docs/adr/0004-pipeline-local-de-voces-cromaticas.md` (estado *Proposed*) y `docs/AI_VOICE_CHROMATIC_PIPELINE.md` describen un pipeline de voces que **ya no se usa**: ahora la música y las voces salen de Suno. Falta decidir si se marca como *Superseded* y si se escribe un ADR nuevo.
 - `docs/PROJECT_STRUCTURE.md` menciona `docs/DEPLOY.md`, que no existe todavía.
-- Existe un worktree viejo de un agente en `.claude/worktrees/`. No lo borres sin preguntar.
+- Existe un worktree viejo de un agente en `.claude/worktrees/` (ya sin registrar en git; su rama local es `worktree-agent-a148a96f1853ae6ce`). No lo borres sin preguntar. Los worktrees nuevos van en `FNF_Echoes-worktrees/` (ver `GIT_WORKFLOW.md` §12).
+- `mods/autoload.txt` y `mods/readme.txt` **no están versionados** (los ignora `mods/*` en `.gitignore`), aunque `AGENTS.md` §3 dibuja `autoload.txt` dentro del repo. Un clon o worktree nuevo no lo trae y el motor no cargaría el mod. Falta decidir si se versiona (`!mods/autoload.txt`) o se documenta como paso manual.
+- `PROJECT_STRUCTURE.md` (regla 6) dice que se enlaza `mods/fnf-echoes/`, pero el enlace real del `.app` apunta a toda la carpeta `mods/`.
 
 ## 6. Preguntas abiertas para Zyra
 
@@ -61,7 +63,9 @@ Entre los dos bloques de Kiyu van los crasheos y una cutscene (ver
 
 ## 7. Última sesión (sobrescribe esta sección al terminar)
 
-- **Fecha:** 2026-10-02
-- **Qué se hizo:** se creó el manual de agentes (`AGENTS.md` + `docs/agents/`) y se reescribió `docs/GIT_WORKFLOW.md` (Linear → rama → PR → rebase-merge, autorrevisión, sin aprobación de terceros).
-- **Qué quedó a medias:** nada de código. Etiquetas `needs-zyra`/`blocked`/`engine`/`windows` ya creadas en Linear. Pendientes de Zyra: crear el estado **In Review** en los equipos BACK y DESIGN de Linear, y alinear la protección de `main` en GitHub con `GIT_WORKFLOW.md` §7.
+- **Fecha:** 2026-10-03
+- **Rama / issue:** `docs/BE-6-git-done-y-worktrees` / BE-6
+- **Qué se hizo:** se documentó el alias local `git done` (limpieza tras el merge) y el flujo con worktrees en `docs/GIT_WORKFLOW.md` §8 y §12. Antes ya se había aplicado la configuración de Linear (estado *In Review*, etiquetas `needs-zyra`/`blocked`/`engine`/`windows`) y la protección de `main` en GitHub.
+- **Probado:** `git done` en el checkout principal, dentro de un worktree (se niega), con un worktree de rama mergeada simulada (lo quita y borra la rama) y con cambios sin commitear (lo conserva). **NO PROBADO:** ejecutar el juego desde un worktree (reapuntar el enlace de `mods`).
+- **Qué quedó a medias:** nada de código. Pendiente comprobar que la integración GitHub ↔ Linear mueve BE-6 sola (In Progress → In Review → Done).
 - **Siguiente paso recomendado:** prueba aislada de transparencia en Windows con color clave, documentada antes en una revisión del ADR-0003.
