@@ -225,17 +225,65 @@ Trampas conocidas del rebase-merge:
 - *Automatically delete head branches* activado.
 - Permitir **Rebase merge** y **Squash merge**; desactivar **Merge commit**.
 
-Estado real a 2026-10-02 (leído con `gh api`): exige 1 aprobación, historial lineal **desactivado**, resolución de conversaciones **desactivada**, borrado automático de ramas **desactivado**, merge commit **permitido**. Alinearlo con esta lista es una tarea de Zyra (cambia ajustes del repositorio; un agente solo la propone).
+Estado real a 2026-10-03 (leído con `gh api`): **aplicado tal cual esta lista**. `enforce_admins` sigue en `false` a propósito: es lo que permite a Zyra la excepción de push directo de §9. Cambiar estos ajustes es tarea de Zyra (un agente solo lo propone).
 
 ---
 
 ## 8. Después del merge
 
+GitHub borra la rama **remota** solo (*Automatically delete head branches*), pero tu máquina no se entera. La limpieza local se hace con **un comando**, desde el checkout principal:
+
 ```bash
-git checkout main
-git pull origin main
-git branch -d feature/BE-12-transparencia-windows        # con rebase-merge puede pedir -D: es normal, los hashes cambiaron
-git push origin --delete feature/BE-12-transparencia-windows   # solo si no se borró sola
+git done
+```
+
+`git done` es un alias de git **local** (vive en `.git/config`, no se versiona). Hace, en orden:
+
+1. Se niega si hay **cambios sin commitear** (no mueve ramas bajo tu trabajo) o si lo ejecutas **dentro de un worktree** (ver §12).
+2. `git fetch --prune`, cambia a `main` y la actualiza con `pull --ff-only`.
+3. Borra las ramas locales cuya remota desapareció **y** que tienen una PR **mergeada** (lo confirma `gh`). Si la remota desapareció pero no hay PR mergeada, **conserva la rama** y avisa: puede ser trabajo sin subir.
+4. Si esa rama tenía un **worktree**, lo quita antes (si tiene cambios sin commitear, lo conserva y avisa).
+5. `git worktree prune`.
+
+Necesita `gh` con sesión iniciada. **Instalación** (una vez por máquina; copia y pega todo el bloque):
+
+```bash
+git config --local alias.done "$(cat <<'EOF'
+!f() {
+  root=$(git worktree list --porcelain | sed -n '1s/^worktree //p');
+  if [ "$(git rev-parse --git-dir)" != "$(git rev-parse --git-common-dir)" ]; then
+    echo "Estas dentro de un worktree. Ejecuta git done desde el checkout principal: $root";
+    return 1;
+  fi;
+  [ -z "$(git status --porcelain --untracked-files=no)" ] || { echo "Hay cambios sin commitear: no toco nada."; return 1; };
+  git fetch origin --prune || return 1;
+  git checkout main && git pull --ff-only origin main || return 1;
+  for b in $(git for-each-ref --format='%(refname:short) %(upstream:track)' refs/heads | grep -F '[gone]' | cut -d' ' -f1); do
+    if [ "$(gh pr list --head "$b" --state merged --json number --jq length 2>/dev/null)" -gt 0 ] 2>/dev/null; then
+      wt=$(git worktree list --porcelain | awk -v b="branch refs/heads/$b" '/^worktree /{p=substr($0,10)} $0==b{print p}');
+      if [ -n "$wt" ]; then
+        git worktree remove "$wt" || { echo "No pude quitar el worktree $wt (cambios sin commitear?). Conservo $b."; continue; };
+      fi;
+      git branch -D "$b";
+    else
+      echo "Conservo $b: su remota se borro pero no tiene PR mergeada.";
+    fi;
+  done;
+  git worktree prune;
+}; f
+EOF
+)"
+```
+
+Se usa `-D` (no `-d`) porque con rebase/squash-merge los hashes cambian y git cree que la rama "no está mergeada"; por eso la comprobación de PR mergeada va por `gh` y no por git.
+
+> `gh pr merge --rebase --delete-branch` (mergear desde la terminal) hace por sí solo la parte de borrar la rama local; `git done` cubre el caso normal de mergear desde el botón de GitHub.
+
+Sin el alias, a mano:
+
+```bash
+git checkout main && git pull --ff-only origin main
+git branch -D feature/BE-12-transparencia-windows
 ```
 
 Y comprueba tres cosas:
@@ -304,3 +352,82 @@ git checkout main && git pull origin main
 ```
 
 > Este ejemplo toca `engine/`, así que antes de la rama debe existir un ADR aprobado (ver `AGENTS.md` §0.3 y ADR-0003).
+
+---
+
+## 12. Worktrees (varias issues a la vez)
+
+Un *worktree* es otra carpeta de trabajo del **mismo repo** con su propia rama. Sirve para tener dos issues abiertas a la vez, o para que un agente trabaje en paralelo, **sin apilar ramas** (§5) y sin mover la rama de tu checkout principal.
+
+Reglas (siguen siendo las de siempre): **un worktree = una issue = una rama = una PR**, y el máximo de 2 issues en *In Progress* (§3) cuenta también aquí.
+
+### Dónde viven
+
+| Qué | Ruta |
+|---|---|
+| Checkout principal (`main`, motor compilado) | `/Volumes/Zyras Zone/Projects/FNF_Echoes` |
+| Worktrees | `/Volumes/Zyras Zone/Projects/FNF_Echoes-worktrees/<ID>-descripcion` |
+
+La carpeta de worktrees es **hermana** del repo, no está dentro: por eso git no la ve y no hace falta ignorarla. Usa siempre rutas absolutas y entre comillas (la ruta tiene espacios).
+
+> Existe además `.claude/worktrees/agent-a148a96f1853ae6ce` (un worktree viejo de un agente, ya sin registrar en git). No se borra sin preguntar a Zyra; las ramas nuevas **no** usan esa carpeta.
+
+### Crear uno
+
+Desde el checkout principal, con `main` actualizada (la rama nace de `main`, como siempre):
+
+```bash
+cd "/Volumes/Zyras Zone/Projects/FNF_Echoes"
+git checkout main && git pull --ff-only origin main
+git worktree add -b docs/BE-6-git-done-y-worktrees \
+  "/Volumes/Zyras Zone/Projects/FNF_Echoes-worktrees/BE-6-git-done-y-worktrees" main
+```
+
+### Qué trae y qué no
+
+- **`engine/` llega vacío.** Es un submódulo y un worktree nuevo no lo inicializa. Para tareas de **docs** o de **`mods/`** no hace falta. **No lo inicialices ahí** (duplicarías el motor y su compilación). Cualquier tarea que toque `engine/` o necesite compilar se hace **en el checkout principal**.
+- **`mods/` llega incompleto.** Solo trae `mods/fnf-echoes/`. Los archivos `mods/autoload.txt` y `mods/readme.txt` **no están versionados** (los ignora `mods/*` en `.gitignore`), así que no aparecen. Sin `autoload.txt` el motor no carga el mod.
+
+### Probar el juego desde un worktree
+
+El `.app` compilado solo mira `mods/` a través de un enlace simbólico que apunta al checkout principal. Para probar los cambios de un worktree hay que **reapuntar** el enlace y **restaurarlo** al terminar:
+
+```bash
+APP="/Volumes/Zyras Zone/Projects/FNF_Echoes/engine/export/release/macos/bin/CodenameEngine.app/Contents/Resources/mods"
+WT="/Volumes/Zyras Zone/Projects/FNF_Echoes-worktrees/BE-6-git-done-y-worktrees"
+
+cp "/Volumes/Zyras Zone/Projects/FNF_Echoes/mods/autoload.txt" "$WT/mods/"   # una vez por worktree (git lo ignora)
+ln -sfn "$WT/mods" "$APP"                                                     # el juego ahora carga el worktree
+# ... abrir el juego y probar ...
+ln -sfn "/Volumes/Zyras Zone/Projects/FNF_Echoes/mods" "$APP"                 # RESTAURAR siempre al terminar
+```
+
+**NO PROBADO ejecutando el juego:** el procedimiento sale de `docs/PROJECT_STRUCTURE.md` (regla 6) y de leer el enlace real del `.app`; lo único probado es `git done` con worktrees (§8). Quien lo use por primera vez, que confirme que el juego carga el mod y lo anote aquí.
+
+Solo **un** worktree a la vez puede estar enlazado. Si olvidas restaurar, el juego carga código de otra rama sin avisar: ante un comportamiento raro, comprueba primero a dónde apunta el enlace (`ls -l "$APP"`). Para Windows no hay procedimiento (plataforma sin probar).
+
+### Limpiarlo después del merge
+
+Desde el **checkout principal**:
+
+```bash
+git done
+```
+
+Quita el worktree y borra la rama si su PR está mergeada (detalle en §8). A mano:
+
+```bash
+git worktree list                       # ver cuáles existen
+git worktree remove "<ruta del worktree>"
+git branch -D docs/BE-6-git-done-y-worktrees
+git worktree prune                      # limpia registros de carpetas que ya no existen
+```
+
+Si restauraste el enlace de la sección anterior, no queda nada más que limpiar. Si el worktree tiene cambios sin commitear, `git worktree remove` se niega (y `git done` lo conserva y avisa): decide tú si commitear, guardar o descartar; **no uses `--force` sin mirar qué se pierde**.
+
+### Trampas conocidas
+
+- **Una rama solo puede estar en un worktree.** `git checkout main` falla dentro de un worktree secundario porque `main` ya está abierta en el principal. Por eso `git done` se niega a correr dentro de uno y te dice la ruta a la que ir.
+- **No borres la carpeta de un worktree con `rm -rf` ni con Finder.** Git sigue creyendo que existe y la rama queda "ocupada". Si ya lo hiciste: `git worktree prune`.
+- **`git branch -D` no borra una rama que tiene un worktree vivo.** Quita primero el worktree (o usa `git done`).
+- Un agente que trabaja en un worktree sigue las mismas reglas que en el principal (§10): no cambia de rama, no toca el checkout principal y deja el relevo en la issue.

@@ -75,6 +75,7 @@ El flujo completo (issue de Linear → rama → PR → merge) está en `docs/GIT
 - Antes de abrir la PR: checklist de `docs/CODING_STANDARDS.md`.
 - La PR va **contra `main`**, con `Closes BE-12` y explica **qué** y **por qué**. Si hubo decisión de arquitectura, enlaza el ADR.
 - El merge ("Rebase and merge") lo hace Zyra tras leer su propio diff. **Tú no mergeas** salvo que Zyra lo pida explícitamente en esa sesión.
+- Tras el merge, Zyra limpia con `git done` desde el checkout principal (`GIT_WORKFLOW.md` §8). Si trabajas en un **worktree** (`FNF_Echoes-worktrees/`), lee `GIT_WORKFLOW.md` §12 antes: `engine/` llega vacío, `git checkout main` falla y probar el juego exige reapuntar un enlace.
 
 ## 6. Al terminar (checklist final)
 
