@@ -18,6 +18,7 @@ La organización de este repositorio sigue el estándar **AGENTS.md**, adoptado 
 | `docs/adr/000X-*.md` | Personas y agentes | Registro de decisiones técnicas (ej. elección de motor de juego): contexto, opciones consideradas, trade-offs, consecuencias. |
 | `docs/CODING_STANDARDS.md` | Agentes y personas | Metodología de programación exigida: POO, KISS, DRY, convenciones de Haxe, con ejemplos aplicados al propio proyecto. |
 | `docs/PROJECT_STRUCTURE.md` | Agentes y personas | Mapa de carpetas del repositorio y qué va en cada una. |
+| `docs/agents/*.md` | Cualquier agente de IA | Manual operativo: estado actual del proyecto, protocolo de sesión y relevo, guía de HScript, recetas paso a paso, trampas conocidas y glosario. Pensado para que cualquier agente, incluso un modelo local pequeño, retome una sesión a medias sin adivinar. |
 | `context.md` | Personas (evaluadores) | Este documento. |
 | `TFM-Requisitos.md` | Solo uso personal | Checklist de los requisitos de entrega del máster. Excluido del repositorio vía `.gitignore` — no forma parte del entregable público. |
 

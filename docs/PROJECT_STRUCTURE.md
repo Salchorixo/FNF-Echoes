@@ -10,6 +10,7 @@ FNF_Echoes/
 ├── TFM-Requisitos.md          # Checklist de requisitos de entrega (ya creado)
 │
 ├── docs/
+│   ├── agents/                # Manual operativo para agentes de IA (empezar por 00_ESTADO_ACTUAL.md)
 │   ├── CODING_STANDARDS.md    # POO, KISS, DRY, convenciones Haxe
 │   ├── PROJECT_STRUCTURE.md   # Este documento
 │   ├── DEPLOY.md              # Instrucciones de publicación en itch.io
@@ -22,10 +23,12 @@ FNF_Echoes/
 │
 └── mods/
     └── fnf-echoes/             # El mod/juego en sí — todo el contenido y sistemas propios
-        ├── songs/               # Canciones: Inst.ogg, Voices.ogg por dificultad
+        ├── songs/               # Canciones (estructura del motor, ver engine/assets/songs/bopeebo/)
         │   └── <song-name>/
-        │
-        ├── charts/              # Charts (.json) por canción y dificultad
+        │       ├── charts/          # easy.json, normal.json, hard.json
+        │       ├── song/            # Inst.ogg, Voices.ogg
+        │       ├── meta.json        # Metadata de la canción (nombre, BPM...)
+        │       └── events.json
         │
         ├── data/                # Definiciones sin código + estados custom softcodeados
         │   ├── characters/         # XML de personajes
