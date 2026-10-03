@@ -41,8 +41,8 @@ Entre los dos bloques de Kiyu van los crasheos y una cutscene (ver
 
 ## 4. En curso / siguiente paso
 
-1. **Transparencia real de ventana en Windows** (Linear: BACK → ENGINE & PLATFORM): ventana *layered* con **color clave** (no necesita alfa en el framebuffer). macOS ya está (BE-7). El motor tiene puentes nativos en `engine/source/funkin/backend/utils/NativeAPI.hx` y `native/Windows.hx`. Plan B obligatorio: escritorio falso dibujado por el juego ("EchoOS").
-   - **Antes de usar la transparencia en el juego:** el shader VHS fuerza alfa 1 (trampa nº 16) y la intro todavía pide `FlxG.fullscreen = true` (trampa nº 14).
+1. **Transparencia real de ventana en Windows** (Linear: BE-10, BACK → ENGINE & PLATFORM): ventana *layered* con **color clave** (no necesita alfa en el framebuffer). macOS ya está (BE-7). El motor tiene puentes nativos en `engine/source/funkin/backend/utils/NativeAPI.hx` y `native/Windows.hx`. Plan B obligatorio: escritorio falso dibujado por el juego ("EchoOS").
+   - **Antes de usar la transparencia en el juego:** el shader VHS fuerza alfa 1 (trampa nº 16, **BE-8**) y la intro todavía pide `FlxG.fullscreen = true` (trampa nº 14, **BE-9**, con decisiones de Zyra pendientes).
 2. **Secuencia final** (BACK → FINAL SEQUENCE): crasheo 1 real y controlado, menú roto, crasheo 2 falso, cutscene, bloque 2.
 3. **Canciones dentro del mod**: crear `songs/<cancion>/` con la estructura del motor (ver `03_RECETAS.md`).
 
@@ -53,7 +53,7 @@ Entre los dos bloques de Kiyu van los crasheos y una cutscene (ver
 - Existe un worktree viejo de un agente en `.claude/worktrees/` (ya sin registrar en git; su rama local es `worktree-agent-a148a96f1853ae6ce`). No lo borres sin preguntar. Los worktrees nuevos van en `FNF_Echoes-worktrees/` (ver `GIT_WORKFLOW.md` §12).
 - `mods/autoload.txt` y `mods/readme.txt` **no están versionados** (los ignora `mods/*` en `.gitignore`), aunque `AGENTS.md` §3 dibuja `autoload.txt` dentro del repo. Un clon o worktree nuevo no lo trae y el motor no cargaría el mod. Falta decidir si se versiona (`!mods/autoload.txt`) o se documenta como paso manual.
 - `PROJECT_STRUCTURE.md` (regla 6) dice que se enlaza `mods/fnf-echoes/`, pero el enlace real del `.app` apunta a toda la carpeta `mods/`.
-- **El commit del submódulo `engine/` no está en ningún remoto** (`74c80698` y `3c36a57d`, rama local `echoes/patches`): `.gitmodules` apunta a `CodenameCrew/CodenameEngine`, que no los tiene, así que un clon nuevo no puede bajar `engine/`. Decisión de Zyra: fork propio del motor (pendiente de crear y de apuntar `.gitmodules`).
+- **El commit del submódulo `engine/` no está en ningún remoto** (`74c80698` y `3c36a57d`, rama local `echoes/patches`): `.gitmodules` apunta a `CodenameCrew/CodenameEngine`, que no los tiene, así que un clon nuevo no puede bajar `engine/`. Resuelto en BE-7: fork propio `Salchorixo/CodenameEngine` (rama `echoes/patches`), `.gitmodules` apuntando a él y `upstream` = CodenameCrew dentro del submódulo.
 
 ## 6. Preguntas abiertas para Zyra
 
@@ -66,7 +66,7 @@ Entre los dos bloques de Kiyu van los crasheos y una cutscene (ver
 - **Rama / issue:** `feature/BE-7-transparencia-macos` / BE-7
 - **Qué se hizo:** transparencia real de ventana en macOS y pantalla completa sin Space. Parche en el submódulo (`engine/source/external/**`, `NativeAPI.hx`, `NativeWindow.hx`, `NativeApplication.hx`), estado de prueba `TransparencyTestState.hx` (sin atajo; se quitó la tecla T de la intro) y documentación (ADR-0003 con la causa real, trampas nº 10, 14, 15 y 16, `AGENTS.md` §0.11).
 - **Probado:** a ojo por Zyra en macOS 27.2 (Apple Silicon) con Stage Manager: transparencia ON/OFF y pantalla completa ON/OFF repetidas veces, sin parpadeo y con el indicador de `FlxG.fullscreen` correcto. Medido con sonda de píxeles y con un programa de referencia (ADR-0003). **NO PROBADO:** Windows; con el shader VHS activo; juego distribuido (no `cne test`).
-- **Qué quedó a medias:** crear el fork del motor y apuntar `.gitmodules` (sin eso la PR de BE-7 no se puede mergear sin romper clones).
+- **Qué quedó a medias:** nada de BE-7. El fork `Salchorixo/CodenameEngine` ya existe con la rama `echoes/patches` y `.gitmodules` apunta a él. Seguimiento en BE-8, BE-9 y BE-10.
 - **Decisiones tomadas:** detrás del juego debe verse el escritorio real (no un Space nuevo ni un escritorio falso); pantalla completa = ventana sin bordes del tamaño del escritorio; fork propio del motor para versionar los parches.
 - **Preguntas para Zyra:** ¿la intro arranca en ventana o en pantalla completa sin Space? ¿Ocultar Dock y barra de menús en pantalla completa?
-- **Siguiente paso:** crear el fork `Salchorixo/CodenameEngine`, subir `echoes/patches`, apuntar `.gitmodules` y abrir la PR de BE-7.
+- **Siguiente paso:** mergear la PR de BE-7 (Rebase and merge) y seguir con BE-8 (VHS conserva el alfa). BE-9 espera tus decisiones; BE-10 (Windows) necesita una máquina Windows.
