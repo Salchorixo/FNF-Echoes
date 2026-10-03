@@ -1,6 +1,6 @@
 # ADR-0003: Transparencia de ventana — intento real, simulación adoptada
 
-**Status:** Accepted (revisado)
+**Status:** Accepted (revisado; actualizado 2026-10-03, ver "Actualización 2026-10-03")
 **Date:** 2026-08-08
 **Deciders:** Salchorizo
 
@@ -52,4 +52,36 @@ Construir el resto de la Fase 1 sin el toggle de transparencia, retomarlo como i
 1. [x] Añadir `transparent="true"` al `<window>` de `engine/project.xml`, commitear dentro del submódulo.
 2. [x] Recompilar el motor y probar en runtime — **transparencia real no funciona aún** (ver "Resultado del intento").
 3. [x] Actualizar el puntero del submódulo en este repo al nuevo commit.
-4. [ ] (Futuro, fuera de alcance de la Fase 1) Investigar el parche nativo de lime (`NativeWindow.hx` / backend C++) para que `transparent="true"` realmente deje pasar el escritorio.
+4. [x] macOS: transparencia real conseguida **sin** parchear el C++ de lime (BE-7, 2026-10-03). Ver "Actualización 2026-10-03".
+5. [ ] Windows: transparencia real con ventana *layered* y color clave (issue aparte).
+6. [ ] Que `VHSShader.frag` conserve el alfa de origen (hoy fuerza `1.0` y anularía la transparencia).
+
+
+## Actualización 2026-10-03 (BE-7): la transparencia real SÍ funciona en macOS
+
+**Resultado.** Probada a ojo por Zyra en macOS 27.2 (Apple Silicon), con Stage Manager activado: el escritorio real, sus ventanas y su Dock se ven a través del contenido del juego, sin parpadeo, tanto en ventana como en pantalla completa y al alternar entre ambos varias veces. **Windows: sin probar.**
+
+**La causa que daba este ADR (el C++ de lime) era incorrecta.** No hizo falta tocar `lime.ndll`. Hacían falta cuatro cosas a la vez; el intento anterior solo hizo la segunda de forma incompleta:
+
+1. **Limpiar OpenFL a alfa 0:** `FlxG.stage.color = null`. `OpenGLRenderer.__clear()` limpia a `(0,0,0,0)` solo con ese valor. El intento original solo tocó `camera.bgColor`, que no afecta ese limpiado.
+2. **Cámara sin fondo:** `FlxG.camera.bgColor = 0x00000000` (Flixel omite el `fill` si el alfa es 0).
+3. **Ventana de macOS no opaca y superficie GL translúcida:** `NSWindow` con `opaque = NO`, fondo `clearColor`, sin sombra, y `NSOpenGLContextParameterSurfaceOpacity = 0`.
+4. **Capas de AppKit sin fondo opaco:** AppKit da un `backgroundColor` opaco al marco de la ventana y al `_NSOpenGLViewBackingLayer`; ese fondo se ve negro justo donde OpenGL dibujó alfa 0. Y **AppKit rehace esas capas** al cambiar el estilo, el tamaño o el modo de la ventana, así que el parche las limpia y las **vuelve a limpiar sola** (notificaciones de ventana + comprobación a 120 Hz) para que no haya parpadeo.
+
+**Cómo se averiguó (para no repetirlo).** Una sonda con `glReadPixels` leyó el fondo como `0x00000000` y el recuadro como opaco: OpenGL dibujaba bien, así que el problema era la composición. Un programa de referencia independiente (Objective-C, sin el motor) mostró que esta macOS sí compone transparencia con `NSOpenGLContext`, también si se activa en caliente y con ventana con título, y que **una capa con fondo negro opaco la anula** (alfa 255). Ahí estaba la diferencia con el juego.
+
+**Pantalla completa.** La pantalla completa nativa de macOS crea un **Space propio, siempre opaco y sin escritorio detrás**: ahí la transparencia no puede funcionar. Se resuelve así:
+- `disableNativeFullscreen()` marca las ventanas con `NSWindowCollectionBehaviorFullScreenNone` al crearlas (el botón verde pasa a hacer zoom).
+- `SDL_VIDEO_MAC_FULLSCREEN_SPACES=0`, fijada antes de que SDL arranque, hace que `FlxG.fullscreen`, Alt+Enter y Ctrl+Cmd+F usen el modo de escritorio de SDL: una ventana sin bordes del tamaño de la pantalla, sin Space.
+- Bug de lime corregido en `NativeApplication.hx`: en macOS ese modo hace que SDL envíe `WINDOW_MAXIMIZE` y `WINDOW_RESTORE`, y lime respondía `__fullscreen = false`, dejando `FlxG.fullscreen` desincronizado de la ventana real (F no podía salir).
+
+**El parche.** Commit `3c36a57d` en la rama `echoes/patches` del submódulo `engine/` (sobre `74c80698`). Archivos: `source/external/src/mac/Mac.mm`, `include/mac/Mac.h`, `ExternalMac.hx`, `external_code.xml` (enlaza `OpenGL` y `QuartzCore`), `funkin/backend/utils/native/Mac.hx`, `NativeAPI.hx` (`setWindowTransparent`, `disableNativeFullscreen`; no-op fuera de macOS) y los reemplazos de motor `lime/_internal/backend/native/NativeWindow.hx` y `NativeApplication.hx`. Uso desde el mod, ver `mods/fnf-echoes/data/states/TransparencyTestState.hx`.
+
+**Compilar.** `cne build` equivale a `haxelib run lime build macos -DTEST_BUILD` desde `engine/` con `HAXE_STD_PATH=/opt/homebrew/lib/haxe/std`; incremental, ~1 min. El `.app` queda en modo `cne test` (busca los mods en `engine/mods/`, ver `docs/agents/04_TRAMPAS_CONOCIDAS.md` nº 15).
+
+**Límites y pendientes.**
+- Windows: ventana *layered* con color clave (issue aparte).
+- El shader VHS termina en `gl_FragColor = vec4(col, 1.0)`: fuerza alfa 1 en toda la pantalla y anula la transparencia mientras esté activo.
+- Usa `NSOpenGLContext`, API en desuso desde macOS 10.14 (sigue funcionando en 27.2). Si Apple la retirara, habría que pasar a una capa Metal.
+- Dock y barra de menús siguen visibles en pantalla completa (no se ocultan). Con la transparencia activa se ven por encima del juego.
+- **El commit del submódulo no está en ningún remoto** (ni el `74c80698` anterior): un clon nuevo no puede bajar `engine/`. Se resuelve con un fork propio del motor (decisión de Zyra, 2026-10-03).

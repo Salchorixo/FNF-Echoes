@@ -23,6 +23,7 @@ silencio.
 8. **Antes de decir "funciona", pruébalo.** Si no pudiste compilar o ejecutar, escribe literalmente "NO PROBADO" y por qué.
 9. **Al terminar o al dejar algo a medias, deja el relevo escrito** (`docs/agents/01_PROTOCOLO_DE_SESION.md` §3) y actualiza `00_ESTADO_ACTUAL.md`.
 10. **Historia, diseño de juego, arte y música los decide Zyra.** Tú propones; no decides.
+11. **El juego se abre en ventana, nunca en pantalla completa nativa de macOS.** Esa pantalla completa mueve la ventana a un Space propio, siempre opaco y sin escritorio detrás: ahí la transparencia (que el final necesita) no puede funcionar. El motor ya la bloquea y `FlxG.fullscreen` da una ventana sin bordes del tamaño del escritorio (sin Space). No coloques la ventana a mano ni dependas de `window.fullscreen` (ver `docs/agents/04_TRAMPAS_CONOCIDAS.md` nº 14).
 
 ---
 
