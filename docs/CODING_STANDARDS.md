@@ -24,11 +24,13 @@ Responsabilidad única se sigue aplicando — a nivel de **archivo/script**, no 
 | Archivo | Responsabilidad única |
 |---|---|
 | `data/states/StoryMapState.hx` | Controlar la pantalla del tablero-mapa: navegación entre nodos, desbloqueo |
-| `scripts/ui/cardMenu.hx` | Grilla de tarjetas + selección, reutilizada por cualquier estado que necesite tarjetas |
+| `data/states/OptionsState.hx` | Controlar la pantalla de Options: cinta de categorías + panel de la categoría abierta |
+| `scripts/ui/cardMenu.hx` | Grilla de tarjetas + selección (+ paneo leve de cámara), reutilizada por cualquier estado que necesite tarjetas |
 | `scripts/ui/nodeArtPanel.hx` | Panel de arte del nodo seleccionado (slide-in + fade), reutilizado por cualquier mapa |
+| `scripts/ui/translate.hx` | Diccionario EN/ES de textos propios de la UI, consultado por cualquier pantalla con texto traducible |
 | `scripts/effects/vhsShader.hx` | Adjuntar el shader de distorsión a la cámara, sin lógica de gameplay dentro |
 
-Regla de cuándo separar en un script aparte vs. dejar inline en el estado: **solo cuando hay un segundo consumidor real**. Datos usados por una sola pantalla (como los nodos del tablero en `StoryMapState`) van como objeto anónimo ahí mismo — crear un archivo aparte para eso sería peso muerto, no POO. `cardMenu.hx` y `nodeArtPanel.hx` están separados porque a la fecha ya los usa o va a usar más de una pantalla.
+Regla de cuándo separar en un script aparte vs. dejar inline en el estado: **solo cuando hay un segundo consumidor real**. Datos usados por una sola pantalla (como los nodos del tablero en `StoryMapState`, o las filas de Controls/Gameplay en `OptionsState`) van como objeto anónimo ahí mismo — crear un archivo aparte para eso sería peso muerto, no POO. `cardMenu.hx`, `nodeArtPanel.hx` y `translate.hx` están separados porque a la fecha ya los usa o va a usar más de una pantalla — `translate.hx` puntualmente nació así: vivía inline en `OptionsState.hx` hasta que `MainMenuState` necesitó las mismas cadenas para sus propias tarjetas.
 
 La comunicación entre scripts se hace por composición explícita (`Script.create(Paths.script('...'))` + `.call()`/`.get()`/`.set()`), nunca accediendo a variables internas de otro script — el mismo espíritu de encapsulamiento de POO, con la herramienta que el motor realmente ofrece.
 

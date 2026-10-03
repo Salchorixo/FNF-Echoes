@@ -28,3 +28,9 @@ addons/*
 # --- Sistema operativo ---
 .DS_Store
 Thumbs.db
+
+# --- Fuentes de audio en bruto (pruebas externas no integradas) ---
+audio_src/
+
+# --- Archivos temporales de Microsoft Office ---
+~$*.docx
