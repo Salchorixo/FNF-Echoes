@@ -45,8 +45,8 @@ mismo formato: síntoma → causa → qué hacer.
 - **Causa y solución:** ADR-0001, sección "Diagnóstico del crash de HarfBuzz". No desactives `LIME_HARFBUZZ` entero: el juego se cuelga.
 
 ### 10. `transparent="true"` en `project.xml` no hace la ventana transparente
-- **Causa:** `lime` limpia cada frame a negro opaco desde su código nativo (ADR-0003).
-- **Qué hacer:** no repitas ese intento. La vía nueva (color clave en Windows, ventana no opaca en macOS) requiere revisar el ADR-0003 antes de tocar `engine/`.
+- **Causa:** por sí solo no basta. En macOS hacen falta cuatro cosas a la vez (limpiar OpenFL a alfa 0 con `FlxG.stage.color = null`, `camera.bgColor` alfa 0, ventana y superficie GL no opacas y capas de AppKit sin fondo opaco). La explicación antigua del ADR-0003 (el C++ de lime) era incorrecta.
+- **Qué hacer:** usa el patrón de `mods/fnf-echoes/data/states/TransparencyTestState.hx`: `FlxG.stage.color = null`, `FlxG.camera.bgColor = 0x00000000` y `NativeAPI.setWindowTransparent(true)`. Detalles y por qué en el ADR-0003, "Actualización 2026-10-03". Windows: sin hacer. Cuidado con el shader VHS (nº 16).
 
 ### 11. Traducir "ECHOES"
 - **Regla fija:** "ECHOES" y "ECHO" no pasan nunca por `translate.hx`. Se quedan en inglés.
@@ -57,3 +57,19 @@ mismo formato: síntoma → causa → qué hacer.
 
 ### 13. Documentos viejos sobre voces
 - `docs/adr/0004-...` y `docs/AI_VOICE_CHROMATIC_PIPELINE.md` describen un pipeline que ya **no se usa** (ahora es Suno). No los sigas como instrucciones. Ver `00_ESTADO_ACTUAL.md` §5.
+
+### 14. La pantalla completa nativa en macOS impide la transparencia
+- **Síntoma:** al pasar a pantalla completa el escritorio "se va a la derecha" y, aunque la transparencia esté activa, la ventana se ve negra.
+- **Causa:** la pantalla completa nativa de macOS crea un **Space propio**, siempre opaco y sin escritorio detrás.
+- **Qué hace ya el motor (parche de BE-7):** la bloquea en todas las ventanas y fija `SDL_VIDEO_MAC_FULLSCREEN_SPACES=0`, así que `FlxG.fullscreen`, Alt+Enter y Ctrl+Cmd+F dan una ventana sin bordes del tamaño del escritorio, **sin Space**, donde la transparencia funciona. No hace falta código especial en el mod.
+- **Qué NO hacer:** no recoloques la ventana a mano (`window.x/y/width/height`, `borderless`): Stage Manager y AppKit la reubican y queda a medias. No dependas de `window.fullscreen` leído justo después de cambiarlo.
+- **Regla obligatoria (`AGENTS.md` §0.11):** el juego se abre en ventana. `TitleState.hx` todavía hace `FlxG.fullscreen = true` al crearse (ahora sin Space); decidir si arranca en ventana está pendiente.
+
+### 15. En modo `cne test` el motor busca los mods en `engine/mods/`, no en el `.app`
+- **Síntoma:** el juego arranca con el menú de Story Mode de siempre; en el log sale `Mod "fnf-echoes" not found in mods list, switching to base game!` y el botón `DISABLE MODS` aparece solo.
+- **Causa:** el `.app` está compilado con `-DTEST_BUILD` (`cne build`/`lime test`). En ese modo `ModsFolder.modsPath` es `./<pathBack>mods/`, que resuelve a `engine/mods/`, y la carpeta solo trae un `readme.txt`. El enlace de `Contents/Resources/mods` no se usa para la lista de mods.
+- **Qué hacer (ajuste local, no se versiona):** `ln -s ../../mods/fnf-echoes engine/mods/fnf-echoes`. El submódulo no se ensucia porque su `.gitignore` ignora `mods/*`. Para ver el log al abrir: `open -n --stdout LOG --stderr LOG <app>`.
+
+### 16. El shader VHS anula la transparencia
+- **Causa:** `VHSShader.frag` termina en `gl_FragColor = vec4(col, 1.0)`: fuerza alfa 1 en toda la pantalla.
+- **Qué hacer:** antes de usar transparencia en un estado con VHS, que el shader conserve el alfa de origen. Está pendiente como issue aparte.

@@ -5,7 +5,7 @@
 > Si algo de aquí no coincide con el repo, **manda el repo**: corrige este
 > archivo y dilo en el relevo.
 
-**Última actualización:** 2026-10-03 (`git done` y worktrees documentados, BE-6).
+**Última actualización:** 2026-10-03 (transparencia real en macOS conseguida, BE-7).
 
 ---
 
@@ -24,7 +24,8 @@ producción: arte, animaciones, charts, mecánicas y la secuencia final.
 | Menús del mod | Existen: Title, MainMenu, EchoSelect, StoryMap, Options, Loading | `mods/fnf-echoes/data/states/` |
 | Scripts compartidos | `cardMenu`, `nodeArtPanel`, `translate`, `vhsShader` | `mods/fnf-echoes/scripts/` |
 | Shader VHS | Existe, se adjunta por estado | `shaders/VHSShader.frag` + `scripts/effects/vhsShader.hx` |
-| Transparencia de ventana | **Intentada, no funciona**; se usa efecto simulado | ADR-0003 |
+| Transparencia de ventana en macOS | **Funciona** (probada a ojo, 2026-10-03): escritorio real visible a través del juego, en ventana y en pantalla completa sin Space | ADR-0003 "Actualización 2026-10-03"; ejemplo en `TransparencyTestState.hx` |
+| Transparencia de ventana en Windows | **Sin hacer** | ADR-0003, action item 5 |
 | Audio de las 3 canciones | Generado en Suno (fuera del repo) | Notion → Canciones |
 
 ## 3. Datos de las canciones (para charts y código)
@@ -40,11 +41,8 @@ Entre los dos bloques de Kiyu van los crasheos y una cutscene (ver
 
 ## 4. En curso / siguiente paso
 
-1. **Transparencia real de ventana** (Linear: BACK → ENGINE & PLATFORM). Idea a probar:
-   - Windows: ventana *layered* con **color clave** (no necesita alpha en el framebuffer, así que esquiva el problema del ADR-0003).
-   - macOS: ventana no opaca + superficie que limpie con alpha 0 (choca con lo encontrado en el ADR-0003; resultado incierto).
-   - El motor ya tiene puentes nativos: `engine/source/funkin/backend/utils/NativeAPI.hx`, `native/Windows.hx`, `native/Mac.hx` (este usa `external.ExternalMac`).
-   - **Requiere revisar el ADR-0003 antes de tocar `engine/`.** Plan B obligatorio: escritorio falso dibujado por el juego ("EchoOS").
+1. **Transparencia real de ventana en Windows** (Linear: BACK → ENGINE & PLATFORM): ventana *layered* con **color clave** (no necesita alfa en el framebuffer). macOS ya está (BE-7). El motor tiene puentes nativos en `engine/source/funkin/backend/utils/NativeAPI.hx` y `native/Windows.hx`. Plan B obligatorio: escritorio falso dibujado por el juego ("EchoOS").
+   - **Antes de usar la transparencia en el juego:** el shader VHS fuerza alfa 1 (trampa nº 16) y la intro todavía pide `FlxG.fullscreen = true` (trampa nº 14).
 2. **Secuencia final** (BACK → FINAL SEQUENCE): crasheo 1 real y controlado, menú roto, crasheo 2 falso, cutscene, bloque 2.
 3. **Canciones dentro del mod**: crear `songs/<cancion>/` con la estructura del motor (ver `03_RECETAS.md`).
 
@@ -55,6 +53,7 @@ Entre los dos bloques de Kiyu van los crasheos y una cutscene (ver
 - Existe un worktree viejo de un agente en `.claude/worktrees/` (ya sin registrar en git; su rama local es `worktree-agent-a148a96f1853ae6ce`). No lo borres sin preguntar. Los worktrees nuevos van en `FNF_Echoes-worktrees/` (ver `GIT_WORKFLOW.md` §12).
 - `mods/autoload.txt` y `mods/readme.txt` **no están versionados** (los ignora `mods/*` en `.gitignore`), aunque `AGENTS.md` §3 dibuja `autoload.txt` dentro del repo. Un clon o worktree nuevo no lo trae y el motor no cargaría el mod. Falta decidir si se versiona (`!mods/autoload.txt`) o se documenta como paso manual.
 - `PROJECT_STRUCTURE.md` (regla 6) dice que se enlaza `mods/fnf-echoes/`, pero el enlace real del `.app` apunta a toda la carpeta `mods/`.
+- **El commit del submódulo `engine/` no está en ningún remoto** (`74c80698` y `3c36a57d`, rama local `echoes/patches`): `.gitmodules` apunta a `CodenameCrew/CodenameEngine`, que no los tiene, así que un clon nuevo no puede bajar `engine/`. Decisión de Zyra: fork propio del motor (pendiente de crear y de apuntar `.gitmodules`).
 
 ## 6. Preguntas abiertas para Zyra
 
@@ -64,8 +63,10 @@ Entre los dos bloques de Kiyu van los crasheos y una cutscene (ver
 ## 7. Última sesión (sobrescribe esta sección al terminar)
 
 - **Fecha:** 2026-10-03
-- **Rama / issue:** `docs/BE-6-git-done-y-worktrees` / BE-6
-- **Qué se hizo:** se documentó el alias local `git done` (limpieza tras el merge) y el flujo con worktrees en `docs/GIT_WORKFLOW.md` §8 y §12. Antes ya se había aplicado la configuración de Linear (estado *In Review*, etiquetas `needs-zyra`/`blocked`/`engine`/`windows`) y la protección de `main` en GitHub.
-- **Probado:** `git done` en el checkout principal, dentro de un worktree (se niega), con un worktree de rama mergeada simulada (lo quita y borra la rama) y con cambios sin commitear (lo conserva). **NO PROBADO:** ejecutar el juego desde un worktree (reapuntar el enlace de `mods`).
-- **Qué quedó a medias:** nada de código. Pendiente comprobar que la integración GitHub ↔ Linear mueve BE-6 sola (In Progress → In Review → Done).
-- **Siguiente paso recomendado:** prueba aislada de transparencia en Windows con color clave, documentada antes en una revisión del ADR-0003.
+- **Rama / issue:** `feature/BE-7-transparencia-macos` / BE-7
+- **Qué se hizo:** transparencia real de ventana en macOS y pantalla completa sin Space. Parche en el submódulo (`engine/source/external/**`, `NativeAPI.hx`, `NativeWindow.hx`, `NativeApplication.hx`), estado de prueba `TransparencyTestState.hx` (sin atajo; se quitó la tecla T de la intro) y documentación (ADR-0003 con la causa real, trampas nº 10, 14, 15 y 16, `AGENTS.md` §0.11).
+- **Probado:** a ojo por Zyra en macOS 27.2 (Apple Silicon) con Stage Manager: transparencia ON/OFF y pantalla completa ON/OFF repetidas veces, sin parpadeo y con el indicador de `FlxG.fullscreen` correcto. Medido con sonda de píxeles y con un programa de referencia (ADR-0003). **NO PROBADO:** Windows; con el shader VHS activo; juego distribuido (no `cne test`).
+- **Qué quedó a medias:** crear el fork del motor y apuntar `.gitmodules` (sin eso la PR de BE-7 no se puede mergear sin romper clones).
+- **Decisiones tomadas:** detrás del juego debe verse el escritorio real (no un Space nuevo ni un escritorio falso); pantalla completa = ventana sin bordes del tamaño del escritorio; fork propio del motor para versionar los parches.
+- **Preguntas para Zyra:** ¿la intro arranca en ventana o en pantalla completa sin Space? ¿Ocultar Dock y barra de menús en pantalla completa?
+- **Siguiente paso:** crear el fork `Salchorixo/CodenameEngine`, subir `echoes/patches`, apuntar `.gitmodules` y abrir la PR de BE-7.
