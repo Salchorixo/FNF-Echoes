@@ -10,6 +10,9 @@ import funkin.backend.utils.NativeAPI;
 //
 // Keys:  T = transparency   F = fullscreen on/off   ESC = back
 //
+// Works on macOS (BE-7) and Windows (BE-10, tested in a VM): NativeAPI.setWindowTransparent does the
+// OS-window half (see docs/adr/0003-transparencia-de-ventana.md); this state does the drawing half.
+//
 // Not reachable from the UI: the temporary T shortcut on the title screen was removed so a
 // player can never open a debug screen. To use it, add
 //   FlxG.switchState(new ModState("TransparencyTestState"));
