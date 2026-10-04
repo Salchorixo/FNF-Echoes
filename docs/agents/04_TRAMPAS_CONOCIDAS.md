@@ -46,7 +46,7 @@ mismo formato: síntoma → causa → qué hacer.
 
 ### 10. `transparent="true"` en `project.xml` no hace la ventana transparente
 - **Causa:** por sí solo no basta. En macOS hacen falta cuatro cosas a la vez (limpiar OpenFL a alfa 0 con `FlxG.stage.color = null`, `camera.bgColor` alfa 0, ventana y superficie GL no opacas y capas de AppKit sin fondo opaco). La explicación antigua del ADR-0003 (el C++ de lime) era incorrecta.
-- **Qué hacer:** usa el patrón de `mods/fnf-echoes/data/states/TransparencyTestState.hx`: `FlxG.stage.color = null`, `FlxG.camera.bgColor = 0x00000000` y `NativeAPI.setWindowTransparent(true)`. Detalles y por qué en el ADR-0003, "Actualización 2026-10-03". Windows: sin hacer. Cuidado con el shader VHS (nº 16).
+- **Qué hacer:** usa el patrón de `mods/fnf-echoes/data/states/TransparencyTestState.hx`: `FlxG.stage.color = null`, `FlxG.camera.bgColor = 0x00000000` y `NativeAPI.setWindowTransparent(true)`. Detalles y por qué en el ADR-0003, "Actualización 2026-10-03". Windows: ver nº 17. Cuidado con el shader VHS (nº 16).
 
 ### 11. Traducir "ECHOES"
 - **Regla fija:** "ECHOES" y "ECHO" no pasan nunca por `translate.hx`. Se quedan en inglés.
@@ -73,3 +73,15 @@ mismo formato: síntoma → causa → qué hacer.
 ### 16. El shader VHS anula la transparencia
 - **Causa:** `VHSShader.frag` termina en `gl_FragColor = vec4(col, 1.0)`: fuerza alfa 1 en toda la pantalla.
 - **Qué hacer:** antes de usar transparencia en un estado con VHS, que el shader conserve el alfa de origen. Está pendiente como issue aparte.
+
+### 17. En Windows, DWM por sí solo no hace la ventana transparente
+- **Síntoma:** `DwmEnableBlurBehindWindow` devuelve `S_OK` (HRESULT 0) pero el fondo sigue negro.
+- **Causa:** falta marcar la ventana como *layered*: `WS_EX_LAYERED` y `SetLayeredWindowAttributes(hwnd, 0, 255, LWA_ALPHA)`, después del paso de DWM. Es la secuencia de GLFW y la implementa `Windows.setWindowTransparent`.
+- **Qué hacer:** usa `NativeAPI.setWindowTransparent(true)` (la misma llamada que en macOS); no reinventes la secuencia. Probado solo en VM, no en hardware real (ADR-0003, BE-10).
+
+### 18. Probar en Windows desde un Mac
+- **UTM no sirve para esto:** no acelera gráficos 3D en invitados Windows y el motor usa OpenGL.
+- **Qué hacer:** VMware Fusion Pro (gratis para uso personal, cuenta de Broadcom) con Windows 11 ARM64, "Accelerate 3D Graphics" activado e instaladas las VMware Tools (sin ellas la pantalla sale en 4:3 y sin aceleración). Guarda la VM en un disco con espacio (ocupa 30-60 GB) y haz un snapshot del estado limpio.
+- **Compilar sin Windows:** `Salchorixo/CodenameEngine` → Actions → *Windows Builds* (se dispara con cada `push`; cancela los de Linux y macOS). Descarga el artefacto `Codename Engine` y úsalo en la VM.
+- **Pasar archivos al invitado:** arrastrar un único `.zip` a la ventana de la VM funciona; arrastrar carpetas con enlaces simbólicos falla ("Cannot create symlink").
+- **Limitación:** la VM es ARM64 con GPU emulada. No sirve para medir rendimiento ni para dar por válido algo en hardware real.

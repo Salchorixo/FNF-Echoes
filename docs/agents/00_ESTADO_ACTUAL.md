@@ -5,7 +5,7 @@
 > Si algo de aquí no coincide con el repo, **manda el repo**: corrige este
 > archivo y dilo en el relevo.
 
-**Última actualización:** 2026-10-03 (transparencia real en macOS conseguida, BE-7).
+**Última actualización:** 2026-10-03 (transparencia real en Windows conseguida en VM, BE-10).
 
 ---
 
@@ -20,12 +20,12 @@ producción: arte, animaciones, charts, mecánicas y la secuencia final.
 | Área | Estado | Dónde |
 |---|---|---|
 | Motor en macOS arm64 | Compila y corre con 3 parches a `lime` 8.2.0 | ADR-0001, "Receta completa" |
-| Motor en Windows | **Nunca probado** | ADR-0001, action item 1 |
+| Motor en Windows | Arranca y corre el mod en una VM Windows 11 ARM64 (motor oficial v1.0.1 y el compilado del fork); **sin probar en hardware real** | ADR-0001 action item 1; ADR-0003 (BE-10) |
 | Menús del mod | Existen: Title, MainMenu, EchoSelect, StoryMap, Options, Loading | `mods/fnf-echoes/data/states/` |
 | Scripts compartidos | `cardMenu`, `nodeArtPanel`, `translate`, `vhsShader` | `mods/fnf-echoes/scripts/` |
 | Shader VHS | Existe, se adjunta por estado | `shaders/VHSShader.frag` + `scripts/effects/vhsShader.hx` |
 | Transparencia de ventana en macOS | **Funciona** (probada a ojo, 2026-10-03): escritorio real visible a través del juego, en ventana y en pantalla completa sin Space | ADR-0003 "Actualización 2026-10-03"; ejemplo en `TransparencyTestState.hx` |
-| Transparencia de ventana en Windows | **Sin hacer** | ADR-0003, action item 5 |
+| Transparencia de ventana en Windows | **Funciona en VM** (2026-10-03), en ventana y en pantalla completa; **sin probar en hardware real** | ADR-0003 "Actualización 2026-10-03 (BE-10)"; `NativeAPI.setWindowTransparent` |
 | Audio de las 3 canciones | Generado en Suno (fuera del repo) | Notion → Canciones |
 
 ## 3. Datos de las canciones (para charts y código)
@@ -41,7 +41,7 @@ Entre los dos bloques de Kiyu van los crasheos y una cutscene (ver
 
 ## 4. En curso / siguiente paso
 
-1. **Transparencia real de ventana en Windows** (Linear: BE-10, BACK → ENGINE & PLATFORM): ventana *layered* con **color clave** (no necesita alfa en el framebuffer). macOS ya está (BE-7). El motor tiene puentes nativos en `engine/source/funkin/backend/utils/NativeAPI.hx` y `native/Windows.hx`. Plan B obligatorio: escritorio falso dibujado por el juego ("EchoOS").
+1. **Probar la transparencia y la pantalla completa en un PC con Windows real** (BE-10 está hecho y probado en VM). Se necesita un PC prestado: el `.exe` del flujo `windows.yml` del fork + el mod (receta en la trampa nº 18). Plan B si algo falla: color clave (ADR-0003) y, si nada funciona, escritorio falso dibujado por el juego ("EchoOS").
    - **Antes de usar la transparencia en el juego:** el shader VHS fuerza alfa 1 (trampa nº 16, **BE-8**) y la intro todavía pide `FlxG.fullscreen = true` (trampa nº 14, **BE-9**, con decisiones de Zyra pendientes).
 2. **Secuencia final** (BACK → FINAL SEQUENCE): crasheo 1 real y controlado, menú roto, crasheo 2 falso, cutscene, bloque 2.
 3. **Canciones dentro del mod**: crear `songs/<cancion>/` con la estructura del motor (ver `03_RECETAS.md`).
@@ -63,10 +63,10 @@ Entre los dos bloques de Kiyu van los crasheos y una cutscene (ver
 ## 7. Última sesión (sobrescribe esta sección al terminar)
 
 - **Fecha:** 2026-10-03
-- **Rama / issue:** `feature/BE-7-transparencia-macos` / BE-7
-- **Qué se hizo:** transparencia real de ventana en macOS y pantalla completa sin Space. Parche en el submódulo (`engine/source/external/**`, `NativeAPI.hx`, `NativeWindow.hx`, `NativeApplication.hx`), estado de prueba `TransparencyTestState.hx` (sin atajo; se quitó la tecla T de la intro) y documentación (ADR-0003 con la causa real, trampas nº 10, 14, 15 y 16, `AGENTS.md` §0.11).
-- **Probado:** a ojo por Zyra en macOS 27.2 (Apple Silicon) con Stage Manager: transparencia ON/OFF y pantalla completa ON/OFF repetidas veces, sin parpadeo y con el indicador de `FlxG.fullscreen` correcto. Medido con sonda de píxeles y con un programa de referencia (ADR-0003). **NO PROBADO:** Windows; con el shader VHS activo; juego distribuido (no `cne test`).
-- **Qué quedó a medias:** nada de BE-7. El fork `Salchorixo/CodenameEngine` ya existe con la rama `echoes/patches` y `.gitmodules` apunta a él. Seguimiento en BE-8, BE-9 y BE-10.
-- **Decisiones tomadas:** detrás del juego debe verse el escritorio real (no un Space nuevo ni un escritorio falso); pantalla completa = ventana sin bordes del tamaño del escritorio; fork propio del motor para versionar los parches.
-- **Preguntas para Zyra:** ¿la intro arranca en ventana o en pantalla completa sin Space? ¿Ocultar Dock y barra de menús en pantalla completa?
-- **Siguiente paso:** mergear la PR de BE-7 (Rebase and merge) y seguir con BE-8 (VHS conserva el alfa). BE-9 espera tus decisiones; BE-10 (Windows) necesita una máquina Windows.
+- **Rama / issue:** `feature/BE-10-transparencia-windows` / BE-10
+- **Qué se hizo:** transparencia real de ventana en Windows. `Windows.setWindowTransparent` (DWM alfa por píxel + ventana *layered*) y su rama en `NativeAPI.setWindowTransparent`; commit `d315654f` en `echoes/patches` del fork. Se montó una VM de Windows 11 ARM64 en VMware Fusion Pro para probarlo, con el motor compilado en las Actions del fork. Documentado en el ADR-0003, trampas nº 17 y 18 y `01_PROTOCOLO_DE_SESION.md` §4.
+- **Probado:** a ojo por Zyra en la VM: transparencia ON/OFF y pantalla completa ON/OFF en todas las combinaciones, con el `.exe` compilado en CI. **NO PROBADO:** hardware real; con el shader VHS activo; reaplicación automática tras cambios de estilo de ventana.
+- **Qué quedó a medias:** nada de BE-10. Seguimiento: probar en un PC real, BE-8 (VHS conserva el alfa) y BE-9 (arranque de la intro).
+- **Decisiones tomadas:** receta de Windows = DWM con región vacía + ventana *layered* (no el color clave, que queda de plan B); probar en VM con VMware Fusion Pro y no en UTM (sin 3D).
+- **Preguntas para Zyra:** ¿tienes acceso a un PC con Windows real para la prueba final? ¿La intro arranca en ventana o en pantalla completa sin Space (BE-9)?
+- **Siguiente paso:** mergear la PR de BE-10 y seguir con BE-8.

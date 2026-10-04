@@ -53,7 +53,7 @@ Construir el resto de la Fase 1 sin el toggle de transparencia, retomarlo como i
 2. [x] Recompilar el motor y probar en runtime — **transparencia real no funciona aún** (ver "Resultado del intento").
 3. [x] Actualizar el puntero del submódulo en este repo al nuevo commit.
 4. [x] macOS: transparencia real conseguida **sin** parchear el C++ de lime (BE-7, 2026-10-03). Ver "Actualización 2026-10-03".
-5. [ ] Windows: transparencia real con ventana *layered* y color clave (issue aparte).
+5. [x] Windows: transparencia real con DWM (alfa por píxel) + ventana *layered* (BE-10, 2026-10-03). **Probada en VM, sin probar en hardware real.** Ver "Actualización 2026-10-03 (BE-10)".
 6. [ ] Que `VHSShader.frag` conserve el alfa de origen (hoy fuerza `1.0` y anularía la transparencia).
 
 
@@ -80,8 +80,30 @@ Construir el resto de la Fase 1 sin el toggle de transparencia, retomarlo como i
 **Compilar.** `cne build` equivale a `haxelib run lime build macos -DTEST_BUILD` desde `engine/` con `HAXE_STD_PATH=/opt/homebrew/lib/haxe/std`; incremental, ~1 min. El `.app` queda en modo `cne test` (busca los mods en `engine/mods/`, ver `docs/agents/04_TRAMPAS_CONOCIDAS.md` nº 15).
 
 **Límites y pendientes.**
-- Windows: ventana *layered* con color clave (issue aparte).
+- Windows: hecho en BE-10, solo probado en VM (ver la actualización de abajo). Falta probarlo en un PC con Windows real.
 - El shader VHS termina en `gl_FragColor = vec4(col, 1.0)`: fuerza alfa 1 en toda la pantalla y anula la transparencia mientras esté activo.
 - Usa `NSOpenGLContext`, API en desuso desde macOS 10.14 (sigue funcionando en 27.2). Si Apple la retirara, habría que pasar a una capa Metal.
 - Dock y barra de menús siguen visibles en pantalla completa (no se ocultan). Con la transparencia activa se ven por encima del juego.
 - **El commit del submódulo no está en ningún remoto** (ni el `74c80698` anterior): un clon nuevo no puede bajar `engine/`. Se resuelve con un fork propio del motor (decisión de Zyra, 2026-10-03).
+
+
+## Actualización 2026-10-03 (BE-10): la transparencia real también funciona en Windows
+
+**Resultado.** Probada a ojo por Zyra en una máquina virtual: Windows 11 Pro ARM64 (build 26200) en VMware Fusion Pro 26H1 sobre un Mac M4, con aceleración 3D (VMware SVGA 3D 9.17.11.4), ejecutando el motor compilado para x64 (emulado). El escritorio de Windows se ve a través del juego, tanto en ventana como en pantalla completa, alternando ambas varias veces. **No probado en hardware real** (Intel/AMD con una GPU de verdad).
+
+**La receta.** Del lado del juego es igual que en macOS: `FlxG.stage.color = null` y `camera.bgColor` con alfa 0. Del lado de Windows, sobre el HWND de SDL (clase `SDL_app`), **en este orden**:
+1. `DwmEnableBlurBehindWindow` con `DWM_BB_ENABLE | DWM_BB_BLURREGION` y una región **vacía** (`CreateRectRgn(0, 0, -1, -1)`): DWM compone el alfa sin desenfocar nada.
+2. `WS_EX_LAYERED` y `SetLayeredWindowAttributes(hwnd, 0, 255, LWA_ALPHA)`.
+
+Es la misma secuencia que usa GLFW. **Solo el paso 1 no basta**: la ventana seguía opaca. El color clave (`LWA_COLORKEY` con magenta `0xFF00FF`) también funciona como plan B, con halos magenta en los bordes del texto.
+
+**Cómo se averiguó (para no repetirlo).** Antes de escribir C++ se probó desde fuera con un script de PowerShell sobre el juego en marcha, que confirmó que se tocaba la ventana correcta (`SDL_app`) y que el estado cambiaba (`layered=False` antes, `True` después). La primera hipótesis (que la VM traducía OpenGL a Direct3D y por eso las técnicas fallaban) era **errónea**: ese paquete de traducción de Microsoft ni siquiera estaba instalado. Lo que faltaba era el segundo paso.
+
+**Implementación.** `Windows.setWindowTransparent(title, enable)` en `engine/source/funkin/backend/utils/native/Windows.hx`, expuesta por `NativeAPI.setWindowTransparent` con la misma API que en macOS. Commit `d315654f` en la rama `echoes/patches` del fork.
+
+**Compilar y probar sin un Windows físico.** El fork `Salchorixo/CodenameEngine` trae el flujo `windows.yml`, que se dispara con cada `push` (en un fork está desactivado hasta que el dueño acepta el aviso en la web de GitHub). El artefacto `Codename Engine` (240 MB) es la carpeta completa del juego para x64. En el Mac se probó dentro de una VM de VMware Fusion Pro (gratis para uso personal); UTM no sirve porque no acelera 3D en invitados Windows.
+
+**Límites y pendientes.**
+- Hardware real sin probar.
+- En Windows la transparencia **no se reaplica sola** tras cambios de estilo de la ventana (en macOS sí). En las pruebas de la VM la pantalla completa no la rompió, pero habría que repetirlo en un PC real.
+- El shader VHS (BE-8) fuerza alfa 1 y la anularía.

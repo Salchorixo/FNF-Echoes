@@ -63,7 +63,7 @@ Un mal "Siguiente paso": *"Seguir con las opciones."*
 - **Cambios solo en `mods/fnf-echoes/`** (HScript, shaders, datos, imágenes): no hace falta recompilar el motor. Cierra el juego y vuelve a abrir el `.app`/`.exe` ya compilado. El mod se enlaza junto al ejecutable (ver `docs/PROJECT_STRUCTURE.md`, regla 6).
   - Para encontrar el ejecutable compilado: `find engine/export -maxdepth 4 -name "*.app"` (macOS).
 - **Cambios en `engine/`** (solo con ADR): recompilar siguiendo la receta del ADR-0001 (macOS). Ese proceso es largo y delicado; si falla, **no improvises parches**: copia el error literal y para.
-- **Windows** nunca se ha probado. Si tu cambio es específico de una plataforma, dilo en el commit y en el relevo.
+- **Windows** se prueba en una VM de Windows 11 ARM64 (VMware Fusion Pro) con el motor compilado por el flujo `windows.yml` del fork `Salchorixo/CodenameEngine`; **no hay prueba en hardware real**. Ver `docs/agents/04_TRAMPAS_CONOCIDAS.md` nº 18 y el ADR-0003 (BE-10). Si tu cambio es específico de una plataforma, dilo en el commit y en el relevo.
 - Lo visual (shaders, animaciones, sincronía con la música) **solo se valida mirando el juego**. Si no puedes verlo, escribe "NO PROBADO VISUALMENTE".
 
 ## 5. Commits y PR
