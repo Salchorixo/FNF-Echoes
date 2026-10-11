@@ -86,7 +86,7 @@ FNF_Echoes/
         ├── data/config/modpack.ini   ← nombre del mod + [StateRedirects]
         ├── data/states/              ← pantallas (HScript)
         ├── scripts/ui/               ← cardMenu, nodeArtPanel, translate
-        ├── scripts/effects/          ← vhsShader
+        ├── scripts/effects/          ← vhsShader, windowFx
         └── shaders/                  ← VHSShader.frag
 ```
 
