@@ -62,7 +62,7 @@ mismo formato: síntoma → causa → qué hacer.
 - **Síntoma:** al pasar a pantalla completa el escritorio "se va a la derecha" y, aunque la transparencia esté activa, la ventana se ve negra.
 - **Causa:** la pantalla completa nativa de macOS crea un **Space propio**, siempre opaco y sin escritorio detrás.
 - **Qué hace ya el motor (parche de BE-7):** la bloquea en todas las ventanas y fija `SDL_VIDEO_MAC_FULLSCREEN_SPACES=0`, así que `FlxG.fullscreen`, Alt+Enter y Ctrl+Cmd+F dan una ventana sin bordes del tamaño del escritorio, **sin Space**, donde la transparencia funciona. No hace falta código especial en el mod.
-- **Qué NO hacer:** no recoloques la ventana a mano (`window.x/y/width/height`, `borderless`): Stage Manager y AppKit la reubican y queda a medias. No dependas de `window.fullscreen` leído justo después de cambiarlo.
+- **Qué NO hacer:** no recoloques la ventana a mano (`window.x/y/width/height`, `borderless`) como parche para arreglar el fullscreen: Stage Manager y AppKit la reubican y queda a medias. **Excepción deliberada:** la coreografía de ventana (`scripts/effects/windowFx.hx`, Receta I) sí mueve y redimensiona la ventana a propósito, siempre desde modo ventana y terminando en pantalla completa; en macOS 27.2 (Apple Silicon, sin escalado) las posiciones pedidas coincidieron con las que ve el SO, y en Windows (VM, escala 100 %) los 8 choques dieron hueco 0. Stage Manager y escalado 125/150 % en Windows: NO PROBADO. No dependas de `window.fullscreen` leído justo después de cambiarlo.
 - **Regla obligatoria (`AGENTS.md` §0.11):** el juego se abre en ventana. `TitleState.hx` todavía hace `FlxG.fullscreen = true` al crearse (ahora sin Space); decidir si arranca en ventana está pendiente.
 
 ### 15. En modo `cne test` el motor busca los mods en `engine/mods/`, no en el `.app`
@@ -85,3 +85,8 @@ mismo formato: síntoma → causa → qué hacer.
 - **Compilar sin Windows:** `Salchorixo/CodenameEngine` → Actions → *Windows Builds* (se dispara con cada `push`; cancela los de Linux y macOS). Descarga el artefacto `Codename Engine` y úsalo en la VM.
 - **Pasar archivos al invitado:** arrastrar un único `.zip` a la ventana de la VM funciona; arrastrar carpetas con enlaces simbólicos falla ("Cannot create symlink").
 - **Limitación:** la VM es ARM64 con GPU emulada. No sirve para medir rendimiento ni para dar por válido algo en hardware real.
+
+### 19. En Windows, `modpack.ini` puede abrir un estado de prueba al arrancar
+- **Síntoma:** al abrir el juego aparece un estado de prueba (p. ej. `TransparencyTestState`) en vez de la intro, aunque `TitleState.hx` sea correcto. En el log no hay errores: la primera línea de tu estado nunca sale.
+- **Causa:** `[StateRedirects]` de `mods/fnf-echoes/data/config/modpack.ini` tenía `TitleState="TransparencyTestState"` (atajo de una prueba anterior), que gana sobre `TitleState.hx`.
+- **Qué hacer:** `Get-Content mods\fnf-echoes\data\config\modpack.ini`. Para probar un estado, ponerlo ahí (`TitleState="MiEstadoDePrueba"`) y **devolver `TitleState="TitleState"` al terminar**. No lo versiones con el atajo puesto. Si hay varias copias del juego (p. ej. en Descargas y en el Escritorio), comprueba cuál abres.

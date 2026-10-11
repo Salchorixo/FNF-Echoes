@@ -86,3 +86,27 @@ mods/fnf-echoes/songs/<nombre-cancion>/
 2. Nombre: `NNNN-titulo-en-kebab-case.md`, en español.
 3. Secciones: Estado · Fecha · Contexto · Decisión · Opciones consideradas · Consecuencias · Action Items (copia el formato de un ADR existente).
 4. Estado inicial: **Proposed**. Solo Zyra lo pasa a **Accepted**.
+
+## Receta I — Que el juego mueva su propia ventana (Zyra la lanza desde dentro)
+
+Historia: Zyra está dentro de la ventana como en una celda; al golpear la pared interior izquierda, la ventana sale lanzada a la izquierda, se estrella contra el borde de la pantalla y vuelve al centro; luego el golpe del otro lado (y al revés con la derecha). Ejemplo vivo: `mods/fnf-echoes/data/states/WindowChoreographyTestState.hx` (Zyra es un cuadrado de relleno hasta que haya arte) + `scripts/effects/windowFx.hx`. Solo HScript, no toca `engine/`.
+
+División de trabajo: **el estado decide cuándo golpea Zyra** (su animación, dentro del juego); `windowFx` hace lo que la ventana hace con ese golpe.
+
+1. En tu estado: `fx = Script.create(Paths.script('scripts/effects/windowFx')); fx.load();`.
+2. **Llama `fx.call("update", [elapsed])` en cada `update()`** (los scripts compartidos no se actualizan solos) y `fx.call("restore")` en `destroy()` y al salir con ESC.
+3. Con transparencia: `fx.call("setTransparent", [true])` (la reaplica tras cada cambio de modo; en Windows no se reaplica sola).
+4. `fx.call("begin")`: sale de pantalla completa, dimensiona y centra → fase `ready`.
+5. En el fotograma del golpe de Zyra: `fx.call("launch", [lado, segundos, ease, overshoot, hitstop])` (`lado` = `"left"`/`"right"`). Fases: `hitstop` (un instante congelado con un temblor mínimo) → `flying` (explosivo) → `impact` (temblor hacia dentro, decae) → `settling` → `recentering` (la ventana vuelve al centro de la pantalla) → `ready`. Vuelve a lanzar cuando la fase sea `ready` otra vez.
+6. `fx.call("finish")`: vuelve a pantalla completa → fase `done`.
+7. `popHits()` entrega un registro por choque: `[lado, hueco, número, velocidadDeImpacto]`.
+
+**Curva y fuerza.**
+- `ease`: `expoOut`, `quintOut`, `quartOut`, `cubeOut`, `quadOut`, `sineOut`, `circOut`, `linear`, `quadIn`, `cubeIn`, `expoIn`, `sineInOut`, `quadInOut` (lista en `easeFn()` de `windowFx.hx`). Las `...Out` salen a toda velocidad = explosivo.
+- `overshoot` (p. ej. 0.4): un ease `...Out` acaba a velocidad 0, pero un golpe debe chocar **rápido**. La curva apunta a un destino virtual pasado el borde (`distancia × (1 + overshoot)`) y el borde de la pantalla la corta aún en movimiento. `0` = llega despacio.
+- `fx.call("setRecenter", [segundos, ease])` cambia el regreso al centro (por defecto 0,8 s y `cubeInOut`). Todos los golpes salen del centro, así que recorren la misma distancia.
+- El temblor del impacto y del hitstop escalan con el ancho de la pantalla y con la velocidad de impacto.
+
+**Resolución.** No hay nada fijo: lee `window.display.bounds`, da a la ventana la proporción del juego (≤50 % del ancho y ≤70 % del alto del monitor) y la velocidad sale de la curva sobre la distancia real. `setVirtualScreen(w, h)` simula otra pantalla (solo prueba la matemática; no el SO).
+
+**Trampas.** Cada cambio de modo es asíncrono: el script espera (0,9 s al salir, 0,5 s tras redimensionar, 1,0 s al entrar) en vez de leer `window.*` enseguida. La ventana nunca sale de la pantalla (el temblor está recortado a los bordes). Para no fiarse solo de `window.x`, mide desde fuera: en macOS, `CGWindowListCopyWindowInfo` por PID da la posición real.
