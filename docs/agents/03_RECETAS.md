@@ -82,7 +82,7 @@ mods/fnf-echoes/songs/<nombre-cancion>/
 
 ## Receta H — ADR nuevo
 
-1. Número siguiente al último en `docs/adr/` (hoy el último es 0004).
+1. Número siguiente al último en `docs/adr/` (hoy el último es 0003).
 2. Nombre: `NNNN-titulo-en-kebab-case.md`, en español.
 3. Secciones: Estado · Fecha · Contexto · Decisión · Opciones consideradas · Consecuencias · Action Items (copia el formato de un ADR existente).
 4. Estado inicial: **Proposed**. Solo Zyra lo pasa a **Accepted**.
