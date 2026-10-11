@@ -56,7 +56,7 @@ mismo formato: síntoma → causa → qué hacer.
 - **Zyra / Salchorizo (autor):** la persona que hace el mod.
 
 ### 13. Documentos viejos sobre voces
-- `docs/adr/0004-...` y `docs/AI_VOICE_CHROMATIC_PIPELINE.md` describen un pipeline que ya **no se usa** (ahora es Suno). No los sigas como instrucciones. Ver `00_ESTADO_ACTUAL.md` §5.
+- Los documentos del antiguo pipeline de voces ya no existen (se eliminaron el 2026-10-09; ahora las voces son de Suno). Si encuentras una referencia a ellos, ignórala.
 
 ### 14. La pantalla completa nativa en macOS impide la transparencia
 - **Síntoma:** al pasar a pantalla completa el escritorio "se va a la derecha" y, aunque la transparencia esté activa, la ventana se ve negra.

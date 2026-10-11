@@ -54,6 +54,7 @@ escritorio). Resumen en `docs/agents/05_GLOSARIO_Y_LORE.md`.
 | Una tarea con receta (pantalla nueva, script compartido, canción, shader) | `docs/agents/03_RECETAS.md` |
 | Algo "raro" que no funciona | `docs/agents/04_TRAMPAS_CONOCIDAS.md` |
 | Entender personajes, lore o vocabulario | `docs/agents/05_GLOSARIO_Y_LORE.md` |
+| Arte, Blender, animaciones o efectos visuales | Esa documentación es **privada** y no está en este repo: pregúntale a Zyra. No crees documentos de arte ni de Blender aquí. |
 | Compilar el motor o tocar código nativo | `docs/adr/0001-motor-y-stack-tecnologico.md` (receta macOS) y `docs/adr/0003-transparencia-de-ventana.md` |
 | Proponer un cambio de arquitectura | `docs/adr/` + `docs/CODING_STANDARDS.md` |
 | Crear una carpeta o mover archivos | `docs/PROJECT_STRUCTURE.md` |
@@ -73,7 +74,7 @@ FNF_Echoes/
 ├── context.md                ← explica la documentación (para evaluadores)
 ├── docs/
 │   ├── agents/               ← manual operativo para agentes (empieza aquí)
-│   ├── adr/                  ← decisiones técnicas (0001 a 0004)
+│   ├── adr/                  ← decisiones técnicas (0001 a 0003)
 │   ├── CODING_STANDARDS.md
 │   ├── PROJECT_STRUCTURE.md
 │   ├── GIT_WORKFLOW.md
@@ -85,7 +86,7 @@ FNF_Echoes/
         ├── data/config/modpack.ini   ← nombre del mod + [StateRedirects]
         ├── data/states/              ← pantallas (HScript)
         ├── scripts/ui/               ← cardMenu, nodeArtPanel, translate
-        ├── scripts/effects/          ← vhsShader
+        ├── scripts/effects/          ← vhsShader, windowFx
         └── shaders/                  ← VHSShader.frag
 ```
 
