@@ -64,8 +64,11 @@ FNF_Echoes/
         │   │                        # "ECHOES"/"ECHO" nunca pasan por acá (regla fija:
         │   │                        # esos nombres quedan en inglés siempre)
         │   ├── effects/
-        │   │   └── vhsShader.hx     # Adjunta VHSShader.frag a la cámara — cada estado lo
+        │   │   ├── vhsShader.hx     # Adjunta VHSShader.frag a la cámara — cada estado lo
         │   │                        # llama en su propio create() (ver regla 7)
+        │   │   └── windowFx.hx      # Zyra golpea la pared interior y la ventana sale lanzada contra el
+        │   │                        # borde de la pantalla; el estado lo conduce con update(elapsed)
+        │   │                        # (Receta I)
         │   └── gameplay/           # Scripts de gameplay (eventos, notetypes propios)
         │
         ├── shaders/               # Shaders GLSL propios

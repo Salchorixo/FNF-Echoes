@@ -80,6 +80,7 @@ Scripts compartidos que existen hoy:
 | `scripts/ui/translate.hx` | `get(key)` | Textos EN/ES de la UI |
 | `scripts/ui/nodeArtPanel.hx` | (ábrelo y revisa) | Panel de arte del tablero-mapa |
 | `scripts/effects/vhsShader.hx` | `attach()` | Pone el shader VHS en la cámara |
+| `scripts/effects/windowFx.hx` | `begin()`, `launch(lado, seg, ease, overshoot, hitstop)`, `finish()`, `setRecenter(seg, ease)`, `update(elapsed)`, `getPhase()`, `popHits()`, `setTransparent(on)`, `setVirtualScreen(w, h)`, `restore()` | Zyra lanza la ventana desde dentro (Receta I) |
 
 Si esta tabla no coincide con los archivos, **mandan los archivos**: corrige la tabla.
 
