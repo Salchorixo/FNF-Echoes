@@ -1,10 +1,12 @@
 {
-	"name": "soul",
-	"displayName": "Soul",
+	"name": "limbo",
+	"displayName": "Limbo",
 	"bpm": 150.0,
 	"beatsPerMeasure": 4,
 	"stepsPerBeat": 4,
-	"difficulties": ["hard"],
+	"difficulties": [
+		"hard"
+	],
 	"icon": "dad",
 	"color": "#6C5CE7",
 	"coopAllowed": false,
