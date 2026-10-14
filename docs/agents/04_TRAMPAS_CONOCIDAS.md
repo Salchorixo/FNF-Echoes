@@ -95,3 +95,11 @@ mismo formato: síntoma → causa → qué hacer.
 - **Síntoma:** al mandar teclas con `osascript -e 'tell application "System Events" to key code 126'` el juego las procesa a veces sí y a veces no, o con un fotograma de retraso; la selección parece "no hacer caso".
 - **Causa:** (1) `key code` pulsa y suelta en el mismo instante y el juego pierde la pulsación si cae entre dos fotogramas; (2) si la ventana del agente recupera el foco entre comandos, la tecla va a otra app.
 - **Qué hacer:** poner el juego en primer plano justo antes (`set frontmost of first process whose name is "CodenameEngine" to true`) y mandar la tecla con una pulsación **sostenida** (~0,12 s) con CoreGraphics desde Python (`ctypes` + `CGEventCreateKeyboardEvent` / `CGEventPost`), esperando ~1 s entre teclas. Con el Mac bloqueado las capturas salen negras: no lo desbloquees.
+
+### 21. Un shader de cámara afecta a todo lo que dibuja esa cámara
+- **Síntoma:** al poner un shader (glitch, VHS...) con `FlxG.camera.addShader(...)`, Zyra, el lápiz y todo lo demás sale deformado, aunque solo se quisiera afectar al fondo y a los botones.
+- **Causa:** un shader de cámara procesa la imagen final de esa cámara entera.
+- **Qué hacer:** separar en dos cámaras. Lo que debe quedar intacto va en una cámara propia, transparente y por encima (`new FlxCamera()`, `bgColor = 0x00000000`, `FlxG.cameras.add(cam, false)`; cada sprite con `sprite.cameras = [cam]`). Y el shader solo se añade mientras dura el efecto y se quita con `removeShader` al terminar.
+
+### 22. Probar un juego que Zyra también puede estar usando
+- Al abrir el juego desde la terminal aparece en la pantalla de Zyra y puede estar tocándolo a la vez: el estado cambia solo (se abre Ajustes, se mueve un deslizador). **Una prueba con teclas puede cambiar sus ajustes guardados** (idioma, calidad, volumen...). Antes de pulsar teclas en pantallas de Ajustes, apunta los valores de partida y devuélvelos; mejor probar esas pantallas con capturas y lo mínimo de teclas.
