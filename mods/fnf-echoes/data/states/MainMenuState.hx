@@ -6,6 +6,8 @@ import flixel.tweens.FlxTween;
 import flixel.util.FlxColor;
 import flixel.util.FlxTimer;
 import funkin.backend.MusicBeatTransition;
+import funkin.backend.system.Flags;
+import funkin.editors.EditorPicker;
 import funkin.backend.scripting.ModState;
 import funkin.backend.scripting.ModSubState;
 import funkin.backend.shaders.CustomShader;
@@ -711,6 +713,7 @@ function update(elapsed) {
 	updateShader(elapsed);
 
 	if (FlxG.keys.justPressed.F4) requestTheme(themer.call("next", [theme])); // test shortcut
+	if (introDone && !themeBusy && controls.DEV_ACCESS && !Flags.DISABLE_EDITORS) openEditors(); // the 7 key (BE-40)
 
 	if (controls.UP_P) moveSelection(-1);
 	else if (controls.DOWN_P) {
@@ -743,6 +746,21 @@ function destroy() {
 }
 
 // ---------------------------------------------------------------- themes (BE-16)
+
+// The engine's editor picker (chart editor...) on the 7 key, as in the engine's own main menu, which this menu replaces (BE-40).
+// The editors use the system pointer, so the themed one is put away while the picker is open.
+function openEditors() {
+	persistentUpdate = false;
+	persistentDraw = true;
+	markReturn(); // the editors leave through this screen: coming back skips the intro
+	themer.call("restoreCursor");
+	var sub = new EditorPicker();
+	sub.closeCallback = () -> {
+		persistentUpdate = true;
+		applyCursor();
+	};
+	openSubState(sub);
+}
 
 // Settings is not a screen: it is a window laid over this menu (BE-20), opened as a sub-state, so there is no
 // transition. The menu keeps moving behind it (persistentUpdate) but ignores the keyboard and the mouse
