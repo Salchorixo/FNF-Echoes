@@ -44,6 +44,7 @@ Entre los dos bloques de Kiyu van los crasheos y una cutscene (ver
 
 ## 4. En curso / siguiente paso
 
+0. **Nombres (decisión de Zyra, 2026-10-14):** las canciones se llaman **Limbo** (1, personaje Soul), **Dopamine** (2, Taro) y **Placebo** (3, Kiyu); el selector muestra los de las canciones (BE-41).
 0. **Charteo (2026-10-14):** empieza con **Soul** (issue DS-1). BE-40 añade el atajo **7** del menú principal para abrir los editores del motor. Datos de Soul medidos del audio: 150 BPM (±1), primer pulso hacia 0,14 s, 129,93 s de duración; el audio de partida está en la carpeta de producción (`MUSIC OST - INST/inst 1st song.wav`).
 0. **Ahora (2026-10-14):** los menús están integrados en `main` y el repo está limpio (solo `main`, sin worktrees). Zyra empieza el **charteo de las notas de la música** (antes de las animaciones): se crea su issue en DESIGN → CHARTS y **entonces** su worktree desde `main` (ver `GIT_WORKFLOW.md` §12). Pendiente en paralelo: **probar los menús en Windows** (BE-39, VM) y las decisiones de Zyra listadas en el relevo de §7 (espera de ~13 s de pantalla negra al abrir, calidad de pantalla, widgets de Ajustes por tema, sonidos de la transición, `themeBySong`).
 1. **Antes de usar la transparencia con arte y canciones (bloquean, en este orden):**
