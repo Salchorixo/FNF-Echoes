@@ -5,6 +5,7 @@ import flixel.tweens.FlxEase;
 import flixel.tweens.FlxTween;
 import flixel.util.FlxColor;
 import flixel.util.FlxTimer;
+import funkin.backend.MusicBeatTransition;
 import funkin.backend.scripting.ModState;
 import funkin.backend.scripting.ModSubState;
 import funkin.backend.shaders.CustomShader;
@@ -81,15 +82,19 @@ var sketchFps:Float = 60;
 // Intro frame where Zyra hits the sofa (the sketch's own impact); the music starts there.
 var sketchLandFrame:Int = 42;
 
-// Menu music (Soul, 150 BPM): ONLY the instrumental (menuInst.ogg, BE-19). It starts as soon as the menu opens,
-// landDelay seconds before its drop (instStartSeconds into the track) so that the drop falls exactly on the frame
-// where Zyra lands. Coming back from another screen the music keeps playing; if it is not playing it restarts at the
-// drop. instMusicId tags the sound object: the engine reuses one sound object for every track, so the tag must
-// be set every time the music is started here.
-var songBpm:Float = 150;
-var instStartSeconds:Float = 26;
+// Menu music (BE-26): Zyra's own track, music/menuLoop.ogg (~122 BPM, 74.8 s, it loops whole: its tail fades out and the
+// quiet intro comes back). Zyra lands and the whole menu appears at second 14 of the track (dropSeconds). When the game
+// opens, the music starts at 0 and the screen is BLACK (waitCover; Zyra will put things there); the intro (the drawn sketch, buttons, folder, vinyl) starts
+// sketchLandFrame frames BEFORE the drop, counted on the music's own clock, so Zyra hits the sofa exactly on the drop.
+// ENTER or a click during the wait jumps to that moment. Coming back from another screen the music keeps playing; if it
+// is not playing it restarts at the drop. instMusicId tags the sound object: the engine reuses one sound object for
+// every track, so the tag must be set every time the music is started here.
+var songBpm:Float = 122;
+var dropSeconds:Float = 14;
 var instMusicId:Int = 1;
 var comingBack:Bool = false;
+var waitingIntro:Bool = false;
+var waitCover:FlxSprite; // black screen over everything while the music's intro plays (Zyra will put things there)
 
 // Where the headphones sit in the final pose, in screen pixels (1280x720): the notes come out of
 // the two cups. Move these if the animation changes.
@@ -121,11 +126,15 @@ var buttonPencils:Array<FlxSprite> = [];
 var folderPencil:FlxSprite;
 var themeShader:CustomShader;
 var themeBusy:Bool = false;
+// Spontaneous changes (BE-28): while the menu is ready the desktop changes by itself every autoChangeMin..Max seconds.
+var autoChangeIn:Float = 0;
+var autoChangeMin:Float = 18;
+var autoChangeMax:Float = 40;
 var themeTimers:Array<FlxTimer> = [];
 var shaderTime:Float = 0;
 var lastHighlight:Int = -1;
 // The uniforms of ChannelShader.frag; tweened while a change lasts and copied to the shader every frame.
-var themeParams:Dynamic = {tear: 0.0, rgb: 0.0, snow: 0.0, roll: 0.0, scan: 0.0, whiteMix: 0.0, flash: 0.0, reveal: 1.0, revealMode: 4.0};
+var themeParams:Dynamic = {tear: 0.0, rgb: 0.0, snow: 0.0, roll: 0.0, scan: 0.0, whiteMix: 0.0, flash: 0.0, reveal: 1.0, revealMode: 4.0, pulse: 0};
 var folder:FlxSprite;
 var folderRestY:Float = 0;
 
@@ -164,6 +173,9 @@ var lastMouseY:Float = -1;
 function create() {
 	FlxG.camera.scroll.set(0, 0); // every screen resets its own camera
 	bgColor = FlxColor.WHITE;
+	// The Diffusion transition (BE-24) is the engine's transition script for every menu change from here on. The engine
+	// resets it when the mod loads, so a state of the mod has to set it; the main menu is the first one every run reaches.
+	MusicBeatTransition.script = 'scripts/effects/diffusionTransition';
 
 	i18n = Script.create(Paths.script('scripts/ui/translate'));
 	i18n.load();
@@ -178,7 +190,7 @@ function create() {
 
 	comingBack = isReturning();
 	if (FlxG.sound.music == null || !FlxG.sound.music.playing || FlxG.sound.music.ID != instMusicId)
-		startMenuMusic(comingBack ? instStartSeconds : instStartSeconds - sketchLandFrame / sketchFps);
+		startMenuMusic(comingBack ? dropSeconds : 0);
 
 	buildWall();
 	buildButtons();
@@ -194,7 +206,17 @@ function create() {
 	if (comingBack)
 		skipIntro();
 	else
-		playIntro();
+		beginIntro();
+}
+
+// A black screen over the whole menu (on the top camera) for the seconds before the intro starts.
+function buildWaitCover() {
+	waitCover = new FlxSprite();
+	waitCover.makeGraphic(1, 1, FlxColor.BLACK);
+	waitCover.setGraphicSize(FlxG.width, FlxG.height);
+	waitCover.updateHitbox();
+	waitCover.cameras = [topCam];
+	add(waitCover);
 }
 
 // The intro is only for opening the game. When this screen sends you to another one it leaves a mark
@@ -205,10 +227,10 @@ function sessionStart():Float {
 }
 
 function startMenuMusic(fromSeconds:Float) {
-	CoolUtil.playMusic(Paths.music('menuInst'), true, 1, true, songBpm);
+	CoolUtil.playMusic(Paths.music('menuLoop'), true, 1, true, songBpm);
 	FlxG.sound.music.ID = instMusicId;
 	FlxG.sound.music.time = fromSeconds * 1000;
-	trace('[MainMenu] music: menuInst from ' + fromSeconds + ' s');
+	trace('[MainMenu] music: menuLoop from ' + fromSeconds + ' s');
 }
 
 function markReturn() {
@@ -395,6 +417,35 @@ function buildParticles() {
 function later(seconds:Float, callback) {
 	var timer = new FlxTimer().start(seconds, callback);
 	introTimers.push(timer);
+}
+
+// The second of the track at which the intro has to start so that Zyra lands on the drop.
+function introAt():Float {
+	return dropSeconds - sketchLandFrame / sketchFps;
+}
+
+// Opening the game: if the music is still before that moment, show only the desktop and wait for it (updateIntroWait()).
+function beginIntro() {
+	var music = FlxG.sound.music;
+	if (music != null && music.playing && music.time / 1000 < introAt() - 0.05) {
+		waitingIntro = true;
+		sketch.visible = false;
+		buildWaitCover();
+	} else {
+		playIntro();
+	}
+}
+
+// The wait is counted on the music's clock, so the landing and the drop cannot drift apart.
+function updateIntroWait() {
+	if (!waitingIntro) return;
+	var music = FlxG.sound.music;
+	if (music == null || !music.playing || music.time / 1000 >= introAt()) {
+		waitingIntro = false;
+		sketch.visible = true;
+		FlxTween.tween(waitCover, {alpha: 0}, 0.2, {onComplete: (_) -> waitCover.visible = false});
+		playIntro();
+	}
 }
 
 function playIntro() {
@@ -639,6 +690,9 @@ function updateMouse() {
 }
 
 function update(elapsed) {
+	updateIntroWait();
+	updateAutoChange(elapsed);
+
 	// While the Settings window is open the menu keeps moving but does not react to the keyboard or the mouse.
 	if (subState != null) {
 		updateParticles(elapsed);
@@ -668,7 +722,10 @@ function update(elapsed) {
 
 	updateMouse();
 
-	if (controls.ACCEPT) {
+	if (waitingIntro) {
+		// ENTER or a click while the desktop waits for the drop: jump to the moment the intro starts
+		if (controls.ACCEPT || FlxG.mouse.justPressed) FlxG.sound.music.time = introAt() * 1000;
+	} else if (controls.ACCEPT) {
 		if (introDone) confirmSelection();
 		else skipIntro();
 	}
@@ -736,8 +793,41 @@ function updateShader(elapsed:Float) {
 		themeShader.hset(name, Reflect.field(themeParams, name));
 }
 
+// The desktop changes on its own now and then, also while the Settings window is open. It waits while the intro plays and
+// while a screen transition covers the menu.
+function updateAutoChange(elapsed:Float) {
+	if (!introDone || themeBusy || waitingIntro)
+		return;
+	if (subState != null && Type.getClassName(Type.getClass(subState)) == "funkin.backend.MusicBeatTransition")
+		return;
+	if (autoChangeIn <= 0) {
+		autoChangeIn = FlxG.random.float(autoChangeMin, autoChangeMax);
+		return;
+	}
+	autoChangeIn -= elapsed;
+	if (autoChangeIn <= 0) {
+		trace('[MainMenu] spontaneous theme change from ' + theme + (subState != null ? ' (Settings open)' : ''));
+		requestTheme(themer.call("randomOther", [theme]));
+	}
+}
+
+// What the Settings window reads (BE-28) to suffer the same channel change as the wallpaper: the live values while a change
+// lasts, null otherwise; and the shader's clock.
+function channelParams():Dynamic {
+	return themeBusy ? themeParams : null;
+}
+
+function channelTime():Float {
+	return shaderTime;
+}
+
 // The theme another screen asked for (e.g. the song you just finished).
 function checkPendingTheme() {
+	// Not under the transition that brought us here (BE-24) or the Settings window: the change must be seen.
+	if (subState != null) {
+		later(0.3, (_) -> checkPendingTheme());
+		return;
+	}
 	var wanted:String = themer.call("pending");
 	if (wanted == null) return;
 	themer.call("clearPending");
@@ -884,6 +974,7 @@ function enterUi(soft:Bool) {
 // soft fade: no tearing, snow, colour split, flashes, shake or zoom.
 function changeTheme(newTheme:String) {
 	themeBusy = true;
+	autoChangeIn = FlxG.random.float(autoChangeMin, autoChangeMax);
 	var soft:Bool = themer.call("reduceFlashes");
 
 	themeParams.tear = 0;
@@ -910,6 +1001,7 @@ function changeTheme(newTheme:String) {
 			return;
 		}
 		FlxG.camera.shake(0.012, 0.35);
+		themeParams.pulse += 1; // the Settings window shakes with it
 		FlxTween.tween(themeParams, {tear: 1.0, rgb: 1.0, snow: 0.8, scan: 1.0, whiteMix: 1.0}, lossTime, {ease: FlxEase.quadIn});
 		themeLater(0.1, (_) -> {
 			themeParams.roll = 0.14;
@@ -944,6 +1036,7 @@ function changeTheme(newTheme:String) {
 		themeParams.whiteMix = 0;
 		whiteFlash(0.7, 0.12);
 		FlxG.camera.shake(0.01, 0.3);
+		themeParams.pulse += 1;
 		FlxG.camera.zoom = 1.07;
 		FlxTween.tween(FlxG.camera, {zoom: 1.0}, 0.45, {ease: FlxEase.backOut});
 		FlxTween.tween(themeParams, {reveal: 1.0}, 0.5, {ease: FlxEase.quadOut});

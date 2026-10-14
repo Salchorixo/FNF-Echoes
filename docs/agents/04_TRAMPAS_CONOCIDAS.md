@@ -108,3 +108,14 @@ mismo formato: síntoma → causa → qué hacer.
 - **Síntoma:** una ventana abierta con `openSubState` queda tapada por Zyra o por el lápiz del estado de debajo, o el estado de debajo se queda congelado.
 - **Causa:** los objetos del subestado se dibujan en la cámara por defecto, y una cámara añadida después (`topCam` del menú) se dibuja por encima; además, el estado de debajo solo se actualiza si `persistentUpdate = true`.
 - **Qué hacer:** dar al subestado su propia cámara transparente (`new FlxCamera()`, `bgColor = 0x00000000`, `FlxG.cameras.add(cam, false)`), asignar `obj.cameras = [cam]` a cada objeto antes de `add(obj)` (un `put(obj)` auxiliar) y quitarla en `destroy()`. En el estado de debajo: `persistentUpdate = true` al abrirlo y, mientras `subState != null`, hacer solo lo que debe seguir moviéndose y salir de `update()` antes de leer el teclado y el ratón. Ojo al sustituir `add(` por `put(` con una expresión regular: no cambies el `add(` de dentro de `put` (se llamaría a sí misma sin fin y el juego se cierra con un fallo de pila).
+
+### 24. Traer un objeto al frente en un estado: `remove(obj, true)`
+- **Síntoma:** `remove(obj); add(obj);` no cambia el orden de dibujo: el objeto sigue por debajo de otros.
+- **Causa:** `remove` sin segundo argumento deja un hueco (`null`) en la lista de miembros y `add` reutiliza ese primer hueco, que es el mismo sitio.
+- **Qué hacer:** `remove(obj, true)` (con `splice`) y luego `add(obj)`: al quitarlo de verdad, `add` lo pone al final, y lo último se dibuja encima.
+
+### 25. Una transición propia no se activa con `[Flags]` del `modpack.ini`: hay que fijarla desde un estado del mod
+- **Síntoma:** pones `DEFAULT_TRANSITION_SCRIPT` en `[Flags]` de `data/config/modpack.ini` y el motor sigue con su barrido negro.
+- **Causa:** el motor solo aplica los flags de un mod si es el mod "actual"; los mods cargados como addon (`mods/autoload.txt`, como este) guardan los suyos aparte y no los aplican. Además, `MainState` reinicia `MusicBeatTransition.script` justo después de cargar el global script del mod, así que tampoco sirve `data/global/LIB_<mod>.hx`.
+- **Qué hacer:** `import funkin.backend.MusicBeatTransition;` y `MusicBeatTransition.script = 'scripts/effects/diffusionTransition';` en el `create()` de un estado del mod que toda sesión visite (`MainMenuState`). La transición se abre dos veces (en la pantalla que se deja y en la que llega) y no comparten nada: se pasan un aviso con `FlxG.save.data` (sin guardarlo en disco).
+
