@@ -5,7 +5,8 @@ import flixel.tweens.FlxEase;
 import flixel.tweens.FlxTween;
 
 // Shared horizontal card-grid selector, driven via Script.create() by any
-// state that needs it (MainMenuState, EchoSelectState, ...) — avoids
+// state that needs it (none today: MainMenuState and EchoSelectState became
+// their own layouts) — avoids
 // duplicating the same "row of cards + arrow-key highlight" logic per state.
 // Placeholder look (flat kraft-tone rectangles) until real card art exists.
 var cards:Array<FlxSprite> = [];
