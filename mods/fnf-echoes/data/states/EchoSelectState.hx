@@ -5,6 +5,7 @@ import flixel.tweens.FlxTween;
 import flixel.util.FlxColor;
 import flixel.util.FlxTimer;
 import funkin.backend.scripting.ModState;
+import funkin.backend.scripting.Script;
 import openfl.display.BlendMode;
 
 // Echo selection (the screen after PLAY): three portrait windows in the common language of the menus
@@ -27,6 +28,10 @@ import openfl.display.BlendMode;
 // While you drag, the window leaves a TRAIL of copies of itself along the way, like the windows of the old systems when
 // they hung (ghosts: a pool of sprites); the trail fades away when you drop it. The window you grab, and the selected
 // one, come to the FRONT of the others (raise()).
+//
+// THEMES (BE-30): the frame of the windows (title bar, buttons, border) follows the desktop theme (Vista, XP, Windows 98, Mac):
+// the sheets are <theme>_echo_1 / _chains / _glitch (and bg/refl_<theme>_*), made by AI_export_window_themes.py. The theme is read
+// once, when the screen opens: it never changes while you are here.
 //
 // BACKGROUND (BE-23, mockup AI_build_echo_bg_v4.py): a dark night made of planes at different distances (haze, light shafts, a far
 // city, four rolling waves, fog, floating windows and folders, bubbles, dust motes, huge out-of-focus frames in front). Every plane
@@ -91,6 +96,7 @@ var lastMouseY:Float = -1;
 
 // Background (BE-23)
 var bgDir:String = 'menus/echo/bg/';
+var theme:String = "vista";
 var bgGroup:FlxGroup;
 var floorGroup:FlxGroup;
 var glowGroup:FlxGroup;
@@ -124,6 +130,9 @@ var lastRippleIndex:Int = 0;
 function create() {
 	FlxG.camera.scroll.set(0, 0); // every screen resets its own camera
 	bgColor = FlxColor.BLACK;
+	var themer = Script.create(Paths.script('scripts/ui/themeManager'));
+	themer.load();
+	theme = themer.call("current"); // the windows' frame follows the desktop theme (BE-30)
 	floorY = (FlxG.height - windowH) / 2 - cardRaise + windowH + 8;
 
 	bgGroup = new FlxGroup();
@@ -161,9 +170,9 @@ function buildCards() {
 	for (i in 0...3) {
 		var card = new FlxSprite();
 		if (i == 0) {
-			card.loadGraphic(Paths.image('menus/echo/vista_echo_1'));
+			card.loadGraphic(Paths.image('menus/echo/' + theme + '_echo_1'));
 		} else {
-			card.loadGraphic(Paths.image(i == 1 ? 'menus/echo/vista_echo_chains' : 'menus/echo/vista_echo_glitch'), true, cellW, cellH);
+			card.loadGraphic(Paths.image('menus/echo/' + theme + (i == 1 ? '_echo_chains' : '_echo_glitch')), true, cellW, cellH);
 			var frames = i == 1 ? chainsFrames : glitchFrames;
 			card.animation.add('loop', [for (f in 0...frames) f], animFps, true);
 			card.animation.play('loop');
@@ -555,9 +564,9 @@ function buildFloor() {
 	for (i in 0...3) {
 		var refl = new FlxSprite();
 		if (i == 0) {
-			refl.loadGraphic(Paths.image(bgDir + 'refl_1'));
+			refl.loadGraphic(Paths.image(bgDir + 'refl_' + theme + '_1'));
 		} else {
-			refl.loadGraphic(Paths.image(bgDir + (i == 1 ? 'refl_chains' : 'refl_glitch')), true, cellW, 200);
+			refl.loadGraphic(Paths.image(bgDir + 'refl_' + theme + (i == 1 ? '_chains' : '_glitch')), true, cellW, 200);
 		}
 		refl.antialiasing = true;
 		refl.origin.set(cellMargin + windowW / 2, 0); // it scales from its top, where it touches the window's base

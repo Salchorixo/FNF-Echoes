@@ -147,6 +147,7 @@ Ejemplo vivo: `MainMenuState.hx` + `scripts/ui/themeManager.hx` + `shaders/Chann
 5. **Cursor:** `FlxG.mouse.load(imagen, 1, 0, 0)` al aplicar el tema.
 6. **Cuándo cambia** (BE-27/BE-28): al completar una canción (`requestForSong`), en cada transición de menú (`diffusionTransition.hx`, receta M) y **solo, cada 18-40 s, mientras estás en el menú** (`updateAutoChange()`). Una ventana encima del menú (Ajustes) también sufre el cambio: su cámara es transparente y el shader del fondo pinta alfa 1, así que usa `shaders/ChannelFx.frag` (conserva el alfa) con los valores vivos que el menú expone en `channelParams()` (`FlxG.state.call(...)` desde el subestado).
 7. **Elección de la persona** (BE-29): Ajustes > Pantalla > Fondo del escritorio (AUTO o un tema fijo, `echoesThemeChoice`). Un tema elegido hace que `current()` devuelva siempre ese y `changesEnabled()` sea falso; el menú lo aplica al momento con `chooseTheme()`.
+8. **Ventanas por tema** (BE-30): el marco de las ventanas de Echo y del selector de canciones sigue el tema. Un archivo por tema con prefijo (`<tema>_echo_*`, `<tema>_mood_*`, `refl_<tema>_*`); el estado lee `themer.call("current")` al crearse. Para añadir un tema: su función de marco en `AI_build_window_themes.py` y volver a ejecutar `AI_export_window_themes.py` y `AI_export_echo_bg.py`.
 
 ## Receta M — Una transición entre pantallas propia (script del motor)
 
