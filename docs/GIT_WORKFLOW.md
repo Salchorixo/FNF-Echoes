@@ -398,8 +398,10 @@ WT="/Volumes/Zyras Zone/Projects/FNF_Echoes-worktrees/BE-6-git-done-y-worktrees"
 
 cp "/Volumes/Zyras Zone/Projects/FNF_Echoes/mods/autoload.txt" "$WT/mods/"   # una vez por worktree (git lo ignora)
 ln -sfn "$WT/mods" "$APP"                                                     # el juego ahora carga el worktree
+ln -sfn "$WT/mods/fnf-echoes" "/Volumes/Zyras Zone/Projects/FNF_Echoes/engine/mods/fnf-echoes"   # el .app (modo cne test) lee ESTE enlace: sin él carga el repo principal (trampa nº 15)
 # ... abrir el juego y probar ...
 ln -sfn "/Volumes/Zyras Zone/Projects/FNF_Echoes/mods" "$APP"                 # RESTAURAR siempre al terminar
+(cd "/Volumes/Zyras Zone/Projects/FNF_Echoes/engine/mods" && ln -sfn ../../mods/fnf-echoes fnf-echoes)   # y este también
 ```
 
 **NO PROBADO ejecutando el juego:** el procedimiento sale de `docs/PROJECT_STRUCTURE.md` (regla 6) y de leer el enlace real del `.app`; lo único probado es `git done` con worktrees (§8). Quien lo use por primera vez, que confirme que el juego carga el mod y lo anote aquí.
