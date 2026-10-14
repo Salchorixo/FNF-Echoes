@@ -11,6 +11,8 @@ import funkin.options.Options;
 // NOT in this table — those names stay in English always, per project rule,
 // so callers should never route them through get().
 var uiStrings:Array<Dynamic> = [
+	{key: "PLAY", en: "PLAY", es: "JUGAR"},
+	{key: "SETTINGS", en: "SETTINGS", es: "AJUSTES"},
 	{key: "OPTIONS", en: "OPTIONS", es: "OPCIONES"},
 	{key: "CREDITS", en: "CREDITS", es: "CRÉDITOS"},
 	{key: "CONTROLS", en: "CONTROLS", es: "CONTROLES"},
