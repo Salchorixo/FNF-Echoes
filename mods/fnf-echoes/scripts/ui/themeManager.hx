@@ -17,7 +17,26 @@ import funkin.options.Options;
 var themes:Array<String> = ["vista", "xp", "win98", "mac"];
 var themeBySong:Array<String> = ["win98", "vista", "mac"];
 
+// The desktop the person chose in Settings > Screen (BE-29): "auto" (it changes by itself) or one theme, which then stays.
+var choices:Array<String> = ["auto", "vista", "xp", "win98", "mac"];
+
+function choice():String {
+	var c = FlxG.save.data.echoesThemeChoice;
+	return c == null ? "auto" : c;
+}
+
+function setChoice(c:String) {
+	FlxG.save.data.echoesThemeChoice = c;
+}
+
+function nextChoice(c:String):String {
+	return choices[(choices.indexOf(c) + 1) % choices.length];
+}
+
+// A chosen theme is always the current one; with "auto" it is the last one that was shown.
 function current():String {
+	if (choice() != "auto")
+		return choice();
 	var theme = FlxG.save.data.echoesTheme;
 	return theme == null ? "vista" : theme;
 }
@@ -41,6 +60,8 @@ function next(theme:String):String {
 
 // "Background changes" in Settings (on by default).
 function changesEnabled():Bool {
+	if (choice() != "auto")
+		return false; // a theme chosen in Settings stays: nothing changes it by itself
 	var value = FlxG.save.data.echoesBackgroundChanges;
 	return value == null ? true : value;
 }

@@ -38,8 +38,8 @@ import funkin.options.Options;
 // are Options.volumeMusic/volumeSFX, the keys are Options.P1_*, quality/downscroll/ghost tapping are
 // Options fields, language goes through TranslationUtil. "Reduce flashes" is Options.flashingMenu inverted.
 // "Background changes" and "Desktop effects" are NEW preferences saved in FlxG.save.data
-// (echoesBackgroundChanges, echoesDesktopEffects, both on by default): nothing reads them yet, they are for
-// the theme system and the final sequence.
+// (echoesBackgroundChanges, echoesDesktopEffects, both on by default): the first one is read by the theme system, the second
+// is for the final sequence. "Desktop background" (BE-29) is echoesThemeChoice: auto, or one theme that stays.
 
 // ---------------------------------------------------------------- data
 
@@ -65,6 +65,7 @@ var rowsByCategory:Array<Array<Dynamic>> = [
 		{label: "GHOST TAPPING", kind: "bool", fieldName: "ghostTapping", artSheet: "icons", art: 5}
 	],
 	[
+		{label: "DESKTOP BACKGROUND", kind: "theme", artSheet: "icons", art: 3},
 		{label: "REDUCE FLASHES", kind: "flashes", artSheet: "icons", art: 6},
 		{label: "BACKGROUND CHANGES", kind: "pref", fieldName: "echoesBackgroundChanges", artSheet: "icons", art: 7},
 		{label: "DESKTOP EFFECTS", kind: "pref", fieldName: "echoesDesktopEffects", artSheet: "icons", art: 7}
@@ -411,6 +412,8 @@ function refreshTile(i:Int) {
 		tile.check.animation.frameIndex = Options.language == row.code ? 1 : 0;
 	} else if (row.kind == "quality") {
 		tile.valueText.text = t(Options.quality == 0 ? "PERFORMANCE" : "HIGH");
+	} else if (row.kind == "theme") {
+		tile.valueText.text = t(themeChoiceName(themer().call("choice")));
 	} else if (row.kind == "keybind") {
 		tile.valueText.text = keyName(row);
 	}
@@ -494,12 +497,43 @@ function activateTile(mouseX:Float) {
 		Options.quality = Options.quality == 0 ? 1 : 0;
 		Options.applyQuality();
 		refreshTile(tileIndex);
+	} else if (row.kind == "theme") {
+		cycleThemeChoice();
+		refreshTile(tileIndex);
 	} else if (row.kind == "language") {
 		selectLanguage(row.code);
 	} else {
 		toggleBool(row);
 		refreshTile(tileIndex);
 	}
+}
+
+// "Desktop background": AUTO -> VISTA -> XP -> WINDOWS 98 -> MAC -> AUTO. A chosen theme is applied at once on the menu behind
+// (with the channel change) and then stays; AUTO lets the desktop change by itself again (BE-29).
+var themeScript:Script = null;
+
+function themer():Dynamic {
+	if (themeScript == null) {
+		themeScript = Script.create(Paths.script('scripts/ui/themeManager'));
+		themeScript.load();
+	}
+	return themeScript;
+}
+
+function themeChoiceName(choice:String):String {
+	if (choice == "vista") return "VISTA";
+	if (choice == "xp") return "XP";
+	if (choice == "win98") return "WINDOWS 98";
+	if (choice == "mac") return "MAC";
+	return "AUTO";
+}
+
+function cycleThemeChoice() {
+	var manager = themer();
+	var next = manager.call("nextChoice", [manager.call("choice")]);
+	manager.call("setChoice", [next]);
+	if (next != "auto")
+		FlxG.state.call("chooseTheme", [next]);
 }
 
 function selectLanguage(code:String) {

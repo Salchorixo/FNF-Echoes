@@ -119,3 +119,8 @@ mismo formato: síntoma → causa → qué hacer.
 - **Causa:** el motor solo aplica los flags de un mod si es el mod "actual"; los mods cargados como addon (`mods/autoload.txt`, como este) guardan los suyos aparte y no los aplican. Además, `MainState` reinicia `MusicBeatTransition.script` justo después de cargar el global script del mod, así que tampoco sirve `data/global/LIB_<mod>.hx`.
 - **Qué hacer:** `import funkin.backend.MusicBeatTransition;` y `MusicBeatTransition.script = 'scripts/effects/diffusionTransition';` en el `create()` de un estado del mod que toda sesión visite (`MainMenuState`). La transición se abre dos veces (en la pantalla que se deja y en la que llega) y no comparten nada: se pasan un aviso con `FlxG.save.data` (sin guardarlo en disco).
 
+### 26. Una lambda de HScript no ve los parámetros de su función
+- **Síntoma:** en el registro, `Unknown variable: nombre` justo cuando se ejecuta una lambda (`(_) -> algo(nombre)`) pasada a un temporizador, aunque `nombre` sea un parámetro de la función que la crea.
+- **Causa:** al ejecutarse más tarde, la lambda ya no tiene el ámbito de los argumentos de la función; solo recuerda variables locales (`var`).
+- **Qué hacer:** copiar el parámetro a una variable local antes de crear la lambda (`var target = newTheme; later(0.4, (_) -> chooseTheme(target));`), igual que se hace con `var index = i` en los bucles.
+

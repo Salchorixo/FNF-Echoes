@@ -36,13 +36,15 @@ var uiStrings:Array<Dynamic> = [
 	{key: "MUSIC", en: "MUSIC", es: "MÚSICA"},
 	{key: "SOUND EFFECTS", en: "SOUND EFFECTS", es: "EFECTOS"},
 	{key: "REDUCE FLASHES", en: "REDUCE FLASHES", es: "REDUCIR DESTELLOS"},
+	{key: "DESKTOP BACKGROUND", en: "DESKTOP BACKGROUND", es: "FONDO DEL ESCRITORIO"},
+	{key: "AUTO", en: "AUTO", es: "AUTOMÁTICO"},
 	{key: "BACKGROUND CHANGES", en: "BACKGROUND CHANGES", es: "CAMBIOS DE FONDO"},
 	{key: "DESKTOP EFFECTS", en: "DESKTOP EFFECTS", es: "EFECTOS DE ESCRITORIO"},
 	{key: "STATUS HINT", en: "ARROWS MOVE    ENTER SELECT    ESC BACK", es: "FLECHAS MOVER    ENTER ELEGIR    ESC VOLVER"},
 	{key: "DESC AUDIO", en: "Adjust the overall volume, the music and the sound effects.", es: "Ajusta el volumen general, la música y los efectos."},
 	{key: "DESC CONTROLS", en: "Change a key: press Enter on it and then the new key.", es: "Cambia una tecla: pulsa Enter sobre ella y luego la tecla nueva."},
 	{key: "DESC GAMEPLAY", en: "Graphics quality and aids for the notes.", es: "Calidad gráfica y ayudas para las notas."},
-	{key: "DESC SCREEN", en: "Reduce flashes, and choose if the background and the desktop change by themselves.", es: "Reduce los destellos y decide si el fondo y el escritorio cambian solos."},
+	{key: "DESC SCREEN", en: "Pick your desktop background (or leave it on auto so it changes by itself), and reduce flashes.", es: "Elige el fondo de tu escritorio (o déjalo en automático para que cambie solo) y reduce los destellos."},
 	{key: "DESC LANGUAGE", en: "Choose the language of the game.", es: "Elige el idioma del juego."}
 ];
 

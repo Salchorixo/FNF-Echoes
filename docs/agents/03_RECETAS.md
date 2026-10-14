@@ -146,6 +146,7 @@ Ejemplo vivo: `MainMenuState.hx` + `scripts/ui/themeManager.hx` + `shaders/Chann
 4. **Reglas** (`themeManager.hx`): el tema de cada canción es `themeBySong` (**provisional**); una pantalla pide un cambio con `requestForSong(i)` y el menú lo reproduce al abrirse. Se respetan los ajustes: "Cambios de fondo" apagado = nunca cambia; "Reducir destellos" = fundido suave sin desgarros, nieve ni destellos. **F4** pasa al siguiente tema (atajo de prueba).
 5. **Cursor:** `FlxG.mouse.load(imagen, 1, 0, 0)` al aplicar el tema.
 6. **Cuándo cambia** (BE-27/BE-28): al completar una canción (`requestForSong`), en cada transición de menú (`diffusionTransition.hx`, receta M) y **solo, cada 18-40 s, mientras estás en el menú** (`updateAutoChange()`). Una ventana encima del menú (Ajustes) también sufre el cambio: su cámara es transparente y el shader del fondo pinta alfa 1, así que usa `shaders/ChannelFx.frag` (conserva el alfa) con los valores vivos que el menú expone en `channelParams()` (`FlxG.state.call(...)` desde el subestado).
+7. **Elección de la persona** (BE-29): Ajustes > Pantalla > Fondo del escritorio (AUTO o un tema fijo, `echoesThemeChoice`). Un tema elegido hace que `current()` devuelva siempre ese y `changesEnabled()` sea falso; el menú lo aplica al momento con `chooseTheme()`.
 
 ## Receta M — Una transición entre pantallas propia (script del motor)
 

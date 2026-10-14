@@ -811,6 +811,19 @@ function updateAutoChange(elapsed:Float) {
 	}
 }
 
+// The person picked a desktop in Settings > Screen (BE-29): show it now, with the channel change, even though a chosen theme
+// switches the automatic changes off. If a change is already running it waits for it.
+function chooseTheme(newTheme:String) {
+	if (newTheme == theme)
+		return;
+	if (themeBusy || !introDone) {
+		var target = newTheme; // a closure does not see a function's own parameter, only local variables
+		later(0.4, (_) -> chooseTheme(target));
+		return;
+	}
+	changeTheme(newTheme);
+}
+
 // What the Settings window reads (BE-28) to suffer the same channel change as the wallpaper: the live values while a change
 // lasts, null otherwise; and the shader's clock.
 function channelParams():Dynamic {
