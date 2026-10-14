@@ -5,6 +5,7 @@ import flixel.tweens.FlxEase;
 import flixel.tweens.FlxTween;
 import flixel.util.FlxColor;
 import flixel.util.FlxTimer;
+import funkin.backend.MusicBeatTransition;
 import funkin.backend.scripting.ModState;
 import funkin.backend.scripting.ModSubState;
 import funkin.backend.shaders.CustomShader;
@@ -164,6 +165,9 @@ var lastMouseY:Float = -1;
 function create() {
 	FlxG.camera.scroll.set(0, 0); // every screen resets its own camera
 	bgColor = FlxColor.WHITE;
+	// The Diffusion transition (BE-24) is the engine's transition script for every menu change from here on. The engine
+	// resets it when the mod loads, so a state of the mod has to set it; the main menu is the first one every run reaches.
+	MusicBeatTransition.script = 'scripts/effects/diffusionTransition';
 
 	i18n = Script.create(Paths.script('scripts/ui/translate'));
 	i18n.load();
