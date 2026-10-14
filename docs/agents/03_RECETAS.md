@@ -160,3 +160,12 @@ Ejemplo real: `scripts/effects/diffusionTransition.hx` (BE-24, "Difusión").
 4. El destino: `ModState.lastName` es el nombre del último `ModState` creado (si `Type.getClassName(Type.getClass(state))` es `funkin.backend.scripting.ModState`); una canción (`PlayState`) no es `ModState`.
 5. El arte se hornea en Python (`AI_export_diffusion.py`, carpeta de arte privada) a `images/menus/diffusion/`. El texto de consola usa `vcr.ttf` (monoespaciada: la columna decide la x) y un `FlxText` por trozo de color.
 
+## Receta N — Nota mortal (`Deadly Note`) y cómo probar un chart
+
+Boceto de BE-42: `mods/fnf-echoes/data/notes/Deadly Note.hx` (tipo de nota con script; ejemplos del motor en `engine/assets/data/notes/`).
+
+1. En el editor de charts elige el tipo en *Note > Note Types List* y coloca la nota; el chart lo guarda en `noteTypes`.
+2. Se ve en rojo; Botplay no la toca (`avoid`). **Si la tocas mueres** (`PlayState.instance.health = 0`); **si la dejas pasar no cuesta nada** (el fallo se cancela con `event.cancel()` y la nota se borra con `strumLine.deleteNote`; sin ese borrado se quedaría atascada).
+3. **Probar un chart:** en el editor, **Enter** lanza el *playtest* desde la posición actual y **ESC** vuelve al editor.
+4. Probado en macOS con una canción de prueba (3 notas mortales y una normal): dejarlas pasar no suma fallos; pulsar las cuatro teclas sin parar lleva al game over. Falta: arte final, sonido, animación de muerte y variantes.
+

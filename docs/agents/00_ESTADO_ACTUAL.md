@@ -54,6 +54,7 @@ Entre los dos bloques de Kiyu van los crasheos y una cutscene (ver
 4. **Probar la transparencia y la pantalla completa en un PC con Windows real** (BE-10 y la coreografía están hechos y probados en VM). Se necesita un PC prestado: el `.exe` del flujo `windows.yml` del fork + el mod (receta en la trampa nº 18). Plan B si algo falla: color clave (ADR-0003) y, si nada funciona, escritorio falso dibujado por el juego ("EchoOS").
 5. **Secuencia final** (BACK → FINAL SEQUENCE): crasheo 1 real y controlado, menú roto, crasheo 2 falso, cutscene, bloque 2. Se apoya en la coreografía de ventana.
 6. **Canciones dentro del mod**: crear `songs/<cancion>/` con la estructura del motor (ver `03_RECETAS.md`).
+7. **Nota mortal (BE-42):** boceto del tipo de nota `Deadly Note` (receta N). Falta arte final, sonido, animación de muerte y variantes.
 
 ## 5. Inconsistencias conocidas (no las arregles sin preguntar)
 
