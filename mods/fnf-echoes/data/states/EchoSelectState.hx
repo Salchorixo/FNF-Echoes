@@ -22,6 +22,9 @@ import funkin.backend.scripting.ModState;
 // can be DRAGGED (BE-22): grab one anywhere and it lifts (a soft shadow appears, it tilts a little with the
 // movement); where you drop it, it bounces and stays (cardBaseX/cardHomeY are its new home until you leave the
 // screen). A press that does not move is a click, not a drag. Locked windows can be dragged too, they just do not open.
+// While you drag, the window leaves a TRAIL of copies of itself along the way, like the windows of the old systems when
+// they hung (ghosts: a pool of sprites); the trail fades away when you drop it. The window you grab, and the selected
+// one, come to the FRONT of the others (raise()).
 
 var echoUnlocked:Array<Bool> = [true, false, false];
 var cards:Array<FlxSprite> = [];
@@ -49,6 +52,12 @@ var dragStartY:Float = 0;
 var dragLift:Float = 22;
 var dragState:Dynamic = {lift: 0.0};
 var dragShadow:FlxSprite;
+var ghosts:Array<FlxSprite> = [];
+var ghostNext:Int = 0;
+var ghostPool:Int = 24;
+var ghostSpacing:Float = 26; // pixels of movement between two copies
+var lastGhostX:Float = 0;
+var lastGhostY:Float = 0;
 
 // Animations: Echo 2's chains are 32 frames, Echo 3's glitch 64; pixel art steps at 10 fps.
 var chainsFrames:Int = 32;
@@ -74,6 +83,7 @@ function create() {
 	bgColor = FlxColor.WHITE;
 
 	buildShadow();
+	buildGhosts();
 	buildCards();
 
 	FlxG.mouse.visible = true;
@@ -141,6 +151,49 @@ function buildShadow() {
 	add(dragShadow);
 }
 
+// The pool of copies that make the trail. They take the picture of the window that is dragged (see spawnGhost()).
+function buildGhosts() {
+	for (i in 0...ghostPool) {
+		var ghost = new FlxSprite();
+		ghost.antialiasing = false;
+		ghost.visible = false;
+		add(ghost);
+		ghosts.push(ghost);
+	}
+}
+
+// A copy of the window as it is now, left behind on the path.
+function spawnGhost(card:FlxSprite) {
+	var ghost = ghosts[ghostNext];
+	ghostNext = (ghostNext + 1) % ghostPool;
+	FlxTween.cancelTweensOf(ghost);
+	ghost.frames = card.frames;
+	ghost.animation.frameIndex = card.animation.frameIndex;
+	ghost.width = windowW;
+	ghost.height = windowH;
+	ghost.offset.set(cellMargin, cellMargin);
+	ghost.angle = card.angle;
+	ghost.setPosition(card.x, card.y);
+	ghost.alpha = 0.55;
+	ghost.visible = true;
+	lastGhostX = card.x;
+	lastGhostY = card.y;
+}
+
+function fadeGhosts() {
+	for (ghost in ghosts) {
+		if (!ghost.visible) continue;
+		var g = ghost;
+		FlxTween.tween(g, {alpha: 0}, 0.35, {onComplete: (_) -> g.visible = false});
+	}
+}
+
+// Put a window above the others (the later in the list, the higher).
+function raise(i:Int) {
+	remove(cards[i], true); // splice: without it the slot is reused and the order does not change
+	add(cards[i]);
+}
+
 function finishOpening() {
 	opened = true;
 	updateSelection();
@@ -150,6 +203,7 @@ function finishOpening() {
 // so the two tweens do not fight.
 function updateSelection() {
 	if (!opened) return;
+	if (dragIndex < 0) raise(selectedIndex);
 
 	for (i in 0...cards.length) {
 		if (i == dragIndex) continue;
@@ -221,11 +275,18 @@ function beginDrag(i:Int, mx:Float, my:Float) {
 	FlxTween.cancelTweensOf(card);
 	FlxTween.cancelTweensOf(card, ["angle"]);
 	card.alpha = 1;
-	// on top of the other windows, with its shadow just below it
-	remove(dragShadow);
-	remove(card);
+	// on top of the other windows, with its trail and its shadow just below it
+	for (ghost in ghosts) {
+		FlxTween.cancelTweensOf(ghost);
+		ghost.visible = false;
+		remove(ghost, true);
+		add(ghost);
+	}
+	remove(dragShadow, true);
 	add(dragShadow);
-	add(card);
+	raise(i);
+	lastGhostX = card.x;
+	lastGhostY = card.y;
 	updateSelection();
 }
 
@@ -250,7 +311,8 @@ function endDrag() {
 		return;
 	}
 
-	// drop: it falls the lift it had, bounces, straightens up and stays here
+	// drop: the trail fades; it falls the lift it had, bounces, straightens up and stays here
+	fadeGhosts();
 	cardBaseX[i] = card.x;
 	cardHomeY[i] = card.y + dragState.lift;
 	FlxTween.cancelTweensOf(dragState);
@@ -301,6 +363,8 @@ function updateDrag(elapsed:Float) {
 			var tilt = clamp((card.x - oldX) * 0.9, -6, 6);
 			card.angle += (tilt - card.angle) * Math.min(1, elapsed * 14);
 			placeShadow(card, dragState.lift);
+			if (Math.abs(card.x - lastGhostX) + Math.abs(card.y - lastGhostY) >= ghostSpacing)
+				spawnGhost(card);
 		}
 	} else {
 		endDrag();

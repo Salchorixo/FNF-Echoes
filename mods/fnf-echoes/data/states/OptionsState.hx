@@ -20,7 +20,8 @@ import funkin.options.Options;
 // camera, above the menu's cameras, so there is no screen transition. Closing it (Back from the categories, the blue
 // orb or the red cross) just closes the window. The window can be DRAGGED by its title bar (BE-22): everything is on
 // one camera, so moving the window is moving that camera's scroll; the light veil is on a camera of its own so it
-// stays still. Mouse positions are converted to the window's own coordinates (see windowMouse()).
+// stays still. While it is dragged it leaves a trail of copies of its frame (like the windows of the old systems when they
+// hung), on a camera of their own that does not move. Mouse positions are converted to the window's own coordinates (see windowMouse()).
 // The window art has NO text (images/menus/options/vista_window.png, from AI_export_settings_vista.py in
 // the private art folder): every label is a FlxText drawn on top, so it goes through translate.hx.
 // All positions below are absolute screen pixels (native pixel x 3) read from that script.
@@ -131,6 +132,13 @@ var tiles:Array<Dynamic> = [];
 
 var cam:FlxCamera;
 var veilCam:FlxCamera;
+var ghostCam:FlxCamera;
+var ghosts:Array<FlxSprite> = [];
+var ghostNext:Int = 0;
+var ghostPool:Int = 16;
+var ghostSpacing:Float = 30;
+var lastGhostX:Float = 0;
+var lastGhostY:Float = 0;
 var closing:Bool = false;
 
 // Where the window is: winX/winY is how far it was dragged; rise.y is the little rise of the opening and closing.
@@ -153,9 +161,22 @@ function create() {
 	veilCam = new FlxCamera();
 	veilCam.bgColor = 0x00000000;
 	FlxG.cameras.add(veilCam, false);
+	ghostCam = new FlxCamera();
+	ghostCam.bgColor = 0x00000000;
+	FlxG.cameras.add(ghostCam, false);
 	cam = new FlxCamera();
 	cam.bgColor = 0x00000000;
 	FlxG.cameras.add(cam, false);
+
+	for (i in 0...ghostPool) {
+		var ghost = new FlxSprite();
+		ghost.loadGraphic(Paths.image('menus/options/vista_window'));
+		ghost.antialiasing = false;
+		ghost.visible = false;
+		ghost.cameras = [ghostCam];
+		add(ghost);
+		ghosts.push(ghost);
+	}
 
 	// The menu behind steps back a little (the same light veil the design had); it stays still when the window moves.
 	var veil = new FlxSprite();
@@ -533,6 +554,26 @@ function exitToMainMenu() {
 
 // ---------------------------------------------------------------- input
 
+// A copy of the window where it is now (screen position), left behind on the path.
+function spawnGhost() {
+	var ghost = ghosts[ghostNext];
+	ghostNext = (ghostNext + 1) % ghostPool;
+	FlxTween.cancelTweensOf(ghost);
+	ghost.setPosition(winX, winY - rise.y);
+	ghost.alpha = 0.5;
+	ghost.visible = true;
+	lastGhostX = winX;
+	lastGhostY = winY;
+}
+
+function fadeGhosts() {
+	for (ghost in ghosts) {
+		if (!ghost.visible) continue;
+		var g = ghost;
+		FlxTween.tween(g, {alpha: 0}, 0.35, {onComplete: (_) -> g.visible = false});
+	}
+}
+
 function clamp(v:Float, lo:Float, hi:Float):Float {
 	return Math.max(lo, Math.min(hi, v));
 }
@@ -560,8 +601,11 @@ function updateMouse() {
 		if (FlxG.mouse.pressed) {
 			winX = clamp(rawX - grabX, -366, 764);
 			winY = clamp(rawY - grabY, -60, 600);
+			if (Math.abs(winX - lastGhostX) + Math.abs(winY - lastGhostY) >= ghostSpacing)
+				spawnGhost();
 		} else {
 			windowDrag = false;
+			fadeGhosts();
 		}
 		return;
 	}
@@ -575,6 +619,12 @@ function updateMouse() {
 		windowDrag = true;
 		grabX = rawX - winX;
 		grabY = rawY - winY;
+		lastGhostX = winX;
+		lastGhostY = winY;
+		for (ghost in ghosts) {
+			FlxTween.cancelTweensOf(ghost);
+			ghost.visible = false;
+		}
 		return;
 	}
 
@@ -675,5 +725,6 @@ function updateAdjust() {
 
 function destroy() {
 	FlxG.cameras.remove(cam);
+	FlxG.cameras.remove(ghostCam);
 	FlxG.cameras.remove(veilCam);
 }
