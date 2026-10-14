@@ -126,11 +126,15 @@ var buttonPencils:Array<FlxSprite> = [];
 var folderPencil:FlxSprite;
 var themeShader:CustomShader;
 var themeBusy:Bool = false;
+// Spontaneous changes (BE-28): while the menu is ready the desktop changes by itself every autoChangeMin..Max seconds.
+var autoChangeIn:Float = 0;
+var autoChangeMin:Float = 18;
+var autoChangeMax:Float = 40;
 var themeTimers:Array<FlxTimer> = [];
 var shaderTime:Float = 0;
 var lastHighlight:Int = -1;
 // The uniforms of ChannelShader.frag; tweened while a change lasts and copied to the shader every frame.
-var themeParams:Dynamic = {tear: 0.0, rgb: 0.0, snow: 0.0, roll: 0.0, scan: 0.0, whiteMix: 0.0, flash: 0.0, reveal: 1.0, revealMode: 4.0};
+var themeParams:Dynamic = {tear: 0.0, rgb: 0.0, snow: 0.0, roll: 0.0, scan: 0.0, whiteMix: 0.0, flash: 0.0, reveal: 1.0, revealMode: 4.0, pulse: 0};
 var folder:FlxSprite;
 var folderRestY:Float = 0;
 
@@ -687,6 +691,7 @@ function updateMouse() {
 
 function update(elapsed) {
 	updateIntroWait();
+	updateAutoChange(elapsed);
 
 	// While the Settings window is open the menu keeps moving but does not react to the keyboard or the mouse.
 	if (subState != null) {
@@ -786,6 +791,34 @@ function updateShader(elapsed:Float) {
 	themeShader.hset("time", shaderTime);
 	for (name in ["tear", "rgb", "snow", "roll", "scan", "whiteMix", "flash", "reveal", "revealMode"])
 		themeShader.hset(name, Reflect.field(themeParams, name));
+}
+
+// The desktop changes on its own now and then, also while the Settings window is open. It waits while the intro plays and
+// while a screen transition covers the menu.
+function updateAutoChange(elapsed:Float) {
+	if (!introDone || themeBusy || waitingIntro)
+		return;
+	if (subState != null && Type.getClassName(Type.getClass(subState)) == "funkin.backend.MusicBeatTransition")
+		return;
+	if (autoChangeIn <= 0) {
+		autoChangeIn = FlxG.random.float(autoChangeMin, autoChangeMax);
+		return;
+	}
+	autoChangeIn -= elapsed;
+	if (autoChangeIn <= 0) {
+		trace('[MainMenu] spontaneous theme change from ' + theme + (subState != null ? ' (Settings open)' : ''));
+		requestTheme(themer.call("randomOther", [theme]));
+	}
+}
+
+// What the Settings window reads (BE-28) to suffer the same channel change as the wallpaper: the live values while a change
+// lasts, null otherwise; and the shader's clock.
+function channelParams():Dynamic {
+	return themeBusy ? themeParams : null;
+}
+
+function channelTime():Float {
+	return shaderTime;
 }
 
 // The theme another screen asked for (e.g. the song you just finished).
@@ -941,6 +974,7 @@ function enterUi(soft:Bool) {
 // soft fade: no tearing, snow, colour split, flashes, shake or zoom.
 function changeTheme(newTheme:String) {
 	themeBusy = true;
+	autoChangeIn = FlxG.random.float(autoChangeMin, autoChangeMax);
 	var soft:Bool = themer.call("reduceFlashes");
 
 	themeParams.tear = 0;
@@ -967,6 +1001,7 @@ function changeTheme(newTheme:String) {
 			return;
 		}
 		FlxG.camera.shake(0.012, 0.35);
+		themeParams.pulse += 1; // the Settings window shakes with it
 		FlxTween.tween(themeParams, {tear: 1.0, rgb: 1.0, snow: 0.8, scan: 1.0, whiteMix: 1.0}, lossTime, {ease: FlxEase.quadIn});
 		themeLater(0.1, (_) -> {
 			themeParams.roll = 0.14;
@@ -1001,6 +1036,7 @@ function changeTheme(newTheme:String) {
 		themeParams.whiteMix = 0;
 		whiteFlash(0.7, 0.12);
 		FlxG.camera.shake(0.01, 0.3);
+		themeParams.pulse += 1;
 		FlxG.camera.zoom = 1.07;
 		FlxTween.tween(FlxG.camera, {zoom: 1.0}, 0.45, {ease: FlxEase.backOut});
 		FlxTween.tween(themeParams, {reveal: 1.0}, 0.5, {ease: FlxEase.quadOut});

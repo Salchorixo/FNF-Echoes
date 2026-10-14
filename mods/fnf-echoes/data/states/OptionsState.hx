@@ -1,4 +1,5 @@
 import flixel.FlxCamera;
+import funkin.backend.shaders.CustomShader;
 import flixel.FlxSprite;
 import flixel.text.FlxText;
 import flixel.tweens.FlxEase;
@@ -131,6 +132,8 @@ var tileObjects:Array<Dynamic> = [];
 var tiles:Array<Dynamic> = [];
 
 var cam:FlxCamera;
+var fxShader:CustomShader = null; // the menu's channel change reaches this window too (BE-28)
+var fxPulse:Float = 0;
 var veilCam:FlxCamera;
 var ghostCam:FlxCamera;
 var ghosts:Array<FlxSprite> = [];
@@ -662,7 +665,33 @@ function updateMouse() {
 	}
 }
 
+// While the main menu changes its desktop, the window suffers the same channel change: the menu's live values drive a
+// transparent-camera version of the shader on this window's camera, and every hit shakes it.
+function updateChannelFx() {
+	var p = FlxG.state.call("channelParams");
+	if (p == null) {
+		if (fxShader != null) {
+			cam.removeShader(fxShader);
+			fxShader = null;
+		}
+		return;
+	}
+	if (fxShader == null) {
+		fxShader = new CustomShader("ChannelFx");
+		cam.addShader(fxShader);
+		fxPulse = p.pulse;
+	}
+	fxShader.hset("time", FlxG.state.call("channelTime"));
+	for (name in ["tear", "rgb", "snow", "scan", "whiteMix", "flash"])
+		fxShader.hset(name, Reflect.field(p, name));
+	if (p.pulse != fxPulse) {
+		fxPulse = p.pulse;
+		cam.shake(0.012, 0.3);
+	}
+}
+
 function update(elapsed) {
+	updateChannelFx();
 	applyWindowPosition();
 	if (!canConfirm || closing)
 		return;
@@ -724,6 +753,8 @@ function updateAdjust() {
 }
 
 function destroy() {
+	if (fxShader != null)
+		cam.removeShader(fxShader);
 	FlxG.cameras.remove(cam);
 	FlxG.cameras.remove(ghostCam);
 	FlxG.cameras.remove(veilCam);
