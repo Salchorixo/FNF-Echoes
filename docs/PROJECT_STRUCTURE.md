@@ -49,7 +49,7 @@ FNF_Echoes/
         │       ├── EchoSelectState.hx # Selección de Echo: 3 ventanas XP en pixel art (solo Echo 1 desbloqueado)
         │       ├── LoadingState.hx    # Pantalla de carga (Fase 4) — ojo estático + barra placeholder
         │       ├── StoryMapState.hx   # Selector de canciones: camino vertical con 3 nodos-esfera, fondo y ventana de mecánica por nodo (ambientaciones en bucle), Zyra animado y rectángulo de arte
-        │       └── OptionsState.hx    # Controles, idioma, gameplay — reemplaza el OptionsMenu nativo
+        │       └── OptionsState.hx    # Ajustes: ventana de cristal Vista abierta como SUBESTADO (ModSubState) encima del menú principal, sin transición
         │
         ├── images/              # Sprites: personajes, escenarios, UI
         │   ├── characters/

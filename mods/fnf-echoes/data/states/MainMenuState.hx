@@ -6,6 +6,7 @@ import flixel.tweens.FlxTween;
 import flixel.util.FlxColor;
 import flixel.util.FlxTimer;
 import funkin.backend.scripting.ModState;
+import funkin.backend.scripting.ModSubState;
 import funkin.backend.shaders.CustomShader;
 import funkin.backend.scripting.Script;
 import funkin.backend.utils.CoolUtil;
@@ -601,11 +602,14 @@ function confirmSelection() {
 		return;
 	}
 
-	markReturn();
 	switch (buttonKeys[selectedIndex]) {
-		case "PLAY": FlxG.switchState(new ModState("EchoSelectState"));
-		case "SETTINGS": FlxG.switchState(new ModState("OptionsState"));
-		case "CREDITS": FlxG.switchState(new CreditsMain());
+		case "PLAY":
+			markReturn();
+			FlxG.switchState(new ModState("EchoSelectState"));
+		case "SETTINGS": openSettings();
+		case "CREDITS":
+			markReturn();
+			FlxG.switchState(new CreditsMain());
 	}
 }
 
@@ -635,6 +639,14 @@ function updateMouse() {
 }
 
 function update(elapsed) {
+	// While the Settings window is open the menu keeps moving but does not react to the keyboard or the mouse.
+	if (subState != null) {
+		updateParticles(elapsed);
+		syncPencils();
+		updateShader(elapsed);
+		return;
+	}
+
 	// The record spins while the music plays.
 	if (landed && FlxG.sound.music != null && FlxG.sound.music.playing && vinyl.animation.curAnim == null)
 		vinyl.animation.play('spin');
@@ -672,6 +684,33 @@ function destroy() {
 }
 
 // ---------------------------------------------------------------- themes (BE-16)
+
+// Settings is not a screen: it is a window laid over this menu (BE-20), opened as a sub-state, so there is no
+// transition. The menu keeps moving behind it (persistentUpdate) but ignores the keyboard and the mouse
+// while the window is open (see update()).
+function openSettings() {
+	persistentUpdate = true;
+	var sub = new ModSubState("OptionsState");
+	sub.closeCallback = () -> onSettingsClosed();
+	openSubState(sub);
+}
+
+// The window closed: the language may have changed, so the texts and the wallpaper (its bar has words in it)
+// are put in the language again.
+function onSettingsClosed() {
+	persistentUpdate = false;
+	for (i in 0...buttonKeys.length) {
+		var text = i18n.call("get", [buttonKeys[i]]);
+		buttonLabels[i].text = text;
+		buttonShadows[i].text = text;
+	}
+	wall.loadGraphic(wallImage());
+	wall.scale.set(3, 3);
+	wall.updateHitbox();
+	wall.setPosition(0, 0);
+	wall.antialiasing = false;
+	updateHighlight();
+}
 
 function playThemeSound(name:String) {
 	FlxG.sound.play(themer.call("sound", [theme, name]));

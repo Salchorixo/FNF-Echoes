@@ -103,3 +103,8 @@ mismo formato: síntoma → causa → qué hacer.
 
 ### 22. Probar un juego que Zyra también puede estar usando
 - Al abrir el juego desde la terminal aparece en la pantalla de Zyra y puede estar tocándolo a la vez: el estado cambia solo (se abre Ajustes, se mueve un deslizador). **Una prueba con teclas puede cambiar sus ajustes guardados** (idioma, calidad, volumen...). Antes de pulsar teclas en pantallas de Ajustes, apunta los valores de partida y devuélvelos; mejor probar esas pantallas con capturas y lo mínimo de teclas.
+
+### 23. Un subestado (ModSubState) necesita su propia cámara si debe verse por encima de otras cámaras
+- **Síntoma:** una ventana abierta con `openSubState` queda tapada por Zyra o por el lápiz del estado de debajo, o el estado de debajo se queda congelado.
+- **Causa:** los objetos del subestado se dibujan en la cámara por defecto, y una cámara añadida después (`topCam` del menú) se dibuja por encima; además, el estado de debajo solo se actualiza si `persistentUpdate = true`.
+- **Qué hacer:** dar al subestado su propia cámara transparente (`new FlxCamera()`, `bgColor = 0x00000000`, `FlxG.cameras.add(cam, false)`), asignar `obj.cameras = [cam]` a cada objeto antes de `add(obj)` (un `put(obj)` auxiliar) y quitarla en `destroy()`. En el estado de debajo: `persistentUpdate = true` al abrirlo y, mientras `subState != null`, hacer solo lo que debe seguir moviéndose y salir de `update()` antes de leer el teclado y el ratón. Ojo al sustituir `add(` por `put(` con una expresión regular: no cambies el `add(` de dentro de `put` (se llamaría a sí misma sin fin y el juego se cierra con un fallo de pila).
