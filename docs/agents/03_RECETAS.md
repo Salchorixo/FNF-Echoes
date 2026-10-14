@@ -7,10 +7,10 @@ Cada receta es una lista cerrada. Síguela en orden. Si un paso no se cumple
 
 ## Receta A — Pantalla nueva (estado)
 
-1. Abre `data/states/MainMenuState.hx` y léelo completo: es el modelo.
+1. Abre `data/states/MainMenuState.hx` (animación dibujada, UI en sprites, partículas, ratón y foco) y `data/states/EchoSelectState.hx` (sprites de pixel art animados, selección con elevación, ventana bloqueada que tiembla) y léelos completos: son los modelos.
 2. Crea `mods/fnf-echoes/data/states/NombreState.hx` con el esqueleto de `02_HSCRIPT_CODENAME.md` §2.
 3. Primera línea de `create()`: `FlxG.camera.scroll.set(0, 0);`
-4. Si debe verse con el efecto VHS, adjúntalo igual que en `MainMenuState.hx`.
+4. Si debe verse con el efecto VHS, adjúntalo con el bloque `vhsFx` de `02_HSCRIPT_CODENAME.md` §2. (El menú principal y la selección de Echo **no** lo llevan, por decisión de Zyra: sin curvatura ni filtros por ahora.)
 5. Conecta la entrada: en la pantalla que lleva a esta, `FlxG.switchState(new ModState("NombreState"));`
 6. Conecta la salida: `controls.BACK` vuelve a la pantalla anterior.
 7. Solo si **reemplaza** una pantalla nativa: añade la línea en `data/config/modpack.ini` (`02` §4).
@@ -110,3 +110,14 @@ División de trabajo: **el estado decide cuándo golpea Zyra** (su animación, d
 **Resolución.** No hay nada fijo: lee `window.display.bounds`, da a la ventana la proporción del juego (≤50 % del ancho y ≤70 % del alto del monitor) y la velocidad sale de la curva sobre la distancia real. `setVirtualScreen(w, h)` simula otra pantalla (solo prueba la matemática; no el SO).
 
 **Trampas.** Cada cambio de modo es asíncrono: el script espera (0,9 s al salir, 0,5 s tras redimensionar, 1,0 s al entrar) en vez de leer `window.*` enseguida. La ventana nunca sale de la pantalla (el temblor está recortado a los bordes). Para no fiarse solo de `window.x`, mide desde fuera: en macOS, `CGWindowListCopyWindowInfo` por PID da la posición real.
+
+## Receta J — Meter una animación dibujada (secuencia con alfa) en un estado
+
+Ejemplo vivo: `createSketch()` en `data/states/MainMenuState.hx` (Zyra en su sofá). El vídeo del motor (hxvlc) **no lee alfa**, así que una animación sobre fondo transparente va como atlas de imágenes, no como mp4.
+
+1. Los frames salen de Blender como PNG RGBA (1920×1080, numerados). El empaquetador **vive fuera del repo** (arte privado): `FNF_Echoes_Production/02_Scenes/menú/main menu/AI_pack_atlas.py <carpeta_renders> <salida> [ancho]` (solo Pillow). El menú principal se empaqueta con `1280` (720p); sin ancho conserva 1920×1080. Recorta cada frame a su caja opaca (Sparrow guarda `frameX/frameY` y el lienzo completo) y los reparte en páginas de máx. 4096×4096.
+2. La salida va a `mods/fnf-echoes/images/<ruta>/1.png`, `1.xml`, `2.png`, `2.xml`… (convención multi-spritesheet del motor: `Paths.getFrames('<ruta>')` junta todas las páginas). Los frames se llaman `m_0000`… con el **número de frame del render**.
+3. En el estado: `spr.frames = Paths.getFrames('<ruta>')`, luego `spr.animation.addByIndices('intro', 'm_', [indices], '', fps, false)` y otra `loop` con `true`. Encadena: `spr.animation.onFinish.add((n) -> if (n == 'intro') spr.animation.play('loop'))`.
+4. Escala el sprite a la pantalla (`setGraphicSize(FlxG.width)`, `updateHitbox()`, posición 0,0): así cada frame conserva su sitio.
+5. Para sincronizar algo con un fotograma (música, partículas) usa `spr.animation.onFrameChange.add((nombre, nFrame, _) -> ...)` con `>=`, no `==`, por si se salta un frame.
+6. **Coste:** el atlas del menú principal (276 frames, v5) a 720p son ~36 MB en disco y ~240 MB de memoria de vídeo (5 páginas). A 1080p (con la v2) eran ~86 MB y ~800 MB (12 páginas). WebP no sirve: el motor solo lee PNG y JPG, y no baja la memoria de vídeo. Si hiciera falta aún menos: quitar el segundo frame de cada par (la pose va "a pasos de 2"; solo cambia el temblor del rayado).

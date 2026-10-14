@@ -16,7 +16,7 @@ muestra **los patrones que ya usa el repo**. Cópialos; no inventes otros.
 
 ## 2. Esqueleto de un estado (pantalla)
 
-Basado en `data/states/MainMenuState.hx`:
+Basado en el patrón de `data/states/MainMenuState.hx` y `EchoSelectState.hx` (ninguna de las dos adjunta el VHS, por decisión de Zyra; si una pantalla lo necesita, el bloque `vhsFx` de abajo es el patrón):
 
 ```haxe
 import flixel.util.FlxColor;
@@ -76,7 +76,7 @@ Scripts compartidos que existen hoy:
 
 | Script | Funciones que se llaman desde fuera | Para qué |
 |---|---|---|
-| `scripts/ui/cardMenu.hx` | `create(labels)`, `changeSelection(dir)`, `getSelectedIndex()` | Grilla de tarjetas (menú principal, selección de Echo) |
+| `scripts/ui/cardMenu.hx` | `create(labels)`, `changeSelection(dir)`, `getSelectedIndex()` | Grilla de tarjetas (hoy sin consumidores) |
 | `scripts/ui/translate.hx` | `get(key)` | Textos EN/ES de la UI |
 | `scripts/ui/nodeArtPanel.hx` | (ábrelo y revisa) | Panel de arte del tablero-mapa |
 | `scripts/effects/vhsShader.hx` | `attach()` | Pone el shader VHS en la cámara |

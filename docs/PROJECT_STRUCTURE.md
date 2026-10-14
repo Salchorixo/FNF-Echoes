@@ -41,10 +41,13 @@ FNF_Echoes/
         │       │                    # corrido vía ModState del motor. Path fijado por el motor,
         │       │                    # no elegible (Paths.script('data/states/$name')).
         │       ├── TitleState.hx      # Intro/boot (reemplaza el TitleState nativo)
-        │       ├── MainMenuState.hx   # Menú de 3 tarjetas
-        │       ├── EchoSelectState.hx # Selección de Echo/temporada (solo Echo 1 desbloqueado)
+        │       ├── MainMenuState.hx   # Menú principal (boceto de Zyra): fondo blanco, botones amarillos a la
+        │       │                    # izq., Zyra con auriculares en su sofá, carpeta (arriba der.) y vinilo
+        │       │                    # (abajo der.). Zyra y el sofá son la animación dibujada (atlas en images/menus/main/sketch/).
+        │       │                    # Botones/carpeta/vinilo XP bocetados y notas como partículas (images/menus/main/ui/); sin VHS por decisión de Zyra
+        │       ├── EchoSelectState.hx # Selección de Echo: 3 ventanas XP en pixel art (solo Echo 1 desbloqueado)
         │       ├── LoadingState.hx    # Pantalla de carga (Fase 4) — ojo estático + barra placeholder
-        │       ├── StoryMapState.hx   # Tablero-mapa con nodos y progreso
+        │       ├── StoryMapState.hx   # Selector de canciones: camino vertical con 3 nodos-esfera (pixel art), ventana de mecánica y rectángulo de arte
         │       └── OptionsState.hx    # Controles, idioma, gameplay — reemplaza el OptionsMenu nativo
         │
         ├── images/              # Sprites: personajes, escenarios, UI
@@ -56,7 +59,7 @@ FNF_Echoes/
         ├── scripts/              # Lógica de sistemas propios (softcoded, no toca el core)
         │   ├── ui/
         │   │   ├── cardMenu.hx      # Grilla de tarjetas + selección, compartida vía
-        │   │   │                    # Script.create() entre MainMenuState y EchoSelectState
+        │   │   │                    # Script.create() (hoy sin consumidores)
         │   │   ├── nodeArtPanel.hx  # Panel de arte del tablero-mapa (slide-in + fade),
         │   │   │                    # compartido igual, para cuando haya más de un mapa
         │   │   └── translate.hx     # Diccionario EN/ES de textos propios de la UI,
@@ -87,5 +90,5 @@ FNF_Echoes/
 4. Si se añade una carpeta de primer nivel nueva, se actualiza este documento en el mismo commit (regla fijada en `AGENTS.md`).
 5. **No hay `meta.json` de mod** — Codename Engine no lee ningún archivo de metadata para mods (a diferencia de `songs/<song>/meta.json`, que sí existe pero es otro esquema, de canciones). El nombre del mod se declara en `[Common] NAME=` dentro de `modpack.ini`.
 6. **Para probar localmente**, el `.app` compilado busca `mods/` junto a su propio ejecutable (`CodenameEngine.app/Contents/Resources/mods/`), no en la raíz del repo. Se enlaza (symlink) `mods/fnf-echoes/` del repo ahí — el repo sigue siendo la única fuente de verdad, y los cambios se reflejan sin recompilar el motor. **Ojo:** el `.app` actual está compilado en modo `cne test` (`-DTEST_BUILD`) y en ese modo la lista de mods sale de `engine/mods/`, no de `Contents/Resources/mods/`; hace falta además el enlace local `engine/mods/fnf-echoes -> ../../mods/fnf-echoes` (el submódulo lo ignora). Ver `docs/agents/04_TRAMPAS_CONOCIDAS.md` nº 15.
-7. **El shader VHS se adjunta por-estado, no globalmente.** El motor tiene un hook pensado exactamente para esto (`data/global/LIB_$modName.hx`, disparado por `postStateSwitch`) pero en esta sesión nunca se ejecutó — ni ese hook ni un `update()` simple en el mismo archivo llegaron a dispararse, sin error ni explicación visible, con el archivo confirmado en el lugar correcto. Quedó sin diagnosticar. Mientras tanto, cada estado llama `Script.create(Paths.script('scripts/effects/vhsShader')).call('attach')` al inicio de su propio `create()` — mismo patrón de composición que `cardMenu`/`nodeArtPanel`, solo que repetido en cada estado en vez de centralizado. Si algún día se resuelve el misterio del global script, esto se puede consolidar ahí.
+7. **El shader VHS se adjunta por-estado, no globalmente.** El motor tiene un hook pensado exactamente para esto (`data/global/LIB_$modName.hx`, disparado por `postStateSwitch`) pero en esta sesión nunca se ejecutó — ni ese hook ni un `update()` simple en el mismo archivo llegaron a dispararse, sin error ni explicación visible, con el archivo confirmado en el lugar correcto. Quedó sin diagnosticar. Mientras tanto, cada estado llama `Script.create(Paths.script('scripts/effects/vhsShader')).call('attach')` al inicio de su propio `create()` — mismo patrón de composición que `cardMenu`/`nodeArtPanel`, solo que repetido en cada estado en vez de centralizado. Si algún día se resuelve el misterio del global script, esto se puede consolidar ahí. **Excepción (2026-10-11):** `MainMenuState` no lo adjunta (decisión de Zyra: sin curvatura ni filtros por ahora); para volver a ponerlo basta llamar `attach()` de `vhsShader` en su `create()`.
 8. **`cardMenu.hx` desplaza la cámara levemente según la tarjeta seleccionada** (izquierda/centro/derecha) y no la resetea al salir — es responsabilidad de **cada pantalla propia** resetear `FlxG.camera.scroll.set(0, 0)` al inicio de su propio `create()`, no de quien la llama. Ya lo hacen `TitleState`, `OptionsState`, `StoryMapState` y `LoadingState`. Cualquier estado nuevo que pueda alcanzarse después de una pantalla de tarjetas (`MainMenuState`/`EchoSelectState`) debe hacer lo mismo — así cada pantalla garantiza su propio punto de partida en vez de que cada llamador tenga que acordarse de limpiar.
