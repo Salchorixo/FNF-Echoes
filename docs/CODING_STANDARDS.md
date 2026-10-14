@@ -12,7 +12,7 @@ La solución más simple que resuelve el problema es la correcta. Nada de abstra
 
 ### DRY (Don't Repeat Yourself)
 Ninguna lógica se copia y pega. Si el mismo bloque aparece dos veces, se extrae a un script compartido.
-- Ejemplo real en este proyecto: la grilla de tarjetas vive en un único lugar (`scripts/ui/cardMenu.hx`), compartida por `MainMenuState` y `EchoSelectState` vía `Script.create()` — no se reimplementa por cada pantalla.
+- Ejemplo real en este proyecto: la grilla de tarjetas vive en un único lugar (`scripts/ui/cardMenu.hx`), hoy sin consumidores (`MainMenuState` y `EchoSelectState` pasaron a ser pantallas propias el 2026-10-11 y el 2026-10-13; decidir si se borra) (el menú principal pasó a ser una pantalla propia el 2026-10-11) — no se reimplementa por cada pantalla.
 - Datos repetidos (posiciones de nodos, canciones por punto) van en estructuras de datos (objetos/arrays), no hardcodeados en múltiples archivos.
 
 ### POO (Programación Orientada a Objetos)

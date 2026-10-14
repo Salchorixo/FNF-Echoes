@@ -11,6 +11,8 @@ import funkin.options.Options;
 // NOT in this table — those names stay in English always, per project rule,
 // so callers should never route them through get().
 var uiStrings:Array<Dynamic> = [
+	{key: "PLAY", en: "PLAY", es: "JUGAR"},
+	{key: "SETTINGS", en: "SETTINGS", es: "AJUSTES"},
 	{key: "OPTIONS", en: "OPTIONS", es: "OPCIONES"},
 	{key: "CREDITS", en: "CREDITS", es: "CRÉDITOS"},
 	{key: "CONTROLS", en: "CONTROLS", es: "CONTROLES"},
@@ -27,7 +29,21 @@ var uiStrings:Array<Dynamic> = [
 	{key: "OFF", en: "OFF", es: "NO"},
 	{key: "HIGH", en: "HIGH", es: "ALTA"},
 	{key: "PERFORMANCE", en: "PERFORMANCE", es: "RENDIMIENTO"},
-	{key: "PRESS A KEY...", en: "PRESS A KEY...", es: "PRESIONA UNA TECLA..."}
+	{key: "PRESS A KEY...", en: "PRESS A KEY...", es: "PRESIONA UNA TECLA..."},
+	{key: "AUDIO", en: "AUDIO", es: "AUDIO"},
+	{key: "SCREEN", en: "SCREEN", es: "PANTALLA"},
+	{key: "VOLUME", en: "VOLUME", es: "VOLUMEN"},
+	{key: "MUSIC", en: "MUSIC", es: "MÚSICA"},
+	{key: "SOUND EFFECTS", en: "SOUND EFFECTS", es: "EFECTOS"},
+	{key: "REDUCE FLASHES", en: "REDUCE FLASHES", es: "REDUCIR DESTELLOS"},
+	{key: "BACKGROUND CHANGES", en: "BACKGROUND CHANGES", es: "CAMBIOS DE FONDO"},
+	{key: "DESKTOP EFFECTS", en: "DESKTOP EFFECTS", es: "EFECTOS DE ESCRITORIO"},
+	{key: "STATUS HINT", en: "ARROWS MOVE    ENTER SELECT    ESC BACK", es: "FLECHAS MOVER    ENTER ELEGIR    ESC VOLVER"},
+	{key: "DESC AUDIO", en: "Adjust the overall volume, the music and the sound effects.", es: "Ajusta el volumen general, la música y los efectos."},
+	{key: "DESC CONTROLS", en: "Change a key: press Enter on it and then the new key.", es: "Cambia una tecla: pulsa Enter sobre ella y luego la tecla nueva."},
+	{key: "DESC GAMEPLAY", en: "Graphics quality and aids for the notes.", es: "Calidad gráfica y ayudas para las notas."},
+	{key: "DESC SCREEN", en: "Reduce flashes, and choose if the background and the desktop change by themselves.", es: "Reduce los destellos y decide si el fondo y el escritorio cambian solos."},
+	{key: "DESC LANGUAGE", en: "Choose the language of the game.", es: "Elige el idioma del juego."}
 ];
 
 function get(key:String):String {

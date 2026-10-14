@@ -14,7 +14,7 @@ cometer errores en código, textos o nombres.
 | **Echo** | Una temporada. Nunca se traduce. |
 | **Capítulo / nodo** | Un punto del tablero-mapa (`StoryMapState`). |
 | **Bloque** | Cada una de las dos mitades de una canción (antes y después de un giro de la historia). |
-| **EchoOS** | El "sistema operativo" ficticio que dibuja el juego para la parte final: ventanas, pop-ups de error, carpetas, monitor de procesos. **No imita ni a Windows ni a macOS.** |
+| **EchoOS** | El "sistema operativo" ficticio del computador donde ocurre la historia: ventanas, pop-ups de error, carpetas, monitor de procesos. Su estética es un **homenaje retro a los sistemas de escritorio**: empieza en Windows XP (pixel art), pasa por Windows Vista / Frutiger Aero y, cuando se corrompe, por iconos de Windows más nuevo y de macOS (decisión de Zyra, 2026-10-13: es parte del lore). Se dibuja siempre con arte propio. |
 | **Crasheo 1** | Cierre real y controlado del juego al final del bloque 1 de la canción de Kiyu. El jugador debe reabrir el mod. |
 | **Crasheo 2** | Cierre **falso**, dentro del juego: pop-up, Zyra detrás, impact frame, oscuridad. |
 | **Menú roto** | Pantalla de inicio alterada que aparece al reabrir después del crasheo 1. |
@@ -41,7 +41,7 @@ Zyra, dentro del computador.
 
 ## 4. Reglas de diseño que afectan al código
 
-- **Nada de copiar el sistema real:** no uses nombres como `.exe` ni ventanas que imiten Windows o macOS. Todo es estilo EchoOS.
+- **Estética retro de escritorio (decisión de Zyra, 2026-10-13):** las ventanas y los iconos pueden evocar Windows XP, Windows Vista (Frutiger Aero) y, más adelante, Windows nuevo y macOS, porque es parte del lore. Lo que se mantiene: **todo el arte es propio** (dibujado o generado para el juego; nada de capturas, iconos ni recursos copiados de esos sistemas) y no se usan nombres de archivo reales como `.exe`.
 - **Privacidad:** el juego **nunca** captura, guarda ni envía nada del escritorio del jugador. La transparencia solo deja "ver a través".
 - **Opción de privacidad:** "Efectos de escritorio" activado/desactivado (para quien juega en stream). Desactivado → se usa el escritorio falso.
 - **Fotosensibilidad:** advertencia al inicio del mod y opción para reducir destellos (por el impact frame y los glitches).

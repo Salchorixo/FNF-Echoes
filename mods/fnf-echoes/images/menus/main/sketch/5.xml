@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TextureAtlas imagePath="5.png">
+	<SubTexture name="m_0014" x="2" y="2" width="1200" height="233" frameX="0" frameY="-487" frameWidth="1280" frameHeight="720"/>
+	<SubTexture name="m_0015" x="1206" y="2" width="1204" height="233" frameX="0" frameY="-487" frameWidth="1280" frameHeight="720"/>
+	<SubTexture name="m_0016" x="2414" y="2" width="1210" height="233" frameX="0" frameY="-487" frameWidth="1280" frameHeight="720"/>
+	<SubTexture name="m_0017" x="2" y="239" width="1210" height="233" frameX="0" frameY="-487" frameWidth="1280" frameHeight="720"/>
+	<SubTexture name="m_0018" x="1216" y="239" width="1213" height="233" frameX="0" frameY="-487" frameWidth="1280" frameHeight="720"/>
+	<SubTexture name="m_0019" x="2433" y="239" width="1221" height="233" frameX="0" frameY="-487" frameWidth="1280" frameHeight="720"/>
+</TextureAtlas>
