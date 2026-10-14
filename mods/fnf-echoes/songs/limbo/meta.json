@@ -1,15 +1,14 @@
 {
-	"name": "limbo",
-	"displayName": "Limbo",
-	"bpm": 150.0,
-	"beatsPerMeasure": 4,
-	"stepsPerBeat": 4,
+	"opponentModeAllowed": false,
 	"difficulties": [
 		"hard"
 	],
 	"icon": "dad",
 	"color": "#6C5CE7",
 	"coopAllowed": false,
-	"opponentModeAllowed": false,
-	"needsVoices": true
+	"stepsPerBeat": 4,
+	"displayName": "Limbo",
+	"beatsPerMeasure": 4,
+	"needsVoices": true,
+	"bpm": 150
 }
