@@ -90,3 +90,8 @@ mismo formato: síntoma → causa → qué hacer.
 - **Síntoma:** al abrir el juego aparece un estado de prueba (p. ej. `TransparencyTestState`) en vez de la intro, aunque `TitleState.hx` sea correcto. En el log no hay errores: la primera línea de tu estado nunca sale.
 - **Causa:** `[StateRedirects]` de `mods/fnf-echoes/data/config/modpack.ini` tenía `TitleState="TransparencyTestState"` (atajo de una prueba anterior), que gana sobre `TitleState.hx`.
 - **Qué hacer:** `Get-Content mods\fnf-echoes\data\config\modpack.ini`. Para probar un estado, ponerlo ahí (`TitleState="MiEstadoDePrueba"`) y **devolver `TitleState="TitleState"` al terminar**. No lo versiones con el atajo puesto. Si hay varias copias del juego (p. ej. en Descargas y en el Escritorio), comprueba cuál abres.
+
+### 20. Probar el juego con el teclado desde la terminal (macOS)
+- **Síntoma:** al mandar teclas con `osascript -e 'tell application "System Events" to key code 126'` el juego las procesa a veces sí y a veces no, o con un fotograma de retraso; la selección parece "no hacer caso".
+- **Causa:** (1) `key code` pulsa y suelta en el mismo instante y el juego pierde la pulsación si cae entre dos fotogramas; (2) si la ventana del agente recupera el foco entre comandos, la tecla va a otra app.
+- **Qué hacer:** poner el juego en primer plano justo antes (`set frontmost of first process whose name is "CodenameEngine" to true`) y mandar la tecla con una pulsación **sostenida** (~0,12 s) con CoreGraphics desde Python (`ctypes` + `CGEventCreateKeyboardEvent` / `CGEventPost`), esperando ~1 s entre teclas. Con el Mac bloqueado las capturas salen negras: no lo desbloquees.

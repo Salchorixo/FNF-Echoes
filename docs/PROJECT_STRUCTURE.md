@@ -47,7 +47,7 @@ FNF_Echoes/
         │       │                    # Botones/carpeta/vinilo XP bocetados y notas como partículas (images/menus/main/ui/); sin VHS por decisión de Zyra
         │       ├── EchoSelectState.hx # Selección de Echo: 3 ventanas XP en pixel art (solo Echo 1 desbloqueado)
         │       ├── LoadingState.hx    # Pantalla de carga (Fase 4) — ojo estático + barra placeholder
-        │       ├── StoryMapState.hx   # Selector de canciones: camino vertical con 3 nodos-esfera (pixel art), ventana de mecánica y rectángulo de arte
+        │       ├── StoryMapState.hx   # Selector de canciones: camino vertical con 3 nodos-esfera, fondo y ventana de mecánica por nodo (ambientaciones en bucle), Zyra animado y rectángulo de arte
         │       └── OptionsState.hx    # Controles, idioma, gameplay — reemplaza el OptionsMenu nativo
         │
         ├── images/              # Sprites: personajes, escenarios, UI
