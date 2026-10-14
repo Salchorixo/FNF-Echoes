@@ -713,7 +713,7 @@ function update(elapsed) {
 	updateShader(elapsed);
 
 	if (FlxG.keys.justPressed.F4) requestTheme(themer.call("next", [theme])); // test shortcut
-	if (introDone && !themeBusy && controls.DEV_ACCESS && !Flags.DISABLE_EDITORS) openEditors(); // the 7 key (BE-40)
+	if (introDone && !themeBusy && FlxG.keys.justPressed.SEVEN && !Flags.DISABLE_EDITORS) openEditors(); // the 7 key (BE-40, BE-43)
 
 	if (controls.UP_P) moveSelection(-1);
 	else if (controls.DOWN_P) {
@@ -748,6 +748,7 @@ function destroy() {
 // ---------------------------------------------------------------- themes (BE-16)
 
 // The engine's editor picker (chart editor...) on the 7 key, as in the engine's own main menu, which this menu replaces (BE-40).
+// It reads the physical 7 key, NOT controls.DEV_ACCESS: that one is devModeOnly and does nothing unless Options.devMode is on (BE-43).
 // The editors use the system pointer, so the themed one is put away while the picker is open.
 function openEditors() {
 	persistentUpdate = false;
