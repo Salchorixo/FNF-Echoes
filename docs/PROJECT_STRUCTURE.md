@@ -44,11 +44,12 @@ FNF_Echoes/
         │       ├── MainMenuState.hx   # Menú principal (boceto de Zyra): fondo blanco, botones amarillos a la
         │       │                    # izq., Zyra con auriculares en su sofá, carpeta (arriba der.) y vinilo
         │       │                    # (abajo der.). Zyra y el sofá son la animación dibujada (atlas en images/menus/main/sketch/).
-        │       │                    # Botones/carpeta/vinilo XP bocetados y notas como partículas (images/menus/main/ui/); sin VHS por decisión de Zyra
+        │       │                    # Botones/carpeta/vinilo y fondo según el TEMA (Vista, XP, 98, Mac; images/menus/themes/) con el lápiz y Zyra
+        │       │                    # en otra cámara; las notas son partículas (images/menus/main/ui/); sin VHS por decisión de Zyra
         │       ├── EchoSelectState.hx # Selección de Echo: 3 ventanas XP en pixel art (solo Echo 1 desbloqueado)
         │       ├── LoadingState.hx    # Pantalla de carga (Fase 4) — ojo estático + barra placeholder
         │       ├── StoryMapState.hx   # Selector de canciones: camino vertical con 3 nodos-esfera, fondo y ventana de mecánica por nodo (ambientaciones en bucle), Zyra animado y rectángulo de arte
-        │       └── OptionsState.hx    # Controles, idioma, gameplay — reemplaza el OptionsMenu nativo
+        │       └── OptionsState.hx    # Ajustes: ventana de cristal Vista abierta como SUBESTADO (ModSubState) encima del menú principal, sin transición
         │
         ├── images/              # Sprites: personajes, escenarios, UI
         │   ├── characters/
@@ -62,6 +63,8 @@ FNF_Echoes/
         │   │   │                    # Script.create() (hoy sin consumidores)
         │   │   ├── nodeArtPanel.hx  # Panel de arte del tablero-mapa (slide-in + fade),
         │   │   │                    # compartido igual, para cuando haya más de un mapa
+        │   │   ├── themeManager.hx  # Sistema de temas (Vista, XP, 98, Mac): datos y reglas de cuándo cambia
+        │   │   │                    # el tema del escritorio; lo usa MainMenuState y lo alimenta StoryMapState (Receta L)
         │   │   └── translate.hx     # Diccionario EN/ES de textos propios de la UI,
         │   │                        # compartido entre MainMenuState y OptionsState —
         │   │                        # "ECHOES"/"ECHO" nunca pasan por acá (regla fija:
@@ -75,9 +78,11 @@ FNF_Echoes/
         │   └── gameplay/           # Scripts de gameplay (eventos, notetypes propios)
         │
         ├── shaders/               # Shaders GLSL propios
-        │   └── VHSShader.frag      # Efecto de distorsión/VHS
+        │   ├── VHSShader.frag      # Efecto de distorsión/VHS
+        │   └── ChannelShader.frag  # Glitch de cambio de canal del sistema de temas (solo mientras dura un cambio)
         │
-        ├── sounds/                # SFX de UI (selección de tarjeta, movimiento de ficha, etc.)
+        ├── sounds/                # SFX de UI
+        │   └── themes/            # Sonidos del sistema de temas: channel_change y, por tema, hover/confirm/arrive
         ├── music/                 # Música de menú
         └── fonts/                 # Tipografías propias
 ```

@@ -63,7 +63,7 @@ mismo formato: síntoma → causa → qué hacer.
 - **Causa:** la pantalla completa nativa de macOS crea un **Space propio**, siempre opaco y sin escritorio detrás.
 - **Qué hace ya el motor (parche de BE-7):** la bloquea en todas las ventanas y fija `SDL_VIDEO_MAC_FULLSCREEN_SPACES=0`, así que `FlxG.fullscreen`, Alt+Enter y Ctrl+Cmd+F dan una ventana sin bordes del tamaño del escritorio, **sin Space**, donde la transparencia funciona. No hace falta código especial en el mod.
 - **Qué NO hacer:** no recoloques la ventana a mano (`window.x/y/width/height`, `borderless`) como parche para arreglar el fullscreen: Stage Manager y AppKit la reubican y queda a medias. **Excepción deliberada:** la coreografía de ventana (`scripts/effects/windowFx.hx`, Receta I) sí mueve y redimensiona la ventana a propósito, siempre desde modo ventana y terminando en pantalla completa; en macOS 27.2 (Apple Silicon, sin escalado) las posiciones pedidas coincidieron con las que ve el SO, y en Windows (VM, escala 100 %) los 8 choques dieron hueco 0. Stage Manager y escalado 125/150 % en Windows: NO PROBADO. No dependas de `window.fullscreen` leído justo después de cambiarlo.
-- **Regla obligatoria (`AGENTS.md` §0.11):** el juego se abre en ventana. `TitleState.hx` todavía hace `FlxG.fullscreen = true` al crearse (ahora sin Space); decidir si arranca en ventana está pendiente.
+- **Regla obligatoria (`AGENTS.md` §0.11):** el juego se abre en ventana. `TitleState.hx` ya no pide pantalla completa (decisión de Zyra, 2026-10-13, BE-18): el juego arranca en ventana.
 
 ### 15. En modo `cne test` el motor busca los mods en `engine/mods/`, no en el `.app`
 - **Síntoma:** el juego arranca con el menú de Story Mode de siempre; en el log sale `Mod "fnf-echoes" not found in mods list, switching to base game!` y el botón `DISABLE MODS` aparece solo.
@@ -95,3 +95,16 @@ mismo formato: síntoma → causa → qué hacer.
 - **Síntoma:** al mandar teclas con `osascript -e 'tell application "System Events" to key code 126'` el juego las procesa a veces sí y a veces no, o con un fotograma de retraso; la selección parece "no hacer caso".
 - **Causa:** (1) `key code` pulsa y suelta en el mismo instante y el juego pierde la pulsación si cae entre dos fotogramas; (2) si la ventana del agente recupera el foco entre comandos, la tecla va a otra app.
 - **Qué hacer:** poner el juego en primer plano justo antes (`set frontmost of first process whose name is "CodenameEngine" to true`) y mandar la tecla con una pulsación **sostenida** (~0,12 s) con CoreGraphics desde Python (`ctypes` + `CGEventCreateKeyboardEvent` / `CGEventPost`), esperando ~1 s entre teclas. Con el Mac bloqueado las capturas salen negras: no lo desbloquees.
+
+### 21. Un shader de cámara afecta a todo lo que dibuja esa cámara
+- **Síntoma:** al poner un shader (glitch, VHS...) con `FlxG.camera.addShader(...)`, Zyra, el lápiz y todo lo demás sale deformado, aunque solo se quisiera afectar al fondo y a los botones.
+- **Causa:** un shader de cámara procesa la imagen final de esa cámara entera.
+- **Qué hacer:** separar en dos cámaras. Lo que debe quedar intacto va en una cámara propia, transparente y por encima (`new FlxCamera()`, `bgColor = 0x00000000`, `FlxG.cameras.add(cam, false)`; cada sprite con `sprite.cameras = [cam]`). Y el shader solo se añade mientras dura el efecto y se quita con `removeShader` al terminar.
+
+### 22. Probar un juego que Zyra también puede estar usando
+- Al abrir el juego desde la terminal aparece en la pantalla de Zyra y puede estar tocándolo a la vez: el estado cambia solo (se abre Ajustes, se mueve un deslizador). **Una prueba con teclas puede cambiar sus ajustes guardados** (idioma, calidad, volumen...). Antes de pulsar teclas en pantallas de Ajustes, apunta los valores de partida y devuélvelos; mejor probar esas pantallas con capturas y lo mínimo de teclas.
+
+### 23. Un subestado (ModSubState) necesita su propia cámara si debe verse por encima de otras cámaras
+- **Síntoma:** una ventana abierta con `openSubState` queda tapada por Zyra o por el lápiz del estado de debajo, o el estado de debajo se queda congelado.
+- **Causa:** los objetos del subestado se dibujan en la cámara por defecto, y una cámara añadida después (`topCam` del menú) se dibuja por encima; además, el estado de debajo solo se actualiza si `persistentUpdate = true`.
+- **Qué hacer:** dar al subestado su propia cámara transparente (`new FlxCamera()`, `bgColor = 0x00000000`, `FlxG.cameras.add(cam, false)`), asignar `obj.cameras = [cam]` a cada objeto antes de `add(obj)` (un `put(obj)` auxiliar) y quitarla en `destroy()`. En el estado de debajo: `persistentUpdate = true` al abrirlo y, mientras `subState != null`, hacer solo lo que debe seguir moviéndose y salir de `update()` antes de leer el teclado y el ratón. Ojo al sustituir `add(` por `put(` con una expresión regular: no cambies el `add(` de dentro de `put` (se llamaría a sí misma sin fin y el juego se cierra con un fallo de pila).

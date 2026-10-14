@@ -82,6 +82,7 @@ var glitchLeft:Float = 0;
 var windowX:Float = 6;
 
 var artPanel:Script;
+var themer:Script;
 var zyraAlert:FlxSprite;
 var zyraDown:FlxSprite;
 var pointer:FlxSprite;
@@ -121,6 +122,9 @@ var lastMouseY:Float = -1;
 function create() {
 	FlxG.camera.scroll.set(0, 0); // every screen resets its own camera
 	bgColor = FlxColor.BLACK;
+
+	themer = Script.create(Paths.script('scripts/ui/themeManager'));
+	themer.load();
 
 	buildBackground();
 	buildHalos();
@@ -620,6 +624,9 @@ function confirmSelection() {
 		return;
 
 	nodes[currentIndex].completed = true;
+	// The desktop of the main menu takes the theme of the song you finished (BE-16): the change plays when
+	// you are back in the menu.
+	themer.call("requestForSong", [currentIndex]);
 	var next = currentIndex + 1;
 	if (next < nodes.length && !nodes[next].unlocked)
 		unlockNode(next);

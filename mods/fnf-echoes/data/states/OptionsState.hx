@@ -1,3 +1,4 @@
+import flixel.FlxCamera;
 import flixel.FlxSprite;
 import flixel.text.FlxText;
 import flixel.tweens.FlxEase;
@@ -5,16 +6,19 @@ import flixel.tweens.FlxTween;
 import flixel.util.FlxColor;
 import flixel.util.FlxTimer;
 import flixel.input.keyboard.FlxKey;
-import funkin.backend.scripting.ModState;
 import funkin.backend.scripting.Script;
 import funkin.backend.utils.CoolUtil;
 import funkin.backend.utils.TranslationUtil;
 import funkin.options.Options;
 
-// Settings screen (BE-15), from Zyra's sketch in the common language of the menus: a floating Windows
+// Settings (BE-15 / BE-20), from Zyra's sketch in the common language of the menus: a floating Windows
 // Vista "explorer" window (glass frame, pixel art at 3x, pencil outline) over the main menu. The LEFT pane
 // lists five categories (AUDIO, CONTROLS, GAMEPLAY, SCREEN, LANGUAGE); the RIGHT pane shows the open
 // category's settings as tiles in two columns (icon + name + control) with a description box under them.
+// It is NOT a screen of its own: it is a SUB-STATE (ModSubState) opened over the main menu, which keeps moving
+// behind it (Zyra, the notes and the music; see MainMenuState.openSettings()). Everything here lives on its own
+// camera, above the menu's cameras, so there is no screen transition. Closing it (Back from the categories, the blue
+// orb or the red cross) just closes the window.
 // The window art has NO text (images/menus/options/vista_window.png, from AI_export_settings_vista.py in
 // the private art folder): every label is a FlxText drawn on top, so it goes through translate.hx.
 // All positions below are absolute screen pixels (native pixel x 3) read from that script.
@@ -123,25 +127,30 @@ var statusText:FlxText;
 var tileObjects:Array<Dynamic> = [];
 var tiles:Array<Dynamic> = [];
 
+var cam:FlxCamera;
+var closing:Bool = false;
 var capturingStillPressed:Bool = false;
 var canConfirm:Bool = false;
 var lastMouseX:Float = -1;
 var lastMouseY:Float = -1;
 
 function create() {
-	bgColor = FlxColor.WHITE;
-	FlxG.camera.scroll.set(0, 0); // every screen resets its own camera
-
 	i18n = Script.create(Paths.script('scripts/ui/translate'));
 	i18n.load();
 
-	var backdrop = new FlxSprite();
-	backdrop.loadGraphic(Paths.image('menus/options/vista_backdrop'));
-	add(backdrop);
+	// Its own transparent camera above the menu's (the menu's Zyra and pencil are on a camera of their own too).
+	cam = new FlxCamera();
+	cam.bgColor = 0x00000000;
+	FlxG.cameras.add(cam, false);
+
+	// The menu behind steps back a little (the same light veil the design had).
+	var veil = new FlxSprite();
+	veil.makeGraphic(FlxG.width, FlxG.height, 0x46ECF6FF);
+	put(veil);
 
 	var window = new FlxSprite();
 	window.loadGraphic(Paths.image('menus/options/vista_window'));
-	add(window);
+	put(window);
 
 	buildChrome();
 	buildCategories();
@@ -151,8 +160,19 @@ function create() {
 	// Start from where the pointer already is, so a mouse resting on something at entry does not count as hover.
 	lastMouseX = FlxG.mouse.screenX;
 	lastMouseY = FlxG.mouse.screenY;
-	FlxG.camera.fade(FlxColor.WHITE, 0.25, true);
+	// It opens quickly: a fade and a small rise of the whole window.
+	cam.alpha = 0;
+	cam.scroll.y = -24;
+	FlxTween.tween(cam, {alpha: 1}, 0.16);
+	FlxTween.tween(cam.scroll, {y: 0}, 0.2, {ease: FlxEase.quadOut});
 	new FlxTimer().start(0.2, (_) -> canConfirm = true);
+}
+
+// Everything of this window goes on its own camera.
+function put(obj:Dynamic):Dynamic {
+	obj.cameras = [cam];
+	add(obj);
+	return obj;
 }
 
 // ---------------------------------------------------------------- building
@@ -160,7 +180,7 @@ function create() {
 function makeText(x:Float, y:Float, width:Float, size:Int, color:Int, align:String):FlxText {
 	var text = new FlxText(x, y, width, "");
 	text.setFormat(Paths.font("vcr.ttf"), size, color, align);
-	add(text);
+	put(text);
 	return text;
 }
 
@@ -180,14 +200,14 @@ function buildChrome() {
 	pillTile.loadGraphic(Paths.image('menus/options/vista_pill_tile'));
 	pillTile.antialiasing = false;
 	pillTile.visible = false;
-	add(pillTile);
+	put(pillTile);
 }
 
 function buildCategories() {
 	pillCategory = new FlxSprite();
 	pillCategory.loadGraphic(Paths.image('menus/options/vista_pill_category'));
 	pillCategory.antialiasing = false;
-	add(pillCategory);
+	put(pillCategory);
 
 	// the icons go above the pill (the window art has none: they would be hidden by the selection)
 	for (i in 0...categoryKeys.length) {
@@ -195,7 +215,7 @@ function buildCategories() {
 		icon.loadGraphic(Paths.image('menus/options/vista_cat_icons'), true, 48, 48);
 		icon.animation.frameIndex = i;
 		icon.antialiasing = false;
-		add(icon);
+		put(icon);
 
 		var label = makeText(catLabelX, catPillY + i * catStep + catPillH / 2 - 17, 230, 28, ink, "left");
 		categoryTexts.push(label);
@@ -239,7 +259,7 @@ function buildTiles() {
 		art.animation.frameIndex = row.art;
 		art.antialiasing = false;
 		art.setPosition(x + (tileW - cellW) / 2, y + (row.artSheet == "keycaps" ? 9 : 15));
-		add(art);
+		put(art);
 		track(art);
 
 		var name = makeText(x + 6, y + 64, tileW - 12, 19, ink, "center");
@@ -251,19 +271,19 @@ function buildTiles() {
 			var groove = new FlxSprite(x + sliderTrackX, y + controlTop);
 			groove.loadGraphic(Paths.image('menus/options/vista_slider_track'));
 			groove.antialiasing = false;
-			add(groove);
+			put(groove);
 			track(groove);
 			var knob = new FlxSprite(x + sliderTrackX, y + controlTop);
 			knob.loadGraphic(Paths.image('menus/options/vista_slider_knob'));
 			knob.antialiasing = false;
-			add(knob);
+			put(knob);
 			track(knob);
 			tile.knob = knob;
 		} else if (row.kind == "bool" || row.kind == "flashes" || row.kind == "pref") {
 			var box = new FlxSprite(x + 42, y + controlTop);
 			box.loadGraphic(Paths.image('menus/options/vista_checkbox'), true, 33, 33);
 			box.antialiasing = false;
-			add(box);
+			put(box);
 			track(box);
 			tile.check = box;
 			tile.valueText = track(makeText(x + 84, y + controlTop + 6, 90, 18, ink, "left"));
@@ -271,7 +291,7 @@ function buildTiles() {
 			var radio = new FlxSprite(x + (tileW - 33) / 2, y + controlTop);
 			radio.loadGraphic(Paths.image('menus/options/vista_radio'), true, 33, 33);
 			radio.antialiasing = false;
-			add(radio);
+			put(radio);
 			track(radio);
 			tile.check = radio;
 		} else {
@@ -483,11 +503,15 @@ function updateCapture() {
 	refreshTile(tileIndex);
 }
 
+// Close the window (it also saves what was changed): it fades and sinks, and then the sub-state closes.
 function exitToMainMenu() {
+	if (closing) return;
+	closing = true;
 	Options.save();
 	Options.applySettings();
 	FlxG.save.flush();
-	FlxG.switchState(new ModState("MainMenuState"));
+	FlxTween.tween(cam, {alpha: 0}, 0.14);
+	FlxTween.tween(cam.scroll, {y: -16}, 0.14, {ease: FlxEase.quadIn, onComplete: (_) -> close()});
 }
 
 // ---------------------------------------------------------------- input
@@ -541,7 +565,7 @@ function updateMouse() {
 }
 
 function update(elapsed) {
-	if (!canConfirm)
+	if (!canConfirm || closing)
 		return;
 
 	if (focusMode == "capturing") {
@@ -601,5 +625,5 @@ function updateAdjust() {
 }
 
 function destroy() {
-	FlxG.mouse.visible = false;
+	FlxG.cameras.remove(cam);
 }
