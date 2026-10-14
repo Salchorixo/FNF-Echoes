@@ -80,12 +80,15 @@ var sketchFps:Float = 60;
 // Intro frame where Zyra hits the sofa (the sketch's own impact); the music starts there.
 var sketchLandFrame:Int = 42;
 
-// Menu music (Soul, 150 BPM): the OST (menuOst.ogg) plays first; on the landing frame the
-// instrumental (menuInst.ogg) starts at its drop, instStartSeconds into the track. instMusicId
-// tags the sound object so we can tell which of the two is playing.
+// Menu music (Soul, 150 BPM): ONLY the instrumental (menuInst.ogg, BE-19). It starts as soon as the menu opens,
+// landDelay seconds before its drop (instStartSeconds into the track) so that the drop falls exactly on the frame
+// where Zyra lands. Coming back from another screen the music keeps playing; if it is not playing it restarts at the
+// drop. instMusicId tags the sound object: the engine reuses one sound object for every track, so the tag must
+// be set every time the music is started here.
 var songBpm:Float = 150;
 var instStartSeconds:Float = 26;
 var instMusicId:Int = 1;
+var comingBack:Bool = false;
 
 // Where the headphones sit in the final pose, in screen pixels (1280x720): the notes come out of
 // the two cups. Move these if the animation changes.
@@ -172,9 +175,9 @@ function create() {
 	topCam.bgColor = 0x00000000;
 	FlxG.cameras.add(topCam, false);
 
-	// The OST of song 1 is what plays first; the instrumental takes over at the landing.
-	if (FlxG.sound.music == null || !FlxG.sound.music.playing)
-		CoolUtil.playMusic(Paths.music('menuOst'), true, 1, true, songBpm);
+	comingBack = isReturning();
+	if (FlxG.sound.music == null || !FlxG.sound.music.playing || FlxG.sound.music.ID != instMusicId)
+		startMenuMusic(comingBack ? instStartSeconds : instStartSeconds - sketchLandFrame / sketchFps);
 
 	buildWall();
 	buildButtons();
@@ -187,7 +190,7 @@ function create() {
 	FlxG.mouse.visible = true;
 	applyCursor();
 	updateHighlight();
-	if (isReturning())
+	if (comingBack)
 		skipIntro();
 	else
 		playIntro();
@@ -198,6 +201,13 @@ function create() {
 // MainMenuState sees it, skips the intro and clears it.
 function sessionStart():Float {
 	return Math.round((Date.now().getTime() - Lib.getTimer()) / 1000);
+}
+
+function startMenuMusic(fromSeconds:Float) {
+	CoolUtil.playMusic(Paths.music('menuInst'), true, 1, true, songBpm);
+	FlxG.sound.music.ID = instMusicId;
+	FlxG.sound.music.time = fromSeconds * 1000;
+	trace('[MainMenu] music: menuInst from ' + fromSeconds + ' s');
 }
 
 function markReturn() {
@@ -411,20 +421,11 @@ function popIn(sprite:FlxSprite) {
 	FlxTween.tween(sprite.scale, {x: 1, y: 1}, 0.4, {ease: FlxEase.backOut});
 }
 
-// Zyra hit the sofa (the squash and bounce are in the drawn frames): the music starts and the
-// notes begin to come out (updateParticles() waits for `landed`).
+// Zyra hit the sofa (the squash and bounce are in the drawn frames): the notes begin to come out
+// (updateParticles() waits for `landed`); the music's drop falls on this same frame (see startMenuMusic()).
 function onLanded() {
 	if (landed) return;
 	landed = true;
-
-	// The instrumental of song 1 comes in on the landing, jumping straight to its drop. If it is
-	// already playing (coming back from Settings) nothing restarts.
-	if (FlxG.sound.music == null || !FlxG.sound.music.playing || FlxG.sound.music.ID != instMusicId) {
-		CoolUtil.playMusic(Paths.music('menuInst'), true, 1, true, songBpm);
-		FlxG.sound.music.ID = instMusicId;
-		FlxG.sound.music.time = instStartSeconds * 1000;
-	}
-
 }
 
 // Take a free particle, give it a random shape and launch it from the emitter.
