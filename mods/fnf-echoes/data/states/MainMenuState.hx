@@ -742,6 +742,11 @@ function updateShader(elapsed:Float) {
 
 // The theme another screen asked for (e.g. the song you just finished).
 function checkPendingTheme() {
+	// Not under the transition that brought us here (BE-24) or the Settings window: the change must be seen.
+	if (subState != null) {
+		later(0.3, (_) -> checkPendingTheme());
+		return;
+	}
 	var wanted:String = themer.call("pending");
 	if (wanted == null) return;
 	themer.call("clearPending");

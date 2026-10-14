@@ -41,8 +41,19 @@ function reduceFlashes():Bool {
 	return !Options.flashingMenu;
 }
 
+// The change a finished song asks for. If the song's own theme is already the current one the desktop would never move
+// (only Soul is unlocked in a fresh session, and it maps to a single theme), so then it changes to another theme at random:
+// finishing a song always changes the desktop (BE-25).
 function requestForSong(songIndex:Int) {
-	FlxG.save.data.echoesThemePending = themeBySong[songIndex];
+	var wanted = themeBySong[songIndex];
+	if (wanted == current()) {
+		var others = [];
+		for (t in themes)
+			if (t != wanted)
+				others.push(t);
+		wanted = others[FlxG.random.int(0, others.length - 1)];
+	}
+	FlxG.save.data.echoesThemePending = wanted;
 }
 
 // The theme another screen asked for (or null). Reading it does not clear it: call clearPending().
