@@ -160,3 +160,12 @@ Ejemplo real: `scripts/effects/diffusionTransition.hx` (BE-24, "Difusión").
 4. El destino: `ModState.lastName` es el nombre del último `ModState` creado (si `Type.getClassName(Type.getClass(state))` es `funkin.backend.scripting.ModState`); una canción (`PlayState`) no es `ModState`.
 5. El arte se hornea en Python (`AI_export_diffusion.py`, carpeta de arte privada) a `images/menus/diffusion/`. El texto de consola usa `vcr.ttf` (monoespaciada: la columna decide la x) y un `FlxText` por trozo de color.
 
+## Receta O — Evento "Strum Move" (mover y ocultar las filas de flechas)
+
+BE-44: `mods/fnf-echoes/data/events/Strum Move.json` (parámetros que muestra el editor) y `Strum Move.hx` (lo que hace en el juego). Un evento propio = esas dos cosas con el mismo nombre; el motor solo carga el script si el chart usa el evento.
+
+1. En el editor de charts, en la columna de eventos del paso donde quieres el cambio, añade el evento **Strum Move**.
+2. Parámetros: **Strumline** (0 = Soul, la fila del oponente; 1 = Zyra, la que se juega), **Position** (`Default` = su sitio, `Left` = donde está normalmente la fila de Soul, `Right` = donde está la de Zyra, `Center` = centrada en la pantalla), **Opacity** (0 oculta la fila, 1 la muestra), **Duration (steps)** (0 = al instante) y el suavizado (**Ease** y **Ease way**).
+3. Para el middle scroll de Limbo: un evento en la fila 1 con `Center` y otro en la fila 0 con opacidad 0. Para que Zyra pase a la izquierda cuando canta Soul: fila 1 con `Left`; para volver: fila 1 con `Right`. Para que Soul recupere su fila: fila 0 con `Default` y opacidad 1.
+4. Las notas siguen a las flechas (el motor copia la posición de la flecha a cada nota); los tipos de nota con script (receta N) no cambian.
+
