@@ -1,0 +1,13 @@
+{
+	"name": "soul",
+	"displayName": "Soul",
+	"bpm": 150.0,
+	"beatsPerMeasure": 4,
+	"stepsPerBeat": 4,
+	"difficulties": ["hard"],
+	"icon": "dad",
+	"color": "#6C5CE7",
+	"coopAllowed": false,
+	"opponentModeAllowed": false,
+	"needsVoices": true
+}

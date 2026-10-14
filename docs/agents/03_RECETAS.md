@@ -49,6 +49,7 @@ mods/fnf-echoes/songs/<nombre-cancion>/
 3. El audio (`Inst.ogg`, `Voices.ogg`) lo entrega Zyra. **No generes ni descargues audio.**
 4. Los charts se hacen con el editor de charts del motor (abriéndolo dentro del juego), no a mano en JSON. **Cómo se abre (BE-40):** en el menú principal, ya listo (sin intro ni cambio de tema en curso), pulsa **7**: sale el selector de editores del motor; "Chart Editor" lista las canciones y "New song" abre un asistente (nombre, BPM, compás, `Inst`/voces). Al salir (ESC) vuelve al menú sin repetir la intro. Para probar desde un worktree hay que apuntar **dos** enlaces (ver `GIT_WORKFLOW.md` §12).
 5. Si la canción cambia de BPM entre bloques, eso se marca en el chart (cambio de BPM), no partiendo la canción en dos.
+7. **Notas especiales y efectos** (p. ej. una flecha que mata al tocarla): cada tipo de nota es un script en `mods/fnf-echoes/data/notes/<Tipo>.hx` (ejemplos del motor: `engine/assets/data/notes/`) con `onNoteCreation`, `onNoteHit`, `onPlayerMiss`...; en el chart se marca el tipo de cada nota y el chart lo guarda en `noteTypes`. Los eventos propios van en `data/events/`. Primer ejemplo: Soul (`songs/soul/`).
 6. Si las voces de cada personaje van en archivos separados, **pregunta primero**: busca cómo lo resuelve el motor (`grep -rn "Voices" engine/source/funkin/backend`) antes de inventar nombres de archivo.
 
 ## Receta D — Opción nueva en el menú de opciones
