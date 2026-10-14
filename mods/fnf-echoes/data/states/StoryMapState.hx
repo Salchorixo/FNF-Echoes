@@ -6,14 +6,21 @@ import flixel.util.FlxTimer;
 import funkin.backend.scripting.ModState;
 import funkin.backend.scripting.Script;
 
-// Song selection (the screen after ECHO 1), from Zyra's vertical sketch, on a black background:
-//   left   an XP window with the level's mechanic (placeholder content for now),
+// Song selection (the screen after ECHO 1), from Zyra's vertical sketch:
+//   left   a glass window with the level's mechanic (placeholder content for now),
 //   centre a vertical path, bottom to top, with one node per song (SOUL, TARO, KIYU) and Zyra's
-//          icon to the right of the node he stands on (placeholder icon: Zyra draws the real one),
+//          icon to the right of the node he stands on,
 //   right  the level art, a flat rectangle for now (the nodeArtPanel script, full height, bleeding
 //          to the edge); Zyra makes the real art.
-// All pixel art comes from AI_build_song_select.py (private art folder) at native resolution,
-// shown at 3x with no smoothing. The nodes are little spheres:
+// Every node has its own MOOD (soul, taro, kiyu, kiyu_inf = the infected Kiyu): an abstract animated
+// background, a mechanic window that takes its ambience, name/path/pointer colours and a pencil outline
+// (BE-11). Moods are 64-frame loops played at 10 fps, all in sync (one frame counter for every sheet).
+// Changing node crossfades the mood with a short glitch. A locked node shows its mood dimmed.
+// Zyra's icon is animated at runtime (breathing, irregular blinking, looking towards the node you move
+// to) from two small sheets of poses; when he is on the LAST song with the last song unlocked it
+// changes to the predator face (slow lids, a contracting pupil, a glitch tic now and then).
+// All pixel art comes from AI_export_song_mood.py and AI_build_song_select.py (private art folder) at
+// native resolution, shown at 3x with no smoothing. The nodes are little spheres:
 //   SOUL  black sphere with spikes, corrupted, with a calm pale-blue part;
 //   TARO  white-cyan orb with a ring of NCS-style audio bars;
 //   KIYU  a calm, tender pink orb, which becomes INFECTED (a black unstable mass taking it over)
@@ -56,11 +63,45 @@ var bobPhases:Array<Float> = [0.0, 2.1, 4.2];
 var pathDashes:Array<FlxSprite> = [];
 var pathDashNode:Array<Int> = [];
 
-var mechWindow:FlxSprite;
+// Moods (BE-11). One background sprite and one window sprite per mood, all kept loaded so that
+// changing node never has to decode a sheet.
+var moodKeys:Array<String> = ["soul", "taro", "kiyu", "kiyu_inf"];
+var loopFrames:Int = 64;
+var loopFps:Float = 10;
+var bgSprites:Array<FlxSprite> = [];
+var winSprites:Array<FlxSprite> = [];
+var pencilLight:FlxSprite;
+var pencilDark:FlxSprite;
+var haloSprites:Array<FlxSprite> = [];
+var haloStrength:Array<Float> = [0.30, 0.28, 0.40]; // from the design; x1.5 selected, x0.8 otherwise
+var haloColors:Array<Int> = [0xFF50AADC, 0xFF96F0FF, 0xFF5A3296];
+var mood:String = "";
+var moodFade:Float = 0; // while > 0 the previous mood is still fading out
+var moodPrev:String = "";
+var glitchLeft:Float = 0;
+var windowX:Float = 6;
+
 var artPanel:Script;
-var zyra:FlxSprite;
+var zyraAlert:FlxSprite;
+var zyraDown:FlxSprite;
 var pointer:FlxSprite;
 var zyraAnchor:Dynamic = {y: 0.0};
+
+// Zyra's icon animation: logic ticks at 12 per second; breathing is read from the clock.
+var zyraClock:Float = 0;
+var zyraBlinkIn:Int = 30;
+var zyraDouble:Int = 0;
+var zyraGlanceIn:Int = 70;
+var zyraGlanceLeft:Int = 0;
+var zyraLookLeft:Int = 0;
+var zyraLookUp:Bool = false;
+var zyraGlitchIn:Int = 80;
+var zyraGlitchLeft:Int = 0;
+var zyraFocus:Int = 0;
+var zyraStep:Int = -1;
+var zyraShut:Bool = false;
+// the predator's blink: lid level 0..3 while closing, then 100/101 = the two re-opening poses
+var downBlink:Array<Int> = [0, 1, 2, 2, 3, 3, 3, 3, 100, 101];
 
 var currentIndex:Int = 0;
 var time:Float = 0;
@@ -81,6 +122,9 @@ function create() {
 	FlxG.camera.scroll.set(0, 0); // every screen resets its own camera
 	bgColor = FlxColor.BLACK;
 
+	buildBackground();
+	buildHalos();
+
 	artPanel = Script.create(Paths.script('scripts/ui/nodeArtPanel'));
 	artPanel.load();
 	artPanel.call("create", [0.34]);
@@ -92,6 +136,8 @@ function create() {
 	buildNodes();
 	buildMotesFront();
 	buildZyra();
+	buildPencil();
+	setMood(moodOf(currentIndex), false);
 
 	FlxG.mouse.visible = true;
 	// Start from where the pointer already is, so a mouse resting on a node at entry does not
@@ -110,15 +156,182 @@ function pixelSprite(sprite:FlxSprite) {
 	return sprite;
 }
 
+// The mood of a node: its own, except that Kiyu uses the infected one once infected.
+function moodOf(i:Int) {
+	if (nodes[i].key == "kiyu" && nodes[i].infected)
+		return "kiyu_inf";
+	return nodes[i].key;
+}
+
+// One background per mood (427x240 native, 64 frames in 4 columns). All stay loaded; only the active
+// one (and the one fading out) is visible.
+function buildBackground() {
+	for (key in moodKeys) {
+		var bg = new FlxSprite();
+		bg.loadGraphic(Paths.image('menus/songs/bg_' + key), true, 427, 240);
+		pixelSprite(bg);
+		bg.setPosition(0, 0);
+		bg.visible = false;
+		add(bg);
+		bgSprites.push(bg);
+	}
+}
+
+// A soft glow under each node: a white radial texture that is tinted and faded per node.
+function buildHalos() {
+	for (i in 0...nodes.length) {
+		var halo = new FlxSprite();
+		halo.loadGraphic(Paths.image('menus/songs/halo'));
+		halo.antialiasing = false;
+		halo.color = haloColors[i];
+		halo.alpha = 0;
+		halo.setPosition(nodeCx - 120, nodes[i].y - 120);
+		add(halo);
+		haloSprites.push(halo);
+	}
+}
+
+// One mechanic window per mood (132x228 native: the 120x216 glass plus a margin for the outline).
 function buildWindow() {
-	mechWindow = new FlxSprite();
-	mechWindow.loadGraphic(Paths.image('menus/songs/mech_window'));
-	pixelSprite(mechWindow);
-	mechWindow.setPosition(-460, 36);
-	mechWindow.alpha = 0;
-	add(mechWindow);
-	FlxTween.tween(mechWindow, {x: 24}, 0.5, {ease: FlxEase.quadOut, startDelay: 0.1});
-	FlxTween.tween(mechWindow, {alpha: 1}, 0.3, {startDelay: 0.1});
+	for (key in moodKeys) {
+		var win = new FlxSprite();
+		win.loadGraphic(Paths.image('menus/songs/mood_' + key), true, 132, 228);
+		pixelSprite(win);
+		win.setPosition(-480, 18);
+		win.alpha = 0;
+		win.visible = false;
+		add(win);
+		winSprites.push(win);
+		FlxTween.tween(win, {x: windowX}, 0.5, {ease: FlxEase.quadOut, startDelay: 0.1});
+	}
+}
+
+// Loose pencil rectangles around the window and the art panel, on top of everything: pale on the
+// dark moods (soul, taro), graphite on the light one (kiyu).
+function buildPencil() {
+	pencilLight = new FlxSprite();
+	pencilLight.loadGraphic(Paths.image('menus/songs/pencil_light'));
+	pencilDark = new FlxSprite();
+	pencilDark.loadGraphic(Paths.image('menus/songs/pencil_dark'));
+	for (p in [pencilLight, pencilDark]) {
+		p.antialiasing = false;
+		p.alpha = 0;
+		p.visible = false;
+		add(p);
+	}
+}
+
+// Colours that depend on the mood: soul and taro are dark (pale lines), kiyu is light (violet lines).
+function moodLight(key:String) {
+	return key == "soul" || key == "taro";
+}
+
+function moodLine(key:String, lit:Bool) {
+	if (key == "soul") return lit ? 0xFFE8F4FF : 0xFF6A7396;
+	if (key == "taro") return lit ? 0xFFE8F4FF : 0xFF3A6A9A;
+	return lit ? 0xFF3C286E : 0xFFB9A3D6;
+}
+
+function moodNames(key:String) {
+	if (key == "soul") return "names_soul";
+	if (key == "taro") return "names_taro";
+	return "names_kiyu";
+}
+
+// Switch the mood. animate=true crossfades from the previous one with a short glitch (the CRT-like
+// jolt of the design); false shows it at once (first frame).
+function setMood(key:String, animate:Bool) {
+	if (key == mood)
+		return;
+
+	moodPrev = mood;
+	mood = key;
+
+	for (k in 0...moodKeys.length) {
+		var isNew = moodKeys[k] == key;
+		var isOld = animate && moodKeys[k] == moodPrev && moodPrev != "";
+		var bg = bgSprites[k];
+		var win = winSprites[k];
+		FlxTween.cancelTweensOf(bg, ["alpha"]);
+		FlxTween.cancelTweensOf(win, ["alpha"]);
+		if (isNew) {
+			bg.visible = true;
+			win.visible = true;
+			if (animate) {
+				bg.alpha = 0;
+				FlxTween.tween(bg, {alpha: 1}, 0.28);
+				win.alpha = 0;
+				FlxTween.tween(win, {alpha: 1}, 0.28);
+			} else {
+				bg.alpha = 0;
+				win.alpha = 0;
+				FlxTween.tween(bg, {alpha: 1}, 0.45);
+				FlxTween.tween(win, {alpha: 1}, 0.3, {startDelay: 0.1});
+			}
+		} else if (isOld) {
+			var oldBg = bg;
+			var oldWin = win;
+			FlxTween.tween(oldBg, {alpha: 0}, 0.28, {onComplete: (_) -> oldBg.visible = false});
+			FlxTween.tween(oldWin, {alpha: 0}, 0.28, {onComplete: (_) -> oldWin.visible = false});
+		} else {
+			bg.visible = false;
+			win.visible = false;
+		}
+	}
+	if (animate)
+		glitchLeft = 0.3;
+
+	// the pencil, the names and the path/pointer colours change at once
+	var light = moodLight(key);
+	pencilLight.visible = light;
+	pencilDark.visible = !light;
+	pencilLight.alpha = light ? 1 : 0;
+	pencilDark.alpha = light ? 0 : 1;
+	for (i in 0...nameSprites.length) {
+		var name = nameSprites[i];
+		name.loadGraphic(Paths.image('menus/songs/' + moodNames(key)), true, 34, 12);
+		pixelSprite(name);
+		name.setPosition(nodeCx - 59 * pixel, nodes[i].y - 6 * pixel);
+		name.animation.frameIndex = i * 2 + (nodes[i].unlocked ? 0 : 1);
+	}
+	pointer.color = moodLine(key, true);
+	refreshPath();
+	refreshDim();
+}
+
+// A locked node shows its mood dimmed.
+function refreshDim() {
+	var unlocked = nodes[currentIndex].unlocked;
+	for (k in 0...moodKeys.length) {
+		bgSprites[k].color = unlocked ? 0xFFFFFFFF : 0xFF8C8C8C;
+		winSprites[k].color = unlocked ? 0xFFFFFFFF : 0xFFB4B4B4;
+	}
+}
+
+// The loop counter is shared by every sheet so the background, the window and the beat stay in sync.
+function updateMood(elapsed:Float) {
+	var frame = Std.int(time * loopFps) % loopFrames;
+	for (k in 0...moodKeys.length) {
+		if (bgSprites[k].visible) {
+			bgSprites[k].animation.frameIndex = frame;
+			winSprites[k].animation.frameIndex = frame;
+		}
+	}
+
+	// the glitch of a mood change: the backgrounds jolt sideways for a moment
+	var jolt = 0.0;
+	if (glitchLeft > 0) {
+		glitchLeft -= elapsed;
+		if (glitchLeft > 0)
+			jolt = FlxG.random.int(-6, 6) * pixel;
+	}
+	for (bg in bgSprites)
+		bg.x = jolt;
+
+	for (i in 0...haloSprites.length) {
+		var target = haloStrength[i] * (i == currentIndex ? 1.5 : 0.8);
+		haloSprites[i].alpha += (target - haloSprites[i].alpha) * Math.min(1, elapsed * 8);
+	}
 }
 
 // Dashes between nodes: bright where the next node is unlocked, dim where it is not.
@@ -143,7 +356,7 @@ function buildPath() {
 
 function refreshPath() {
 	for (k in 0...pathDashes.length)
-		pathDashes[k].color = nodes[pathDashNode[k] + 1].unlocked ? 0xFFBEC4D6 : 0xFF424656;
+		pathDashes[k].color = moodLine(mood == "" ? "soul" : mood, nodes[pathDashNode[k] + 1].unlocked);
 }
 
 // Each node: base sprite (its own loop), an overlay sprite for events and its name.
@@ -165,9 +378,9 @@ function buildNodes() {
 		fx.animation.onFinish.add((_) -> fx.visible = false);
 
 		var nameSprite = new FlxSprite();
-		nameSprite.loadGraphic(Paths.image('menus/songs/names'), true, 32, 10);
+		nameSprite.loadGraphic(Paths.image('menus/songs/' + moodNames("soul")), true, 34, 12); // setMood swaps the sheet
 		pixelSprite(nameSprite);
-		nameSprite.setPosition(nodeCx - 28 * pixel - 32 * pixel, node.y - 5 * pixel);
+		nameSprite.setPosition(nodeCx - 59 * pixel, node.y - 6 * pixel);
 		nameSprite.alpha = 0;
 		add(nameSprite);
 		nameSprites.push(nameSprite);
@@ -250,11 +463,16 @@ function buildMotesFront() {
 }
 
 function buildZyra() {
-	zyra = new FlxSprite();
-	zyra.loadGraphic(Paths.image('menus/songs/zyra_icon'));
-	pixelSprite(zyra);
-	zyra.alpha = 0;
-	add(zyra);
+	zyraAlert = new FlxSprite();
+	zyraAlert.loadGraphic(Paths.image('menus/songs/zyra_alert'), true, 28, 28);
+	zyraDown = new FlxSprite();
+	zyraDown.loadGraphic(Paths.image('menus/songs/zyra_down'), true, 28, 28);
+	for (z in [zyraAlert, zyraDown]) {
+		pixelSprite(z);
+		z.alpha = 0;
+		add(z);
+	}
+	zyraDown.visible = false;
 
 	pointer = new FlxSprite();
 	pointer.loadGraphic(Paths.image('menus/songs/pointer'));
@@ -262,9 +480,118 @@ function buildZyra() {
 	pointer.alpha = 0;
 	add(pointer);
 
-	zyraAnchor.y = nodes[0].y - 9 * pixel;
-	FlxTween.tween(zyra, {alpha: 1}, 0.4, {startDelay: 1.0});
+	zyraAnchor.y = nodes[0].y - 14 * pixel;
+	FlxTween.tween(zyraAlert, {alpha: 1}, 0.4, {startDelay: 1.0});
+	FlxTween.tween(zyraDown, {alpha: 1}, 0.4, {startDelay: 1.0});
 	FlxTween.tween(pointer, {alpha: 1}, 0.4, {startDelay: 1.0});
+}
+
+// ---------------------------------------------------------------- Zyra's icon
+
+// The predator face is for the LAST song, once it is unlocked.
+function useDown() {
+	return currentIndex == nodes.length - 1 && nodes[currentIndex].unlocked;
+}
+
+// One logic step (12 per second). Poses (sheets from AI_export_song_mood.py):
+//   zyra_alert: 0 ahead, 1 at the path, 2 up, 3 down, 4 the > < blink
+//   zyra_down:  0-11 look (left, ahead, right) x lid (open ... shut), 12-14 pupil contracted,
+//               15-16 re-opening, 17-18 glitch tic
+function zyraTick() {
+	if (!useDown()) {
+		var frame = 0;
+		zyraShut = false;
+		zyraBlinkIn--;
+		if (zyraBlinkIn <= 0) {
+			frame = 4;
+			zyraBlinkIn = FlxG.random.int(36, 84);
+			zyraDouble = FlxG.random.float() < 0.25 ? 5 : 0; // now and then a double blink
+		} else if (zyraDouble > 0) {
+			zyraDouble--;
+			if (zyraDouble == 0)
+				frame = 4;
+		}
+		if (frame == 0) {
+			if (zyraLookLeft > 0) {
+				zyraLookLeft--;
+				frame = zyraLookUp ? 2 : 3; // towards the node he is moving to
+			} else if (zyraGlanceLeft > 0) {
+				zyraGlanceLeft--;
+				frame = 1;
+			} else {
+				zyraGlanceIn--;
+				if (zyraGlanceIn <= 0) {
+					zyraGlanceLeft = 18; // an idle glance at the path
+					zyraGlanceIn = FlxG.random.int(60, 108);
+				}
+			}
+		}
+		zyraAlert.animation.frameIndex = frame;
+		return;
+	}
+
+	// the predator: slow, heavy tracking, rare slow blinks, a contracted pupil on re-opening, a tic
+	var lx = 0.6 * Math.sin(time * 6.2832 / 8) - (zyraLookLeft > 0 ? 1 : 0);
+	var look = lx < -0.5 ? 0 : (lx > 0.3 ? 2 : 1);
+	if (zyraLookLeft > 0)
+		zyraLookLeft--;
+	var frame = look * 4;
+	zyraShut = false;
+	if (zyraStep >= 0) {
+		var code = downBlink[zyraStep];
+		zyraStep++;
+		if (code >= 100) {
+			frame = 15 + (code - 100);
+		} else {
+			frame = look * 4 + code;
+			zyraShut = code >= 2; // the head sinks while the eyes are shut
+		}
+		if (zyraStep >= downBlink.length) {
+			zyraStep = -1;
+			zyraFocus = 4;
+		}
+	} else {
+		zyraBlinkIn--;
+		if (zyraBlinkIn <= 0) {
+			zyraStep = 0;
+			zyraBlinkIn = FlxG.random.int(84, 130);
+		}
+		if (zyraFocus > 0) {
+			frame = 12 + look;
+			zyraFocus--;
+		}
+	}
+	if (zyraGlitchLeft > 0) {
+		frame = 17 + (2 - zyraGlitchLeft);
+		zyraGlitchLeft--;
+	} else {
+		zyraGlitchIn--;
+		if (zyraGlitchIn <= 0) {
+			zyraGlitchLeft = 2;
+			zyraGlitchIn = FlxG.random.int(72, 132);
+		}
+	}
+	zyraDown.animation.frameIndex = frame;
+}
+
+// Breathing: the head sinks one pixel half of the time (1.5 s the tender face, 2.5 s the predator, which
+// also sinks while its eyes are shut). The sheets are drawn so that the predator is one pixel higher.
+function updateZyra(elapsed:Float) {
+	zyraClock += elapsed;
+	while (zyraClock >= 1 / 12) {
+		zyraClock -= 1 / 12;
+		zyraTick();
+	}
+
+	var down = useDown();
+	zyraAlert.visible = !down;
+	zyraDown.visible = down;
+	var x = nodeCx + 30 * pixel;
+	var alertDy = Math.sin(time * 6.2832 / 1.5) > 0 ? 1 : 0;
+	var downDy = (Math.sin(time * 6.2832 / 2.5) > 0 ? 1 : 0) + (zyraShut ? 1 : 0);
+	zyraAlert.setPosition(x, zyraAnchor.y + alertDy * pixel);
+	zyraDown.setPosition(x, zyraAnchor.y + (downDy - 1) * pixel);
+	pointer.setPosition(nodeCx + 25 * pixel + 2, zyraAnchor.y + 11 * pixel);
 }
 
 // ---------------------------------------------------------------- selection
@@ -273,11 +600,15 @@ function moveTo(index:Int) {
 	if (index < 0 || index >= nodes.length || index == currentIndex)
 		return;
 
+	zyraLookUp = index > currentIndex; // higher nodes are higher on the screen
+	zyraLookLeft = 14;
 	currentIndex = index;
 	artPanel.call("showArt", [currentIndex, nodes[currentIndex].unlocked]);
+	setMood(moodOf(currentIndex), true);
+	refreshDim();
 
 	// Zyra hops to the new node.
-	var targetY = nodes[currentIndex].y - 9 * pixel;
+	var targetY = nodes[currentIndex].y - 14 * pixel;
 	var midY = (zyraAnchor.y + targetY) / 2 - 40;
 	FlxTween.cancelTweensOf(zyraAnchor);
 	FlxTween.tween(zyraAnchor, {y: midY}, 0.1, {
@@ -307,6 +638,7 @@ function unlockNode(i:Int) {
 
 	refreshNodeLook(i, true);
 	refreshPath();
+	refreshDim();
 	eventTimers[i] = 0.5; // plays an event right away
 	artPanel.call("showArt", [currentIndex, nodes[currentIndex].unlocked]);
 }
@@ -434,10 +766,8 @@ function update(elapsed) {
 	updateMouse();
 	updateNodes(elapsed);
 
-	// Zyra's icon: whole-pixel bobbing on top of the hop.
-	var bob = pixel * Math.round(1.2 * Math.sin(time * 6.2832 / 3.4));
-	zyra.setPosition(nodeCx + 31 * pixel + 1 * pixel, zyraAnchor.y + bob);
-	pointer.setPosition(nodeCx + 25 * pixel + 2, zyra.y + 18);
+	updateMood(elapsed);
+	updateZyra(elapsed);
 
 	if (controls.ACCEPT)
 		confirmSelection();
