@@ -46,7 +46,7 @@ Entre los dos bloques de Kiyu van los crasheos y una cutscene (ver
 
 1. **Antes de usar la transparencia con arte y canciones (bloquean, en este orden):**
    - **BE-8:** el shader VHS fuerza alfa 1 y anula la transparencia mientras esté activo (trampa nº 16). Todo estado que quiera ver el escritorio a través del juego necesita esto resuelto.
-   - **BE-9:** la intro todavía pide `FlxG.fullscreen = true` (trampa nº 14). Decisión de Zyra: ¿arranca en ventana o en pantalla completa sin Space?
+   - **BE-9:** resuelto por Zyra (2026-10-13, BE-18): el juego **arranca en ventana**; `TitleState.hx` ya no pide pantalla completa. Queda decidir si algún momento posterior la usa (el final la usa a través de `windowFx.hx`).
 2. **Producción:** arte, animaciones y cutscenes empiezan ahora (la documentación de arte es privada, ver `AGENTS.md` §2). Los estados nuevos con arte siguen las recetas A y B; cualquier uso de la ventana va por `windowFx.hx` (Receta I).
 3. **Coreografía de ventana, lo que falta:** temblor de la ventana, saltos a otras posiciones, afinar curva y temblor de impacto a ojo, y probar en Windows lo que sigue en NO PROBADO (fila de §2).
 4. **Probar la transparencia y la pantalla completa en un PC con Windows real** (BE-10 y la coreografía están hechos y probados en VM). Se necesita un PC prestado: el `.exe` del flujo `windows.yml` del fork + el mod (receta en la trampa nº 18). Plan B si algo falla: color clave (ADR-0003) y, si nada funciona, escritorio falso dibujado por el juego ("EchoOS").
@@ -68,7 +68,7 @@ Entre los dos bloques de Kiyu van los crasheos y una cutscene (ver
 
 - ¿El crasheo 1 es real (el jugador reabre el juego) o falso? Propuesta actual: real pero controlado.
 - ¿Qué final abierto se usa? (opciones en Notion → Canción 3 final).
-- ¿La intro arranca en ventana o en pantalla completa sin Space (BE-9)? ¿Ocultar Dock y barra de menús en pantalla completa?
+- ¿Ocultar Dock y barra de menús cuando el final pase a pantalla completa? (La intro ya arranca en ventana, BE-18.)
 - Coreografía de ventana: ¿qué curva y qué fuerza de temblor al chocar? ¿El regreso al centro más lento y pesado? ¿Zyra empieza su carrera mientras la ventana vuelve al centro?
 - ¿Tienes acceso a un PC con Windows real para la prueba final?
 

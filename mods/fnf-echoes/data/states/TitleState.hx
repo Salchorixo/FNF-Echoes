@@ -45,7 +45,7 @@ var phase:String = "idle";
 function create() {
 	bgColor = FlxColor.BLACK;
 
-	FlxG.fullscreen = true;
+	// The game opens in a window (BE-18); fullscreen is only used by the final window choreography (windowFx.hx).
 	// The card menus pan the camera slightly on selection (see cardMenu.hx)
 	// — reset here so this screen never inherits a leftover shift from them.
 	FlxG.camera.scroll.set(0, 0);
