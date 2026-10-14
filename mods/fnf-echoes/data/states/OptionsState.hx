@@ -18,7 +18,9 @@ import funkin.options.Options;
 // It is NOT a screen of its own: it is a SUB-STATE (ModSubState) opened over the main menu, which keeps moving
 // behind it (Zyra, the notes and the music; see MainMenuState.openSettings()). Everything here lives on its own
 // camera, above the menu's cameras, so there is no screen transition. Closing it (Back from the categories, the blue
-// orb or the red cross) just closes the window.
+// orb or the red cross) just closes the window. The window can be DRAGGED by its title bar (BE-22): everything is on
+// one camera, so moving the window is moving that camera's scroll; the light veil is on a camera of its own so it
+// stays still. Mouse positions are converted to the window's own coordinates (see windowMouse()).
 // The window art has NO text (images/menus/options/vista_window.png, from AI_export_settings_vista.py in
 // the private art folder): every label is a FlxText drawn on top, so it goes through translate.hx.
 // All positions below are absolute screen pixels (native pixel x 3) read from that script.
@@ -128,7 +130,16 @@ var tileObjects:Array<Dynamic> = [];
 var tiles:Array<Dynamic> = [];
 
 var cam:FlxCamera;
+var veilCam:FlxCamera;
 var closing:Bool = false;
+
+// Where the window is: winX/winY is how far it was dragged; rise.y is the little rise of the opening and closing.
+var winX:Float = 0;
+var winY:Float = 0;
+var rise:Dynamic = {y: -24.0};
+var windowDrag:Bool = false;
+var grabX:Float = 0;
+var grabY:Float = 0;
 var capturingStillPressed:Bool = false;
 var canConfirm:Bool = false;
 var lastMouseX:Float = -1;
@@ -139,14 +150,18 @@ function create() {
 	i18n.load();
 
 	// Its own transparent camera above the menu's (the menu's Zyra and pencil are on a camera of their own too).
+	veilCam = new FlxCamera();
+	veilCam.bgColor = 0x00000000;
+	FlxG.cameras.add(veilCam, false);
 	cam = new FlxCamera();
 	cam.bgColor = 0x00000000;
 	FlxG.cameras.add(cam, false);
 
-	// The menu behind steps back a little (the same light veil the design had).
+	// The menu behind steps back a little (the same light veil the design had); it stays still when the window moves.
 	var veil = new FlxSprite();
 	veil.makeGraphic(FlxG.width, FlxG.height, 0x46ECF6FF);
-	put(veil);
+	veil.cameras = [veilCam];
+	add(veil);
 
 	var window = new FlxSprite();
 	window.loadGraphic(Paths.image('menus/options/vista_window'));
@@ -162,9 +177,10 @@ function create() {
 	lastMouseY = FlxG.mouse.screenY;
 	// It opens quickly: a fade and a small rise of the whole window.
 	cam.alpha = 0;
-	cam.scroll.y = -24;
+	veilCam.alpha = 0;
 	FlxTween.tween(cam, {alpha: 1}, 0.16);
-	FlxTween.tween(cam.scroll, {y: 0}, 0.2, {ease: FlxEase.quadOut});
+	FlxTween.tween(veilCam, {alpha: 1}, 0.16);
+	FlxTween.tween(rise, {y: 0.0}, 0.2, {ease: FlxEase.quadOut});
 	new FlxTimer().start(0.2, (_) -> canConfirm = true);
 }
 
@@ -511,10 +527,20 @@ function exitToMainMenu() {
 	Options.applySettings();
 	FlxG.save.flush();
 	FlxTween.tween(cam, {alpha: 0}, 0.14);
-	FlxTween.tween(cam.scroll, {y: -16}, 0.14, {ease: FlxEase.quadIn, onComplete: (_) -> close()});
+	FlxTween.tween(veilCam, {alpha: 0}, 0.14);
+	FlxTween.tween(rise, {y: -16.0}, 0.14, {ease: FlxEase.quadIn, onComplete: (_) -> close()});
 }
 
 // ---------------------------------------------------------------- input
+
+function clamp(v:Float, lo:Float, hi:Float):Float {
+	return Math.max(lo, Math.min(hi, v));
+}
+
+// The window sits where it was dragged to, with the little rise of its opening and closing.
+function applyWindowPosition() {
+	cam.scroll.set(-winX, -winY + rise.y);
+}
 
 function inRect(px:Float, py:Float, x:Float, y:Float, w:Float, h:Float):Bool {
 	return px >= x && px < x + w && py >= y && py < y + h;
@@ -523,12 +549,34 @@ function inRect(px:Float, py:Float, x:Float, y:Float, w:Float, h:Float):Bool {
 // Hover only counts while the mouse actually moves: a pointer resting on something must not undo what the
 // keyboard just selected.
 function updateMouse() {
-	var mx = FlxG.mouse.screenX;
-	var my = FlxG.mouse.screenY;
-	var moved = mx != lastMouseX || my != lastMouseY;
-	lastMouseX = mx;
-	lastMouseY = my;
+	var rawX = FlxG.mouse.screenX;
+	var rawY = FlxG.mouse.screenY;
+	var moved = rawX != lastMouseX || rawY != lastMouseY;
+	lastMouseX = rawX;
+	lastMouseY = rawY;
+
+	// dragging the window by its title bar
+	if (windowDrag) {
+		if (FlxG.mouse.pressed) {
+			winX = clamp(rawX - grabX, -366, 764);
+			winY = clamp(rawY - grabY, -60, 600);
+		} else {
+			windowDrag = false;
+		}
+		return;
+	}
+
+	// from here on the pointer is in the window's own coordinates
+	var mx = rawX - winX;
+	var my = rawY - (winY - rise.y);
 	var clicked = FlxG.mouse.justPressed;
+
+	if (clicked && inRect(mx, my, 366, 60, 720, 48)) {
+		windowDrag = true;
+		grabX = rawX - winX;
+		grabY = rawY - winY;
+		return;
+	}
 
 	// the blue orb (back) and the red cross (close) of the window
 	var dx = mx - 408;
@@ -565,6 +613,7 @@ function updateMouse() {
 }
 
 function update(elapsed) {
+	applyWindowPosition();
 	if (!canConfirm || closing)
 		return;
 
@@ -626,4 +675,5 @@ function updateAdjust() {
 
 function destroy() {
 	FlxG.cameras.remove(cam);
+	FlxG.cameras.remove(veilCam);
 }

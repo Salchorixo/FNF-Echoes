@@ -18,12 +18,16 @@ import funkin.backend.scripting.ModState;
 // There are no labels: the windows' own title bars say "ECHO 1/2/3" ("ECHO" is never translated).
 // No VHS shader here, same as the main menu (Zyra's call: no filters for now, and pixel art must
 // stay crisp). Up/left/right move the selection (the selected window lifts a little), ACCEPT opens
-// Echo 1 and makes a locked window shake. The mouse works too (hover selects, click confirms).
+// Echo 1 and makes a locked window shake. The mouse works too (hover selects, a click confirms) and the windows
+// can be DRAGGED (BE-22): grab one anywhere and it lifts (a soft shadow appears, it tilts a little with the
+// movement); where you drop it, it bounces and stays (cardBaseX/cardHomeY are its new home until you leave the
+// screen). A press that does not move is a click, not a drag. Locked windows can be dragged too, they just do not open.
 
 var echoUnlocked:Array<Bool> = [true, false, false];
 var cards:Array<FlxSprite> = [];
 var cardBaseX:Array<Float> = [];
 var cardBaseY:Float = 0;
+var cardHomeY:Array<Float> = [];
 var selectedIndex:Int = 0;
 
 var windowW:Float = 288;
@@ -34,6 +38,17 @@ var cellMargin:Float = 24;
 var cardGap:Float = 56;
 var cardRaise:Float = 22; // how far above the centre the windows sit (room for the ink puddle)
 var liftHeight:Float = 12;
+
+// Dragging (BE-22)
+var dragIndex:Int = -1;
+var dragMoved:Bool = false;
+var dragOffX:Float = 0;
+var dragOffY:Float = 0;
+var dragStartX:Float = 0;
+var dragStartY:Float = 0;
+var dragLift:Float = 22;
+var dragState:Dynamic = {lift: 0.0};
+var dragShadow:FlxSprite;
 
 // Animations: Echo 2's chains are 32 frames, Echo 3's glitch 64; pixel art steps at 10 fps.
 var chainsFrames:Int = 32;
@@ -58,6 +73,7 @@ function create() {
 	FlxG.camera.scroll.set(0, 0); // every screen resets its own camera
 	bgColor = FlxColor.WHITE;
 
+	buildShadow();
 	buildCards();
 
 	FlxG.mouse.visible = true;
@@ -91,6 +107,7 @@ function buildCards() {
 
 		var x = startX + i * (windowW + cardGap);
 		cardBaseX.push(x);
+		cardHomeY.push(cardBaseY);
 		card.setPosition(x, cardBaseY + 48);
 		card.alpha = 0;
 		add(card);
@@ -98,10 +115,30 @@ function buildCards() {
 
 		var index = i;
 		new FlxTimer().start(index * openStagger, (_) -> {
-			FlxTween.tween(card, {y: cardBaseY}, openTime, {ease: FlxEase.backOut});
+			FlxTween.tween(card, {y: cardHomeY[index]}, openTime, {ease: FlxEase.backOut});
 			FlxTween.tween(card, {alpha: 1}, 0.25);
 		});
 	}
+}
+
+// A soft ellipse that appears under a window while it is dragged.
+function buildShadow() {
+	var w = 256;
+	var h = 64;
+	dragShadow = new FlxSprite();
+	dragShadow.makeGraphic(w, h, FlxColor.TRANSPARENT, true, "echoesDragShadow");
+	for (y in 0...h) {
+		for (x in 0...w) {
+			var dx = (x - w / 2) / (w / 2);
+			var dy = (y - h / 2) / (h / 2);
+			var d = Math.sqrt(dx * dx + dy * dy);
+			dragShadow.pixels.setPixel32(x, y, FlxColor.fromRGB(40, 60, 90, Std.int(120 * Math.pow(Math.max(0, 1 - d), 1.4))));
+		}
+	}
+	dragShadow.dirty = true;
+	dragShadow.antialiasing = true;
+	dragShadow.alpha = 0;
+	add(dragShadow);
 }
 
 function finishOpening() {
@@ -115,8 +152,9 @@ function updateSelection() {
 	if (!opened) return;
 
 	for (i in 0...cards.length) {
+		if (i == dragIndex) continue;
 		FlxTween.cancelTweensOf(cards[i], ["y"]);
-		var targetY = cardBaseY - (i == selectedIndex ? liftHeight : 0);
+		var targetY = cardHomeY[i] - (i == selectedIndex ? liftHeight : 0);
 		FlxTween.tween(cards[i], {y: targetY}, 0.12, {ease: FlxEase.quadOut});
 	}
 }
@@ -154,7 +192,7 @@ function updateMouse() {
 	lastMouseX = FlxG.mouse.screenX;
 	lastMouseY = FlxG.mouse.screenY;
 
-	if (moved && opened) {
+	if (moved && opened && dragIndex < 0) {
 		for (i in 0...cards.length) {
 			if (i != selectedIndex && FlxG.mouse.overlaps(cards[i])) {
 				selectedIndex = i;
@@ -163,8 +201,118 @@ function updateMouse() {
 		}
 	}
 
-	if (FlxG.mouse.justPressed && opened && FlxG.mouse.overlaps(cards[selectedIndex]))
+}
+
+// ---------------------------------------------------------------- dragging
+
+function clamp(v:Float, lo:Float, hi:Float):Float {
+	return Math.max(lo, Math.min(hi, v));
+}
+
+function beginDrag(i:Int, mx:Float, my:Float) {
+	var card = cards[i];
+	dragIndex = i;
+	dragMoved = false;
+	dragStartX = mx;
+	dragStartY = my;
+	dragOffX = mx - card.x;
+	dragOffY = my - card.y;
+	selectedIndex = i;
+	FlxTween.cancelTweensOf(card);
+	FlxTween.cancelTweensOf(card, ["angle"]);
+	card.alpha = 1;
+	// on top of the other windows, with its shadow just below it
+	remove(dragShadow);
+	remove(card);
+	add(dragShadow);
+	add(card);
+	updateSelection();
+}
+
+// The press turned into a drag: the window lifts and its shadow fades in.
+function liftCard() {
+	FlxTween.cancelTweensOf(dragState);
+	FlxTween.tween(dragState, {lift: dragLift}, 0.1, {ease: FlxEase.quadOut});
+	FlxTween.cancelTweensOf(dragShadow);
+	FlxTween.tween(dragShadow, {alpha: 1}, 0.1);
+}
+
+function endDrag() {
+	var i = dragIndex;
+	var card = cards[i];
+	dragIndex = -1;
+
+	if (!dragMoved) {
+		// no movement: it was a click
+		selectedIndex = i;
+		updateSelection();
 		confirmSelection();
+		return;
+	}
+
+	// drop: it falls the lift it had, bounces, straightens up and stays here
+	cardBaseX[i] = card.x;
+	cardHomeY[i] = card.y + dragState.lift;
+	FlxTween.cancelTweensOf(dragState);
+	FlxTween.tween(dragState, {lift: 0.0}, 0.3, {ease: FlxEase.bounceOut});
+	FlxTween.tween(card, {y: cardHomeY[i]}, 0.32, {ease: FlxEase.bounceOut, onComplete: (_) -> {
+		FlxTween.tween(dragShadow, {alpha: 0}, 0.15);
+		updateSelection();
+	}});
+	FlxTween.tween(card, {angle: 0}, 0.4, {ease: FlxEase.elasticOut});
+}
+
+function updateDrag(elapsed:Float) {
+	var mx = FlxG.mouse.screenX;
+	var my = FlxG.mouse.screenY;
+
+	if (dragIndex < 0) {
+		if (FlxG.mouse.justPressed && opened && canConfirm) {
+			// the topmost window under the pointer (later windows are drawn above the earlier ones)
+			var hit = -1;
+			for (i in 0...cards.length)
+				if (FlxG.mouse.overlaps(cards[i]))
+					hit = i;
+			if (hit >= 0)
+				beginDrag(hit, mx, my);
+		}
+		// the shadow keeps following the window that was just dropped
+		if (dragShadow.alpha > 0) {
+			var dropped = selectedIndex;
+			placeShadow(cards[dropped], dragState.lift);
+		}
+		return;
+	}
+
+	var card = cards[dragIndex];
+	if (FlxG.mouse.pressed) {
+		if (!dragMoved && (Math.abs(mx - dragStartX) > 6 || Math.abs(my - dragStartY) > 6)) {
+			dragMoved = true;
+			liftCard();
+		}
+		if (dragMoved) {
+			var targetX = clamp(mx - dragOffX, 0, FlxG.width - windowW);
+			var targetY = clamp(my - dragOffY, 0, FlxG.height - windowH);
+			var follow = Math.min(1, elapsed * 40);
+			var oldX = card.x;
+			card.x += (targetX - card.x) * follow;
+			card.y += (targetY - dragState.lift - card.y) * follow;
+			// it tilts a little with the horizontal movement
+			var tilt = clamp((card.x - oldX) * 0.9, -6, 6);
+			card.angle += (tilt - card.angle) * Math.min(1, elapsed * 14);
+			placeShadow(card, dragState.lift);
+		}
+	} else {
+		endDrag();
+	}
+}
+
+// The shadow lies under the window's base, wider and fainter the higher the window is.
+function placeShadow(card:FlxSprite, lift:Float) {
+	var width = windowW * (0.95 + 0.003 * lift);
+	dragShadow.scale.set(width / 256, 0.55 + lift * 0.004);
+	dragShadow.updateHitbox();
+	dragShadow.setPosition(card.x + windowW / 2 - dragShadow.width / 2, card.y + lift + windowH - dragShadow.height / 2 + 6);
 }
 
 function update(elapsed) {
@@ -173,6 +321,7 @@ function update(elapsed) {
 	else if (controls.RIGHT_P)
 		moveSelection(1);
 
+	updateDrag(elapsed);
 	updateMouse();
 
 	if (controls.ACCEPT)
