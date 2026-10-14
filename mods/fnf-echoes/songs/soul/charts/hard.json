@@ -1,0 +1,26 @@
+{
+	"codenameChart": true,
+	"chartVersion": "1.6.0",
+	"stage": "stage",
+	"scrollSpeed": 2.0,
+	"noteTypes": [],
+	"events": [],
+	"strumLines": [
+		{
+			"characters": [
+				"dad"
+			],
+			"type": 0,
+			"position": "dad",
+			"notes": []
+		},
+		{
+			"characters": [
+				"bf"
+			],
+			"type": 1,
+			"position": "boyfriend",
+			"notes": []
+		}
+	]
+}
