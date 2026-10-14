@@ -7,6 +7,7 @@ import flixel.util.FlxTimer;
 import funkin.backend.scripting.ModState;
 import funkin.backend.scripting.Script;
 import funkin.backend.utils.CoolUtil;
+import openfl.Lib;
 import funkin.menus.TitleState;
 import funkin.menus.credits.CreditsMain;
 
@@ -24,7 +25,8 @@ import funkin.menus.credits.CreditsMain;
 // Intro: the animation plays once (Zyra falls onto a floating sofa, which tumbles upright and
 // settles), the music and the notes start on the frame where he lands, then the buttons slide
 // in and the folder and the vinyl pop in. After that the idle loop repeats. ACCEPT during the
-// intro skips it. Every timing is a variable below, to be tuned by eye.
+// intro skips it. Coming BACK from another screen (Settings, Echo, Credits) there is no intro: Zyra is
+// already in his loop (BE-17, see markReturn()). Every timing is a variable below, to be tuned by eye.
 //
 // buttonKeys stays the stable English keys — confirmSelection() switches on these regardless
 // of the display language, so what is shown never affects the navigation. Settings still opens
@@ -152,7 +154,27 @@ function create() {
 
 	FlxG.mouse.visible = true;
 	updateHighlight();
-	playIntro();
+	if (isReturning())
+		skipIntro();
+	else
+		playIntro();
+}
+
+// The intro is only for opening the game. When this screen sends you to another one it leaves a mark
+// (the start time of this run of the game, so a mark left by a previous run never counts); the next
+// MainMenuState sees it, skips the intro and clears it.
+function sessionStart():Float {
+	return Math.round((Date.now().getTime() - Lib.getTimer()) / 1000);
+}
+
+function markReturn() {
+	FlxG.save.data.echoesMenuReturn = sessionStart();
+}
+
+function isReturning():Bool {
+	var mark = FlxG.save.data.echoesMenuReturn;
+	FlxG.save.data.echoesMenuReturn = null;
+	return mark != null && Math.abs(mark - sessionStart()) < 3;
 }
 
 // ---------------------------------------------------------------- building
@@ -475,6 +497,7 @@ function confirmSelection() {
 		return;
 	}
 
+	markReturn();
 	switch (buttonKeys[selectedIndex]) {
 		case "PLAY": FlxG.switchState(new ModState("EchoSelectState"));
 		case "SETTINGS": FlxG.switchState(new ModState("OptionsState"));
