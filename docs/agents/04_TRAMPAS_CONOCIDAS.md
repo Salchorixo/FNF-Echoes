@@ -124,3 +124,8 @@ mismo formato: síntoma → causa → qué hacer.
 - **Causa:** al ejecutarse más tarde, la lambda ya no tiene el ámbito de los argumentos de la función; solo recuerda variables locales (`var`).
 - **Qué hacer:** copiar el parámetro a una variable local antes de crear la lambda (`var target = newTheme; later(0.4, (_) -> chooseTheme(target));`), igual que se hace con `var index = i` en los bucles.
 
+### 27. Para pasar un dato de un script a otro, `FlxG.save.data`, no `FlxG.state.call(...)`
+- **Síntoma:** una ventana (subestado) pregunta al estado de debajo con `FlxG.state.call("funcion")` y recibe `null` o valores que no cuadran (en BE-31, el tema que muestra el menú).
+- **Causa:** `call()` entre scripts depende de qué scripts tenga el estado y de cómo combine sus resultados; con una función con tipo de retorno (`:String`) devolvió `null`, y sin tipo dio resultados inconsistentes. Con objetos (`channelParams()`) sí funcionó, pero no es fiable.
+- **Qué hacer:** que quien sabe el dato lo **publique** en `FlxG.save.data.algo` (en memoria; no hace falta guardarlo en disco) cada vez que cambie, y que el otro script lo lea de ahí (`MainMenuState.publishTheme()` / `OptionsState.currentTheme()`).
+

@@ -182,6 +182,7 @@ function create() {
 	themer = Script.create(Paths.script('scripts/ui/themeManager'));
 	themer.load();
 	theme = themer.call("current");
+	publishTheme();
 
 	// The pencil, Zyra and the notes live on their own camera, above the one that draws the themed layers.
 	topCam = new FlxCamera();
@@ -830,6 +831,12 @@ function channelParams():Dynamic {
 	return themeBusy ? themeParams : null;
 }
 
+// The theme the menu shows right now (it changes at the white moment of a channel change) is kept in the save data (in memory)
+// for the Settings window, which follows it (BE-31). A call() between scripts gave inconsistent results, the save data does not.
+function publishTheme() {
+	FlxG.save.data.echoesShownTheme = theme;
+}
+
 function channelTime():Float {
 	return shaderTime;
 }
@@ -1031,6 +1038,7 @@ function changeTheme(newTheme:String) {
 	var swapAt = lossStart + lossTime + 0.04;
 	themeLater(swapAt, (_) -> {
 		theme = newTheme;
+		publishTheme();
 		applyThemeArt();
 		hideUi();
 		themeParams.roll = 0;
