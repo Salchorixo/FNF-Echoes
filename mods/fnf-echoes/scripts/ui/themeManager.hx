@@ -26,6 +26,15 @@ function setCurrent(theme:String) {
 	FlxG.save.data.echoesTheme = theme;
 }
 
+// A theme different from `theme`, at random (BE-27: every change of menu changes the desktop).
+function randomOther(theme:String):String {
+	var others = [];
+	for (t in themes)
+		if (t != theme)
+			others.push(t);
+	return others[FlxG.random.int(0, others.length - 1)];
+}
+
 function next(theme:String):String {
 	return themes[(themes.indexOf(theme) + 1) % themes.length];
 }

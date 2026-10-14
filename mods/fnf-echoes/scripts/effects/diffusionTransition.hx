@@ -24,6 +24,7 @@ import funkin.options.Options;
 // Art: images/menus/diffusion/ (AI_export_diffusion.py, private art folder): console_<theme>, console_scan, noise_<theme>_<c|m|f>_<n>.
 // "Reduce flashes" (Options.flashingMenu off): no shake, no white flash, and the noise does not flicker.
 // Screens that are not menus (the song itself) are not handled here: the engine's normal transition runs.
+// Every handled transition also changes the desktop theme at random (BE-27), so the menu you land on has another look.
 
 var fps:Float = 20;
 var leaveEnd:Int = 17;
@@ -84,11 +85,19 @@ function create(event) {
 	dest = destOf(leaving ? event.newState : FlxG.state);
 	if (dest == null)
 		return;
+	// An arrival that does not follow a leaving half (the first time the menu opens, after the title) uses the engine's
+	// normal transition: the black screen of the menu's intro stays black.
+	if (!leaving && FlxG.save.data.echoesDiffusion != true)
+		return;
 	active = true;
 	event.cancel(); // we draw everything ourselves; the engine's black swipe does not run
 
 	var themer = Script.create(Paths.script('scripts/ui/themeManager'));
 	themer.load();
+	// Every change of menu changes the desktop (BE-27): the screen that arrives wears another theme, and so does this
+	// transition (noise and console). "Background changes" off in Settings keeps the theme.
+	if (leaving && themer.call("changesEnabled"))
+		themer.call("setCurrent", [themer.call("randomOther", [themer.call("current")])]);
 	theme = themer.call("current");
 	soft = !Options.flashingMenu;
 

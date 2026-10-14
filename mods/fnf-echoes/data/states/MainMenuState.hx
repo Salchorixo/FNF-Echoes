@@ -84,7 +84,7 @@ var sketchLandFrame:Int = 42;
 
 // Menu music (BE-26): Zyra's own track, music/menuLoop.ogg (~122 BPM, 74.8 s, it loops whole: its tail fades out and the
 // quiet intro comes back). Zyra lands and the whole menu appears at second 14 of the track (dropSeconds). When the game
-// opens, the music starts at 0 and only the desktop is on screen; the intro (the drawn sketch, buttons, folder, vinyl) starts
+// opens, the music starts at 0 and the screen is BLACK (waitCover; Zyra will put things there); the intro (the drawn sketch, buttons, folder, vinyl) starts
 // sketchLandFrame frames BEFORE the drop, counted on the music's own clock, so Zyra hits the sofa exactly on the drop.
 // ENTER or a click during the wait jumps to that moment. Coming back from another screen the music keeps playing; if it
 // is not playing it restarts at the drop. instMusicId tags the sound object: the engine reuses one sound object for
@@ -94,6 +94,7 @@ var dropSeconds:Float = 14;
 var instMusicId:Int = 1;
 var comingBack:Bool = false;
 var waitingIntro:Bool = false;
+var waitCover:FlxSprite; // black screen over everything while the music's intro plays (Zyra will put things there)
 
 // Where the headphones sit in the final pose, in screen pixels (1280x720): the notes come out of
 // the two cups. Move these if the animation changes.
@@ -202,6 +203,16 @@ function create() {
 		skipIntro();
 	else
 		beginIntro();
+}
+
+// A black screen over the whole menu (on the top camera) for the seconds before the intro starts.
+function buildWaitCover() {
+	waitCover = new FlxSprite();
+	waitCover.makeGraphic(1, 1, FlxColor.BLACK);
+	waitCover.setGraphicSize(FlxG.width, FlxG.height);
+	waitCover.updateHitbox();
+	waitCover.cameras = [topCam];
+	add(waitCover);
 }
 
 // The intro is only for opening the game. When this screen sends you to another one it leaves a mark
@@ -415,6 +426,7 @@ function beginIntro() {
 	if (music != null && music.playing && music.time / 1000 < introAt() - 0.05) {
 		waitingIntro = true;
 		sketch.visible = false;
+		buildWaitCover();
 	} else {
 		playIntro();
 	}
@@ -427,6 +439,7 @@ function updateIntroWait() {
 	if (music == null || !music.playing || music.time / 1000 >= introAt()) {
 		waitingIntro = false;
 		sketch.visible = true;
+		FlxTween.tween(waitCover, {alpha: 0}, 0.2, {onComplete: (_) -> waitCover.visible = false});
 		playIntro();
 	}
 }
