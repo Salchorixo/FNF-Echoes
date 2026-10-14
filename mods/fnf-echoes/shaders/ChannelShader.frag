@@ -6,6 +6,7 @@
 //   tear     horizontal bands that slide sideways          rgb    colour-channel split
 //   snow     TV noise                                       roll   vertical roll (0..1)
 //   scan     scanlines                                      whiteMix  fade to Zyra's real white background
+//   flash    an extra white flash on top (short pulses)
 //   reveal   0..1: how much of the new wallpaper has arrived (white where it has not), with the signature
 //   revealMode  0 Vista (a bloom from the centre with a light streak), 1 XP (repainted from the top, few
 //               colours first), 2 Windows 98 (a mosaic of tiles, 16-colour look), 3 Mac (a ripple from the
@@ -17,6 +18,7 @@ uniform float snow;
 uniform float roll;
 uniform float scan;
 uniform float whiteMix;
+uniform float flash;
 uniform float reveal;
 uniform float revealMode;
 
@@ -77,7 +79,7 @@ void main() {
 	float n = hash(q * vec2(640.0, 360.0) + time * 60.0);
 	col = mix(col, vec3(n), snow * 0.55);
 	col *= 1.0 - scan * 0.12 * step(0.5, fract(q.y * 240.0));
-	col = mix(col, vec3(1.0), whiteMix);
+	col = mix(col, vec3(1.0), clamp(whiteMix + flash, 0.0, 1.0));
 
 	gl_FragColor = vec4(col, 1.0);
 }

@@ -125,7 +125,7 @@ var themeTimers:Array<FlxTimer> = [];
 var shaderTime:Float = 0;
 var lastHighlight:Int = -1;
 // The uniforms of ChannelShader.frag; tweened while a change lasts and copied to the shader every frame.
-var themeParams:Dynamic = {tear: 0.0, rgb: 0.0, snow: 0.0, roll: 0.0, scan: 0.0, whiteMix: 0.0, reveal: 1.0, revealMode: 4.0};
+var themeParams:Dynamic = {tear: 0.0, rgb: 0.0, snow: 0.0, roll: 0.0, scan: 0.0, whiteMix: 0.0, flash: 0.0, reveal: 1.0, revealMode: 4.0};
 var folder:FlxSprite;
 var folderRestY:Float = 0;
 
@@ -732,7 +732,7 @@ function updateShader(elapsed:Float) {
 	if (themeShader == null) return;
 	shaderTime += elapsed;
 	themeShader.hset("time", shaderTime);
-	for (name in ["tear", "rgb", "snow", "roll", "scan", "whiteMix", "reveal", "revealMode"])
+	for (name in ["tear", "rgb", "snow", "roll", "scan", "whiteMix", "flash", "reveal", "revealMode"])
 		themeShader.hset(name, Reflect.field(themeParams, name));
 }
 
@@ -798,18 +798,18 @@ function labelsOf(piece:FlxSprite):Array<FlxText> {
 	return [];
 }
 
-// The UI powers off, one piece after another, like a CRT closing to a line.
+// The UI powers off, one piece after another, like a CRT closing to a line (fast: the whole row is gone in ~0.3 s).
 function powerOffUi(soft:Bool) {
 	var pieces = uiPieces();
 	for (i in 0...pieces.length) {
 		var piece = pieces[i];
 		var texts = labelsOf(piece);
-		themeLater(i * 0.05, (_) -> {
-			for (t in texts) FlxTween.tween(t, {alpha: 0}, 0.15);
+		themeLater(i * 0.03, (_) -> {
+			for (t in texts) FlxTween.tween(t, {alpha: 0}, 0.08);
 			if (soft) {
-				FlxTween.tween(piece, {alpha: 0}, 0.3);
+				FlxTween.tween(piece, {alpha: 0}, 0.2);
 			} else {
-				FlxTween.tween(piece.scale, {y: 0.03}, 0.18, {ease: FlxEase.quadIn, onComplete: (_) -> FlxTween.tween(piece, {alpha: 0}, 0.1)});
+				FlxTween.tween(piece.scale, {y: 0.03}, 0.1, {ease: FlxEase.quadIn, onComplete: (_) -> FlxTween.tween(piece, {alpha: 0}, 0.05)});
 			}
 		});
 	}
@@ -826,7 +826,22 @@ function hideUi() {
 	for (t in buttonShadows) t.alpha = 0;
 }
 
-// Each piece enters with the signature of the system (a wink, with its own movement):
+// A short burst of the glitch (tearing and colour split) that dies down: it goes with every entrance.
+function glitchBurst(tear:Float, rgb:Float, seconds:Float) {
+	themeParams.tear = Math.max(themeParams.tear, tear);
+	themeParams.rgb = Math.max(themeParams.rgb, rgb);
+	FlxTween.cancelTweensOf(themeParams, ["tear", "rgb"]);
+	FlxTween.tween(themeParams, {tear: 0.0, rgb: 0.0}, seconds, {ease: FlxEase.quadOut});
+}
+
+// A white flash: it jumps up and falls at once.
+function whiteFlash(power:Float, seconds:Float) {
+	themeParams.flash = power;
+	FlxTween.cancelTweensOf(themeParams, ["flash"]);
+	FlxTween.tween(themeParams, {flash: 0.0}, seconds, {ease: FlxEase.quadOut});
+}
+
+// Each piece enters with the signature of the system (a wink, with its own movement) and a burst of glitch:
 // Vista fades in swelling, XP slides in from the left, 98 steps in like a dragged window, Mac pops out of a corner
 // like a genie.
 function enterUi(soft:Bool) {
@@ -836,34 +851,37 @@ function enterUi(soft:Bool) {
 		var piece = pieces[i];
 		var texts = labelsOf(piece);
 		var rest:Float = restOffsetX[i];
-		themeLater(i * 0.13, (_) -> {
+		themeLater(i * 0.06, (_) -> {
 			piece.alpha = 0;
-			FlxTween.tween(piece, {alpha: 1}, soft ? 0.5 : 0.25);
-			for (t in texts) FlxTween.tween(t, {alpha: t == texts[0] ? 0.8 : 1.0}, 0.3, {startDelay: soft ? 0.2 : 0.3});
+			FlxTween.tween(piece, {alpha: 1}, soft ? 0.35 : 0.12);
+			for (t in texts) FlxTween.tween(t, {alpha: t == texts[0] ? 0.8 : 1.0}, 0.15, {startDelay: soft ? 0.12 : 0.12});
 			if (soft) return;
 
+			glitchBurst(0.45, 0.35, 0.3);
 			if (theme == "vista") {
-				piece.scale.set(0.82, 0.82);
-				FlxTween.tween(piece.scale, {x: 1, y: 1}, 0.45, {ease: FlxEase.backOut});
+				piece.scale.set(0.7, 0.7);
+				FlxTween.tween(piece.scale, {x: 1, y: 1}, 0.3, {ease: FlxEase.backOut});
 			} else if (theme == "xp") {
-				piece.offset.x = rest + 150;
-				FlxTween.tween(piece.offset, {x: rest}, 0.45, {ease: FlxEase.quadOut});
+				piece.offset.x = rest + 260;
+				FlxTween.tween(piece.offset, {x: rest}, 0.28, {ease: FlxEase.expoOut});
 			} else if (theme == "win98") {
 				var drag = {t: 0.0};
-				FlxTween.tween(drag, {t: 1.0}, 0.4, {ease: FlxEase.linear, onUpdate: (_) -> piece.offset.x = rest + Math.floor((1 - drag.t) * 8) * 22});
-				themeLater(0.42, (_) -> piece.offset.x = rest);
+				FlxTween.tween(drag, {t: 1.0}, 0.26, {ease: FlxEase.linear, onUpdate: (_) -> piece.offset.x = rest + Math.floor((1 - drag.t) * 8) * 34});
+				themeLater(0.28, (_) -> piece.offset.x = rest);
 			} else {
 				piece.origin.set(0, piece.frameHeight);
 				piece.scale.set(0.05, 0.05);
-				FlxTween.tween(piece.scale, {x: 1, y: 1}, 0.6, {ease: FlxEase.elasticOut, onComplete: (_) -> piece.centerOrigin()});
+				FlxTween.tween(piece.scale, {x: 1, y: 1}, 0.4, {ease: FlxEase.elasticOut, onComplete: (_) -> piece.centerOrigin()});
 			}
 		});
 	}
 }
 
-// The channel change: UI off -> the wallpaper loses the signal and goes white (Zyra's real background) ->
-// the new theme arrives, the wallpaper first (with the signature of its system) and then the UI, with the glitch
-// dying down. "Reduce flashes" makes it a soft fade: no tearing, snow, colour split or flashing.
+// The channel change (about 1.7 s): the UI powers off -> the wallpaper loses the signal in a rush of tearing, snow and
+// white flashes and goes white (Zyra's real background) -> the new theme arrives with a punch (shake, zoom, flash):
+// the wallpaper first, with the signature of its system, and then the UI, with the glitch dying down. Only the
+// themed camera shakes and zooms: Zyra and the pencil, on their own camera, stay still. "Reduce flashes" makes it a
+// soft fade: no tearing, snow, colour split, flashes, shake or zoom.
 function changeTheme(newTheme:String) {
 	themeBusy = true;
 	var soft:Bool = themer.call("reduceFlashes");
@@ -874,6 +892,7 @@ function changeTheme(newTheme:String) {
 	themeParams.roll = 0;
 	themeParams.scan = 0;
 	themeParams.whiteMix = 0;
+	themeParams.flash = 0;
 	themeParams.reveal = 1;
 	themeParams.revealMode = 4;
 	themeShader = new CustomShader("ChannelShader");
@@ -882,49 +901,67 @@ function changeTheme(newTheme:String) {
 	FlxG.sound.play(Paths.sound('themes/channel_change'), soft ? 0.5 : 1.0);
 	powerOffUi(soft);
 
-	var lossStart = 0.25;
-	var lossTime = soft ? 0.6 : 0.7;
+	// the signal goes: tearing, snow and colour split rise fast; the picture rolls and flashes white
+	var lossStart = 0.08;
+	var lossTime = soft ? 0.35 : 0.38;
 	themeLater(lossStart, (_) -> {
-		if (soft)
+		if (soft) {
 			FlxTween.tween(themeParams, {whiteMix: 1.0}, lossTime, {ease: FlxEase.quadIn});
-		else
-			FlxTween.tween(themeParams, {tear: 1.0, rgb: 0.8, snow: 0.7, scan: 1.0, whiteMix: 1.0}, lossTime, {ease: FlxEase.quadIn});
+			return;
+		}
+		FlxG.camera.shake(0.012, 0.35);
+		FlxTween.tween(themeParams, {tear: 1.0, rgb: 1.0, snow: 0.8, scan: 1.0, whiteMix: 1.0}, lossTime, {ease: FlxEase.quadIn});
+		themeLater(0.1, (_) -> {
+			themeParams.roll = 0.14;
+			whiteFlash(0.6, 0.08);
+		});
+		themeLater(0.19, (_) -> {
+			themeParams.roll = 0.4;
+			whiteFlash(0.8, 0.07);
+		});
+		themeLater(0.27, (_) -> themeParams.roll = 0.0);
 	});
 
 	// white: swap the art and prepare the arrival
-	var swapAt = lossStart + lossTime + 0.05;
+	var swapAt = lossStart + lossTime + 0.04;
 	themeLater(swapAt, (_) -> {
 		theme = newTheme;
 		applyThemeArt();
 		hideUi();
+		themeParams.roll = 0;
 		themeParams.revealMode = soft ? 4 : themer.call("revealMode", [theme]);
 		themeParams.reveal = soft ? 1 : 0;
 	});
 
-	// the wallpaper arrives
-	var arriveAt = swapAt + 0.3;
+	// the new wallpaper arrives with a punch
+	var arriveAt = swapAt + 0.08;
 	themeLater(arriveAt, (_) -> {
 		playThemeSound("arrive");
 		if (soft) {
-			FlxTween.tween(themeParams, {whiteMix: 0.0}, 0.8);
-		} else {
-			themeParams.whiteMix = 0;
-			FlxTween.tween(themeParams, {reveal: 1.0}, 1.0, {ease: FlxEase.quadInOut});
-			themeParams.tear = 0.9;
-			themeParams.rgb = 0.7;
-			themeParams.snow = 0.45;
-			FlxTween.tween(themeParams, {tear: 0.0, rgb: 0.0, snow: 0.0, scan: 0.0}, 1.9, {ease: FlxEase.quadOut});
+			FlxTween.tween(themeParams, {whiteMix: 0.0}, 0.45);
+			return;
 		}
+		themeParams.whiteMix = 0;
+		whiteFlash(0.7, 0.12);
+		FlxG.camera.shake(0.01, 0.3);
+		FlxG.camera.zoom = 1.07;
+		FlxTween.tween(FlxG.camera, {zoom: 1.0}, 0.45, {ease: FlxEase.backOut});
+		FlxTween.tween(themeParams, {reveal: 1.0}, 0.5, {ease: FlxEase.quadOut});
+		themeParams.tear = 1.0;
+		themeParams.rgb = 0.9;
+		themeParams.snow = 0.6;
+		FlxTween.tween(themeParams, {tear: 0.0, rgb: 0.0, snow: 0.0, scan: 0.0}, 0.95, {ease: FlxEase.quadOut});
 	});
 
-	// the UI enters
-	var uiAt = arriveAt + (soft ? 0.6 : 0.8);
+	// the UI enters while the wallpaper is still settling
+	var uiAt = arriveAt + (soft ? 0.35 : 0.3);
 	themeLater(uiAt, (_) -> enterUi(soft));
 
 	// done
-	themeLater(uiAt + 1.4, (_) -> {
+	themeLater(uiAt + 0.75, (_) -> {
 		FlxG.camera.removeShader(themeShader);
 		themeShader = null;
+		FlxG.camera.zoom = 1.0;
 		themer.call("setCurrent", [theme]);
 		themeBusy = false;
 		updateHighlight();
