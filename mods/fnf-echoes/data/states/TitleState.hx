@@ -41,6 +41,7 @@ var glitchMaxDuration:Float = 2.0;
 
 var pressKeyText:FlxText;
 var phase:String = "idle";
+var tempGo:Bool = false; // TEMP-TEST
 
 function create() {
 	bgColor = FlxColor.BLACK;
@@ -135,6 +136,7 @@ function showPrompt() {
 }
 
 function update(elapsed) {
+	if (!tempGo) { tempGo = true; FlxG.switchState(new MainMenuState()); return; } // TEMP-TEST
 	if (glitchActive) {
 		glitchFrameTimer++;
 		if (glitchFrameTimer >= glitchFrameCounts[glitchStep % glitchFrameCounts.length]) {

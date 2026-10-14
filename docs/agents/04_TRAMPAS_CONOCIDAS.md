@@ -129,3 +129,13 @@ mismo formato: síntoma → causa → qué hacer.
 - **Causa:** `call()` entre scripts depende de qué scripts tenga el estado y de cómo combine sus resultados; con una función con tipo de retorno (`:String`) devolvió `null`, y sin tipo dio resultados inconsistentes. Con objetos (`channelParams()`) sí funcionó, pero no es fiable.
 - **Qué hacer:** que quien sabe el dato lo **publique** en `FlxG.save.data.algo` (en memoria; no hace falta guardarlo en disco) cada vez que cambie, y que el otro script lo lea de ahí (`MainMenuState.publishTheme()` / `OptionsState.currentTheme()`).
 
+### 28. `FlxG.mouse.load()` no dibuja nada: el motor fuerza el cursor del sistema
+- **Síntoma:** cargas un puntero propio con `FlxG.mouse.load(imagen, 1, 0, 0)` y en el juego se sigue viendo la flecha del sistema (`screencapture` sin `-C` no muestra ninguna).
+- **Causa:** `engine/source/funkin/backend/system/Main.hx` pone `FlxG.mouse.useSystemCursor = true` al arrancar; con eso Flixel no dibuja su propio cursor.
+- **Qué hacer:** `FlxG.mouse.useSystemCursor = false` antes de `FlxG.mouse.load(...)` y devolver `true` al salir de la pantalla (`themeManager.applyCursor()` / `restoreCursor()`, llamados en `create()` y `destroy()` de cada estado del mod). Para verlo en capturas: `screencapture` sin `-C` (el cursor del juego va dentro de la imagen; con `-C` aparece además el del sistema).
+
+### 29. Probar con varias instancias del juego a la vez ensucia el guardado
+- **Síntoma:** ajustes que cambian solos (selector de fondo fijo en un tema, calidad de pantalla distinta) y teclas que van a otra ventana.
+- **Causa:** todas las instancias comparten el mismo guardado (`~/Library/Application Support/Yoshman29/CodenameEngine.sol` y `.../CodenameEngine/options.sol`) y la última en cerrar sobrescribe; además las teclas sintéticas van a la ventana en primer plano, y Zyra puede estar usando una.
+- **Qué hacer:** una sola instancia de prueba, cerrada por su botón rojo (así vuelca el guardado); antes de empezar apunta los ajustes de partida y al acabar compruébalos en el archivo (`strings -a archivo.sol | grep -o "echoes[A-Za-z]*[^g]*"`).
+

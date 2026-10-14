@@ -97,6 +97,7 @@ var lastMouseY:Float = -1;
 // Background (BE-23)
 var bgDir:String = 'menus/echo/bg/';
 var theme:String = "vista";
+var themer:Script;
 var bgGroup:FlxGroup;
 var floorGroup:FlxGroup;
 var glowGroup:FlxGroup;
@@ -130,9 +131,10 @@ var lastRippleIndex:Int = 0;
 function create() {
 	FlxG.camera.scroll.set(0, 0); // every screen resets its own camera
 	bgColor = FlxColor.BLACK;
-	var themer = Script.create(Paths.script('scripts/ui/themeManager'));
+	themer = Script.create(Paths.script('scripts/ui/themeManager'));
 	themer.load();
 	theme = themer.call("current"); // the windows' frame follows the desktop theme (BE-30)
+	themer.call("applyCursor", [theme]); // and so does the pointer (BE-32)
 	floorY = (FlxG.height - windowH) / 2 - cardRaise + windowH + 8;
 
 	bgGroup = new FlxGroup();
@@ -748,4 +750,5 @@ function update(elapsed) {
 
 function destroy() {
 	FlxG.mouse.visible = false;
+	themer.call("restoreCursor");
 }

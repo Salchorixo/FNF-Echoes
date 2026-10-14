@@ -262,7 +262,7 @@ function buildWall() {
 }
 
 function applyCursor() {
-	FlxG.mouse.load(themer.call("image", [theme, "cursor"]), 1, 0, 0);
+	themer.call("applyCursor", [theme]);
 }
 
 // Label colour and shadow of a button in the current theme (Mac highlights the selected one).
@@ -739,6 +739,7 @@ function destroy() {
 	for (timer in themeTimers) timer.cancel();
 	if (themeShader != null) FlxG.camera.removeShader(themeShader);
 	FlxG.mouse.visible = false;
+	themer.call("restoreCursor");
 }
 
 // ---------------------------------------------------------------- themes (BE-16)

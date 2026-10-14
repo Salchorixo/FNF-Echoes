@@ -95,6 +95,18 @@ function clearPending() {
 	FlxG.save.data.echoesThemePending = null;
 }
 
+// The pointer of a theme (BE-32). The engine forces the SYSTEM cursor (Main.hx: FlxG.mouse.useSystemCursor = true), and with it
+// FlxG.mouse.load() draws nothing: the themed pointer only shows if the game draws its own. Every screen of the mod calls this on
+// create and restoreCursor() on destroy, so engine screens (Credits...) get the system pointer back.
+function applyCursor(theme:String) {
+	FlxG.mouse.useSystemCursor = false;
+	FlxG.mouse.load(image(theme, "cursor"), 1, 0, 0);
+}
+
+function restoreCursor() {
+	FlxG.mouse.useSystemCursor = true;
+}
+
 // Art and sounds of a theme.
 function image(theme:String, name:String):String {
 	return Paths.image('menus/themes/' + theme + '_' + name);

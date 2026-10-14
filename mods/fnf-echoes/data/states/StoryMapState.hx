@@ -127,6 +127,7 @@ function create() {
 	themer = Script.create(Paths.script('scripts/ui/themeManager'));
 	themer.load();
 	theme = themer.call("current"); // the window's frame follows the desktop theme (BE-30)
+	themer.call("applyCursor", [theme]); // and so does the pointer (BE-32)
 
 	buildBackground();
 	buildHalos();
@@ -784,4 +785,5 @@ function update(elapsed) {
 
 function destroy() {
 	FlxG.mouse.visible = false;
+	themer.call("restoreCursor");
 }
