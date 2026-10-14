@@ -82,15 +82,18 @@ var sketchFps:Float = 60;
 // Intro frame where Zyra hits the sofa (the sketch's own impact); the music starts there.
 var sketchLandFrame:Int = 42;
 
-// Menu music (Soul, 150 BPM): ONLY the instrumental (menuInst.ogg, BE-19). It starts as soon as the menu opens,
-// landDelay seconds before its drop (instStartSeconds into the track) so that the drop falls exactly on the frame
-// where Zyra lands. Coming back from another screen the music keeps playing; if it is not playing it restarts at the
-// drop. instMusicId tags the sound object: the engine reuses one sound object for every track, so the tag must
-// be set every time the music is started here.
-var songBpm:Float = 150;
-var instStartSeconds:Float = 26;
+// Menu music (BE-26): Zyra's own track, music/menuLoop.ogg (~122 BPM, 74.8 s, it loops whole: its tail fades out and the
+// quiet intro comes back). Zyra lands and the whole menu appears at second 14 of the track (dropSeconds). When the game
+// opens, the music starts at 0 and only the desktop is on screen; the intro (the drawn sketch, buttons, folder, vinyl) starts
+// sketchLandFrame frames BEFORE the drop, counted on the music's own clock, so Zyra hits the sofa exactly on the drop.
+// ENTER or a click during the wait jumps to that moment. Coming back from another screen the music keeps playing; if it
+// is not playing it restarts at the drop. instMusicId tags the sound object: the engine reuses one sound object for
+// every track, so the tag must be set every time the music is started here.
+var songBpm:Float = 122;
+var dropSeconds:Float = 14;
 var instMusicId:Int = 1;
 var comingBack:Bool = false;
+var waitingIntro:Bool = false;
 
 // Where the headphones sit in the final pose, in screen pixels (1280x720): the notes come out of
 // the two cups. Move these if the animation changes.
@@ -182,7 +185,7 @@ function create() {
 
 	comingBack = isReturning();
 	if (FlxG.sound.music == null || !FlxG.sound.music.playing || FlxG.sound.music.ID != instMusicId)
-		startMenuMusic(comingBack ? instStartSeconds : instStartSeconds - sketchLandFrame / sketchFps);
+		startMenuMusic(comingBack ? dropSeconds : 0);
 
 	buildWall();
 	buildButtons();
@@ -198,7 +201,7 @@ function create() {
 	if (comingBack)
 		skipIntro();
 	else
-		playIntro();
+		beginIntro();
 }
 
 // The intro is only for opening the game. When this screen sends you to another one it leaves a mark
@@ -209,10 +212,10 @@ function sessionStart():Float {
 }
 
 function startMenuMusic(fromSeconds:Float) {
-	CoolUtil.playMusic(Paths.music('menuInst'), true, 1, true, songBpm);
+	CoolUtil.playMusic(Paths.music('menuLoop'), true, 1, true, songBpm);
 	FlxG.sound.music.ID = instMusicId;
 	FlxG.sound.music.time = fromSeconds * 1000;
-	trace('[MainMenu] music: menuInst from ' + fromSeconds + ' s');
+	trace('[MainMenu] music: menuLoop from ' + fromSeconds + ' s');
 }
 
 function markReturn() {
@@ -399,6 +402,33 @@ function buildParticles() {
 function later(seconds:Float, callback) {
 	var timer = new FlxTimer().start(seconds, callback);
 	introTimers.push(timer);
+}
+
+// The second of the track at which the intro has to start so that Zyra lands on the drop.
+function introAt():Float {
+	return dropSeconds - sketchLandFrame / sketchFps;
+}
+
+// Opening the game: if the music is still before that moment, show only the desktop and wait for it (updateIntroWait()).
+function beginIntro() {
+	var music = FlxG.sound.music;
+	if (music != null && music.playing && music.time / 1000 < introAt() - 0.05) {
+		waitingIntro = true;
+		sketch.visible = false;
+	} else {
+		playIntro();
+	}
+}
+
+// The wait is counted on the music's clock, so the landing and the drop cannot drift apart.
+function updateIntroWait() {
+	if (!waitingIntro) return;
+	var music = FlxG.sound.music;
+	if (music == null || !music.playing || music.time / 1000 >= introAt()) {
+		waitingIntro = false;
+		sketch.visible = true;
+		playIntro();
+	}
 }
 
 function playIntro() {
@@ -643,6 +673,8 @@ function updateMouse() {
 }
 
 function update(elapsed) {
+	updateIntroWait();
+
 	// While the Settings window is open the menu keeps moving but does not react to the keyboard or the mouse.
 	if (subState != null) {
 		updateParticles(elapsed);
@@ -672,7 +704,10 @@ function update(elapsed) {
 
 	updateMouse();
 
-	if (controls.ACCEPT) {
+	if (waitingIntro) {
+		// ENTER or a click while the desktop waits for the drop: jump to the moment the intro starts
+		if (controls.ACCEPT || FlxG.mouse.justPressed) FlxG.sound.music.time = introAt() * 1000;
+	} else if (controls.ACCEPT) {
 		if (introDone) confirmSelection();
 		else skipIntro();
 	}
