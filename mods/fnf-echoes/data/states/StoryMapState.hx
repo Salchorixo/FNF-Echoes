@@ -607,14 +607,11 @@ function moveTo(index:Int) {
 	setMood(moodOf(currentIndex), true);
 	refreshDim();
 
-	// Zyra hops to the new node.
+	// Zyra travels to the new node in ONE smooth trip: it starts fast and only slows down on arrival
+	// (cubeOut), so it never stops half way, even when the key is pressed again during the trip.
 	var targetY = nodes[currentIndex].y - 14 * pixel;
-	var midY = (zyraAnchor.y + targetY) / 2 - 40;
 	FlxTween.cancelTweensOf(zyraAnchor);
-	FlxTween.tween(zyraAnchor, {y: midY}, 0.1, {
-		ease: FlxEase.quadOut,
-		onComplete: (_) -> FlxTween.tween(zyraAnchor, {y: targetY}, 0.12, {ease: FlxEase.quadIn})
-	});
+	FlxTween.tween(zyraAnchor, {y: targetY}, 0.38, {ease: FlxEase.cubeOut});
 }
 
 // PROTOTYPE (see the header): completes the selected song and unlocks the next node.
