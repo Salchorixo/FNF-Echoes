@@ -83,6 +83,7 @@ var windowX:Float = 6;
 
 var artPanel:Script;
 var themer:Script;
+var theme:String = "vista";
 var zyraAlert:FlxSprite;
 var zyraDown:FlxSprite;
 var pointer:FlxSprite;
@@ -125,6 +126,8 @@ function create() {
 
 	themer = Script.create(Paths.script('scripts/ui/themeManager'));
 	themer.load();
+	theme = themer.call("current"); // the window's frame follows the desktop theme (BE-30)
+	themer.call("applyCursor", [theme]); // and so does the pointer (BE-32)
 
 	buildBackground();
 	buildHalos();
@@ -199,7 +202,7 @@ function buildHalos() {
 function buildWindow() {
 	for (key in moodKeys) {
 		var win = new FlxSprite();
-		win.loadGraphic(Paths.image('menus/songs/mood_' + key), true, 132, 228);
+		win.loadGraphic(Paths.image('menus/songs/' + theme + '_mood_' + key), true, 132, 228);
 		pixelSprite(win);
 		win.setPosition(-480, 18);
 		win.alpha = 0;
@@ -782,4 +785,5 @@ function update(elapsed) {
 
 function destroy() {
 	FlxG.mouse.visible = false;
+	themer.call("restoreCursor");
 }

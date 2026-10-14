@@ -182,6 +182,7 @@ function create() {
 	themer = Script.create(Paths.script('scripts/ui/themeManager'));
 	themer.load();
 	theme = themer.call("current");
+	publishTheme();
 
 	// The pencil, Zyra and the notes live on their own camera, above the one that draws the themed layers.
 	topCam = new FlxCamera();
@@ -261,7 +262,7 @@ function buildWall() {
 }
 
 function applyCursor() {
-	FlxG.mouse.load(themer.call("image", [theme, "cursor"]), 1, 0, 0);
+	themer.call("applyCursor", [theme]);
 }
 
 // Label colour and shadow of a button in the current theme (Mac highlights the selected one).
@@ -738,6 +739,7 @@ function destroy() {
 	for (timer in themeTimers) timer.cancel();
 	if (themeShader != null) FlxG.camera.removeShader(themeShader);
 	FlxG.mouse.visible = false;
+	themer.call("restoreCursor");
 }
 
 // ---------------------------------------------------------------- themes (BE-16)
@@ -811,10 +813,29 @@ function updateAutoChange(elapsed:Float) {
 	}
 }
 
+// The person picked a desktop in Settings > Screen (BE-29): show it now, with the channel change, even though a chosen theme
+// switches the automatic changes off. If a change is already running it waits for it.
+function chooseTheme(newTheme:String) {
+	if (newTheme == theme)
+		return;
+	if (themeBusy || !introDone) {
+		var target = newTheme; // a closure does not see a function's own parameter, only local variables
+		later(0.4, (_) -> chooseTheme(target));
+		return;
+	}
+	changeTheme(newTheme);
+}
+
 // What the Settings window reads (BE-28) to suffer the same channel change as the wallpaper: the live values while a change
 // lasts, null otherwise; and the shader's clock.
 function channelParams():Dynamic {
 	return themeBusy ? themeParams : null;
+}
+
+// The theme the menu shows right now (it changes at the white moment of a channel change) is kept in the save data (in memory)
+// for the Settings window, which follows it (BE-31). A call() between scripts gave inconsistent results, the save data does not.
+function publishTheme() {
+	FlxG.save.data.echoesShownTheme = theme;
 }
 
 function channelTime():Float {
@@ -1018,6 +1039,7 @@ function changeTheme(newTheme:String) {
 	var swapAt = lossStart + lossTime + 0.04;
 	themeLater(swapAt, (_) -> {
 		theme = newTheme;
+		publishTheme();
 		applyThemeArt();
 		hideUi();
 		themeParams.roll = 0;

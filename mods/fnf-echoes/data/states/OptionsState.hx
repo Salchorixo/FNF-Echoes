@@ -23,7 +23,9 @@ import funkin.options.Options;
 // one camera, so moving the window is moving that camera's scroll; the light veil is on a camera of its own so it
 // stays still. While it is dragged it leaves a trail of copies of its frame (like the windows of the old systems when they
 // hung), on a camera of their own that does not move. Mouse positions are converted to the window's own coordinates (see windowMouse()).
-// The window art has NO text (images/menus/options/vista_window.png, from AI_export_settings_vista.py in
+// THEMES (BE-31): the window's design follows the desktop theme the menu shows (<theme>_window.png: Vista from AI_export_settings_vista.py,
+// the others from AI_export_settings_themes.py), and it changes live if the menu changes theme while the window is open.
+// The window art has NO text (images/menus/options/<theme>_window.png, from AI_export_settings_vista.py in
 // the private art folder): every label is a FlxText drawn on top, so it goes through translate.hx.
 // All positions below are absolute screen pixels (native pixel x 3) read from that script.
 //
@@ -38,8 +40,8 @@ import funkin.options.Options;
 // are Options.volumeMusic/volumeSFX, the keys are Options.P1_*, quality/downscroll/ghost tapping are
 // Options fields, language goes through TranslationUtil. "Reduce flashes" is Options.flashingMenu inverted.
 // "Background changes" and "Desktop effects" are NEW preferences saved in FlxG.save.data
-// (echoesBackgroundChanges, echoesDesktopEffects, both on by default): nothing reads them yet, they are for
-// the theme system and the final sequence.
+// (echoesBackgroundChanges, echoesDesktopEffects, both on by default): the first one is read by the theme system, the second
+// is for the final sequence. "Desktop background" (BE-29) is echoesThemeChoice: auto, or one theme that stays.
 
 // ---------------------------------------------------------------- data
 
@@ -65,6 +67,7 @@ var rowsByCategory:Array<Array<Dynamic>> = [
 		{label: "GHOST TAPPING", kind: "bool", fieldName: "ghostTapping", artSheet: "icons", art: 5}
 	],
 	[
+		{label: "DESKTOP BACKGROUND", kind: "theme", artSheet: "icons", art: 3},
 		{label: "REDUCE FLASHES", kind: "flashes", artSheet: "icons", art: 6},
 		{label: "BACKGROUND CHANGES", kind: "pref", fieldName: "echoesBackgroundChanges", artSheet: "icons", art: 7},
 		{label: "DESKTOP EFFECTS", kind: "pref", fieldName: "echoesDesktopEffects", artSheet: "icons", art: 7}
@@ -132,6 +135,8 @@ var tileObjects:Array<Dynamic> = [];
 var tiles:Array<Dynamic> = [];
 
 var cam:FlxCamera;
+var theme:String = "vista"; // the window's design follows the desktop theme the menu shows (BE-31)
+var windowSprite:FlxSprite;
 var fxShader:CustomShader = null; // the menu's channel change reaches this window too (BE-28)
 var fxPulse:Float = 0;
 var veilCam:FlxCamera;
@@ -159,6 +164,7 @@ var lastMouseY:Float = -1;
 function create() {
 	i18n = Script.create(Paths.script('scripts/ui/translate'));
 	i18n.load();
+	theme = currentTheme();
 
 	// Its own transparent camera above the menu's (the menu's Zyra and pencil are on a camera of their own too).
 	veilCam = new FlxCamera();
@@ -173,7 +179,7 @@ function create() {
 
 	for (i in 0...ghostPool) {
 		var ghost = new FlxSprite();
-		ghost.loadGraphic(Paths.image('menus/options/vista_window'));
+		ghost.loadGraphic(Paths.image(windowImage()));
 		ghost.antialiasing = false;
 		ghost.visible = false;
 		ghost.cameras = [ghostCam];
@@ -187,11 +193,12 @@ function create() {
 	veil.cameras = [veilCam];
 	add(veil);
 
-	var window = new FlxSprite();
-	window.loadGraphic(Paths.image('menus/options/vista_window'));
-	put(window);
+	windowSprite = new FlxSprite();
+	windowSprite.loadGraphic(Paths.image(windowImage()));
+	put(windowSprite);
 
 	buildChrome();
+	placeTitle();
 	buildCategories();
 	setCategory(0, false);
 
@@ -206,6 +213,41 @@ function create() {
 	FlxTween.tween(veilCam, {alpha: 1}, 0.16);
 	FlxTween.tween(rise, {y: 0.0}, 0.2, {ease: FlxEase.quadOut});
 	new FlxTimer().start(0.2, (_) -> canConfirm = true);
+}
+
+// The theme the menu behind shows now (Settings only opens over the main menu).
+function currentTheme():String {
+	var shown = FlxG.save.data.echoesShownTheme;
+	return shown == null ? "vista" : shown;
+}
+
+function windowImage():String {
+	return 'menus/options/' + theme + '_window';
+}
+
+// The title text follows the design of the title bar: white with a dark shadow on Vista and XP, white without shadow on Windows 98,
+// dark and centred on Mac (its traffic lights take the left).
+function placeTitle() {
+	if (theme == "mac") {
+		titleShadow.visible = false;
+		titleText.color = 0xFF3E4460;
+		titleText.x = 765 - titleText.textField.textWidth / 2 - 2;
+	} else {
+		titleText.x = 393;
+		titleText.color = FlxColor.WHITE;
+		titleShadow.visible = theme != "win98";
+		titleShadow.color = theme == "xp" ? 0xFF001878 : 0xFF143C78;
+		titleShadow.x = 395;
+	}
+}
+
+// The menu changed its theme (under the white of the channel change): the window changes with it, also when it is open.
+function applyTheme(newTheme:String) {
+	theme = newTheme;
+	windowSprite.loadGraphic(Paths.image(windowImage()));
+	for (ghost in ghosts)
+		ghost.loadGraphic(Paths.image(windowImage()));
+	placeTitle();
 }
 
 // Everything of this window goes on its own camera.
@@ -411,6 +453,8 @@ function refreshTile(i:Int) {
 		tile.check.animation.frameIndex = Options.language == row.code ? 1 : 0;
 	} else if (row.kind == "quality") {
 		tile.valueText.text = t(Options.quality == 0 ? "PERFORMANCE" : "HIGH");
+	} else if (row.kind == "theme") {
+		tile.valueText.text = t(themeChoiceName(themer().call("choice")));
 	} else if (row.kind == "keybind") {
 		tile.valueText.text = keyName(row);
 	}
@@ -494,12 +538,43 @@ function activateTile(mouseX:Float) {
 		Options.quality = Options.quality == 0 ? 1 : 0;
 		Options.applyQuality();
 		refreshTile(tileIndex);
+	} else if (row.kind == "theme") {
+		cycleThemeChoice();
+		refreshTile(tileIndex);
 	} else if (row.kind == "language") {
 		selectLanguage(row.code);
 	} else {
 		toggleBool(row);
 		refreshTile(tileIndex);
 	}
+}
+
+// "Desktop background": AUTO -> VISTA -> XP -> WINDOWS 98 -> MAC -> AUTO. A chosen theme is applied at once on the menu behind
+// (with the channel change) and then stays; AUTO lets the desktop change by itself again (BE-29).
+var themeScript:Script = null;
+
+function themer():Dynamic {
+	if (themeScript == null) {
+		themeScript = Script.create(Paths.script('scripts/ui/themeManager'));
+		themeScript.load();
+	}
+	return themeScript;
+}
+
+function themeChoiceName(choice:String):String {
+	if (choice == "vista") return "VISTA";
+	if (choice == "xp") return "XP";
+	if (choice == "win98") return "WINDOWS 98";
+	if (choice == "mac") return "MAC";
+	return "AUTO";
+}
+
+function cycleThemeChoice() {
+	var manager = themer();
+	var next = manager.call("nextChoice", [manager.call("choice")]);
+	manager.call("setChoice", [next]);
+	if (next != "auto")
+		FlxG.state.call("chooseTheme", [next]);
 }
 
 function selectLanguage(code:String) {
@@ -510,6 +585,7 @@ function selectLanguage(code:String) {
 	// Re-render everything on screen in the new language: that is what makes the choice visible.
 	titleShadow.text = t("SETTINGS");
 	titleText.text = t("SETTINGS");
+	placeTitle();
 	statusText.text = t("STATUS HINT");
 	refreshCategoryText();
 	var keep = tileIndex;
@@ -691,6 +767,9 @@ function updateChannelFx() {
 }
 
 function update(elapsed) {
+	var shown = currentTheme();
+	if (shown != theme)
+		applyTheme(shown);
 	updateChannelFx();
 	applyWindowPosition();
 	if (!canConfirm || closing)
