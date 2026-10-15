@@ -1,0 +1,5 @@
+{
+	"params": [
+		{"name": "Soul in front of the arrows", "type": "Bool", "defaultValue": true}
+	]
+}
