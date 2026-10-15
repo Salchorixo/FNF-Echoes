@@ -167,5 +167,7 @@ Boceto de BE-42: `mods/fnf-echoes/data/notes/Deadly Note.hx` (tipo de nota con s
 1. En el editor de charts elige el tipo en *Note > Note Types List* y coloca la nota; el chart lo guarda en `noteTypes`.
 2. Se ve en rojo; Botplay no la toca (`avoid`). **Si la tocas mueres** (`PlayState.instance.health = 0`); **si la dejas pasar no cuesta nada** (el fallo se cancela con `event.cancel()` y la nota se borra con `strumLine.deleteNote`; sin ese borrado se quedaría atascada).
 3. **Probar un chart:** en el editor, **Enter** lanza el *playtest* desde la posición actual y **ESC** vuelve al editor.
-4. Probado en macOS con una canción de prueba (3 notas mortales y una normal): dejarlas pasar no suma fallos; pulsar las cuatro teclas sin parar lleva al game over. Falta: arte final, sonido, animación de muerte y variantes.
+4. **Soul canta con ellas (BE-45):** cuando una nota mortal llega a las flechas, los personajes de la fila 0 (Soul) hacen la animación de cantar de esa dirección, una vez por nota, la toques o no. Pasa también si la nota va por la fila de Soul (antes no cantaba: el motor no golpea las notas `avoid` de una fila automática).
+   **Efecto provisional (BE-45):** cuando la nota llega a su flecha, deja de dibujarse (si la pulsas a tiempo cuenta igual) y **la flecha se pone negra, como infectada**, y se recupera sola (1,4 s la mortal, 0,7 s la naranja). Mejorar más adelante con una animación de verdad (que se extienda, glitch, sonido).
+5. Probado en macOS con una canción de prueba (3 notas mortales y una normal): dejarlas pasar no suma fallos; pulsar las cuatro teclas sin parar lleva al game over. Falta: arte final, sonido, animación de muerte y variantes.
 
