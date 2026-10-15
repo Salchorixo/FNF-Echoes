@@ -1,3 +1,6 @@
+import flixel.tweens.FlxTween;
+import flixel.tweens.FlxEase;
+
 // "Deadly Note" (BE-42, sketch): a note you must NOT press. If you hit it you die at once; if you let it pass it costs nothing
 // (no miss, no health loss, the combo is not broken). Botplay never touches it (note.avoid). It is put in the chart from the chart
 // editor: Note > note type > "Deadly Note"; the chart then lists it in its noteTypes and the engine loads this script by the name.
@@ -6,7 +9,7 @@
 
 // Soul sings when a deadly note reaches the strums (BE-45). The deadly notes are Soul's, but they travel in Zyra's row, so the engine
 // would never animate Soul for them. Every strumline reports each of its notes on every frame (onNoteUpdate signal); the first frame
-// a deadly note is at/after its time, the characters of the OTHER row (Soul's: the first strumline of the chart) sing that direction.
+// a deadly note is at/after its time, the characters of Soul's row (the first strumline of the chart) sing that direction, whichever row the note is in.
 // It happens once per note, hit or not, and Botplay or not.
 function postCreate() {
 	for (line in strumLines.members)
@@ -19,10 +22,22 @@ function deadlyNoteUpdate(e) {
 	if (note.strumTime > Conductor.songPosition) return;
 	note.extra.set("sung", true);
 	var soulRow = strumLines.members[0];
-	if (note.strumLine == soulRow) return; // a deadly note in Soul's own row is animated by the engine as usual
 	for (char in soulRow.characters)
 		if (char != null)
 			char.playSingAnim(note.strumID);
+	infect(note);
+}
+
+// PROVISIONAL (BE-45): the note is "swallowed" by its arrow: it stops being drawn (it still counts if you press it in time) and the
+// arrow turns black, like an infection, and slowly recovers. To improve later: a proper animation (spreading, glitch, sound).
+function infect(note) {
+	var strum = note.strumLine.members[note.noteData];
+	if (strum == null) return;
+	note.visible = false;
+	var old = strum.extra.get("infection");
+	if (old != null) old.cancel();
+	strum.color = 0xFF000000;
+	strum.extra.set("infection", FlxTween.color(strum, 1.4, 0xFF000000, 0xFFFFFFFF, {startDelay: 0.5, ease: FlxEase.quadOut}));
 }
 
 function onNoteCreation(event) {
