@@ -173,8 +173,8 @@ Boceto de BE-42: `mods/fnf-echoes/data/notes/Deadly Note.hx` (tipo de nota con s
 
 Dos eventos del chart (`data/events/*.json` define los parámetros y `*.hx` los ejecuta, igual que la receta O):
 
-- **`Soul Front`** (Bool): con "sí", el personaje de la fila 0 (Soul) se dibuja **por encima de las flechas**, que así parecen ir por detrás de él. Las flechas viven en la cámara del HUD, que se dibuja sobre la del juego, y un personaje no puede quedar "en medio" de dos cámaras; por eso el script crea una **cámara extra por encima del HUD** que copia el scroll y el zoom de la cámara del juego cada cuadro (`postUpdate`) y mueve a Soul a ella. Se quita en `destroy()` (si no, la cámara se queda al salir de la canción).
+- **`Character Front`** (fila + Bool): con "sí", los personajes de **esa fila** (0 = Soul, 1 = Zyra, cualquiera) se dibujan **por encima de las flechas**, que así parecen ir por detrás de ellos; cada fila es independiente (Zyra delante, luego Soul, ambos, ninguno). Las flechas viven en la cámara del HUD, que se dibuja sobre la del juego, y un personaje no puede quedar "en medio" de dos cámaras; por eso el script crea una **cámara extra por encima del HUD** que copia el scroll y el zoom de la cámara del juego cada cuadro (`postUpdate`) y mueve a los personajes a ella. Se quita en `destroy()` (si no, la cámara se queda al salir de la canción).
 - **`Lane Perspective`** (fila, intensidad 0 a 1, duración, easing): efecto de carretera **solo en las notas**: cuanto más lejos de su flecha, más pequeñas y más cerca del punto de fuga (el centro de la fila). Se aplica en `postUpdate`, después de que el motor coloque cada nota (el motor reasigna `x`/`y` cada cuadro, así que no hay que deshacer nada). Los sostenidos solo se adelgazan.
 
-Límites: no es perspectiva 3D real (no inclina la fila entera ni deforma las flechas, eso pediría un shader en la cámara del HUD); Soul Front mueve solo a los personajes de la fila 0.
+Límites: no es perspectiva 3D real (no inclina la fila entera ni deforma las flechas, eso pediría un shader en la cámara del HUD); Los personajes que se mueven son los de la fila elegida.
 
