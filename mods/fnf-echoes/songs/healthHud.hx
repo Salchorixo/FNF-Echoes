@@ -4,19 +4,20 @@ import flixel.math.FlxRect;
 
 // Zyra's HUD (BE-51), for every song: the drawing images/game/hud/skin.png (600x600, transparent) is only a SKIN on top; under it there
 // is a plain fill that does the work. Same canvas for all four images, so they are stacked at the same place:
-//   fill_health.png  a rectangle in the horizontal bar's groove (x 160..378, y 474..518 of the canvas); it is clipped from the left (Zyra's head)
+//   fill_health.png  crimson/wine rectangle in the horizontal bar's groove (x 100..378, y 474..518 of the canvas: it starts under Zyra's head); it is clipped from the left (the head)
 //                    to the right according to the health, with a smooth movement;
-//   fill_trail.png   the same rectangle in pale pink, behind it: when the health drops it stays a moment and then drains away slowly (the
+//   fill_trail.png   the same rectangle in a lighter rose, behind it: when the health drops it stays a moment and then drains away slowly (the
 //                    "drain" that shows how much you just lost);
 //   fill_sanity.png  the vertical frame's pocket, painted green from the bottom up. Nothing lowers it yet: other scripts change it with
 //                    scripts.call("setSanity", [0..1]) when its mechanic exists.
 // The engine's own health bar and icons are hidden. The HUD sits in the bottom-left corner of the HUD camera, BELOW the arrows.
 // The layout numbers are variables to tune by eye.
 
-var HUD_SCALE = 1.0;
-var HUD_X = -5.0;          // the drawing starts 5 px inside its canvas: this leaves it flush with the screen's left edge
-var HUD_Y = 130.0;         // 600 px canvas on a 720 px screen: the drawing ends at ~y 714
-var HEALTH_BOX = {x0: 160, x1: 378, y0: 474, y1: 518};
+var HUD_SCALE = 0.8;
+var HUD_X = -4.0;          // the drawing starts 5 px inside its canvas (x 5 * scale): this leaves it flush with the screen's left edge
+var HUD_Y = 245.0;         // the drawing ends at canvas y 584: 245 + 584 * 0.8 = 712 on a 720 px screen
+// x0 = where the fill image starts (it goes under Zyra's head), vis = where the groove becomes visible, right after the head: 0 % is empty there.
+var HEALTH_BOX = {x0: 100, vis: 152, x1: 378, y0: 474, y1: 518};
 var SANITY_Y0 = 222;
 var SANITY_Y1 = 447;
 var DRAIN_HOLD = 0.35;     // seconds the trail waits before draining
@@ -75,10 +76,11 @@ function postUpdate(elapsed) {
 		if (hold <= 0)
 			trailFrac += (target - trailFrac) * Math.min(1, elapsed * DRAIN_SPEED);
 	}
-	var w = HEALTH_BOX.x1 - HEALTH_BOX.x0 + 1;
+	var under = HEALTH_BOX.vis - HEALTH_BOX.x0;           // the part of the fill that stays hidden under the head
+	var w = HEALTH_BOX.x1 - HEALTH_BOX.vis + 1;
 	var h = HEALTH_BOX.y1 - HEALTH_BOX.y0 + 1;
-	fillHealth.clipRect = new FlxRect(HEALTH_BOX.x0, HEALTH_BOX.y0, Math.max(1, w * shown), h);
-	trail.clipRect = new FlxRect(HEALTH_BOX.x0, HEALTH_BOX.y0, Math.max(1, w * trailFrac), h);
+	fillHealth.clipRect = new FlxRect(HEALTH_BOX.x0, HEALTH_BOX.y0, under + Math.max(1, w * shown), h);
+	trail.clipRect = new FlxRect(HEALTH_BOX.x0, HEALTH_BOX.y0, under + Math.max(1, w * trailFrac), h);
 
 	sanityShown += (sanity - sanityShown) * Math.min(1, elapsed * 8);
 	var sh = SANITY_Y1 - SANITY_Y0 + 1;
