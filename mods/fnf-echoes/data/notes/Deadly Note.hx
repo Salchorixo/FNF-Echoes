@@ -4,6 +4,27 @@
 // Hooks (engine scripts, see engine/assets/data/notes/ for more examples): onNoteCreation / onPlayerHit / onPlayerMiss.
 // Placeholder look: a dark red tint. The final art (skull), sound and death animation are a later job.
 
+// Soul sings when a deadly note reaches the strums (BE-45). The deadly notes are Soul's, but they travel in Zyra's row, so the engine
+// would never animate Soul for them. Every strumline reports each of its notes on every frame (onNoteUpdate signal); the first frame
+// a deadly note is at/after its time, the characters of the OTHER row (Soul's: the first strumline of the chart) sing that direction.
+// It happens once per note, hit or not, and Botplay or not.
+function postCreate() {
+	for (line in strumLines.members)
+		line.onNoteUpdate.add(deadlyNoteUpdate);
+}
+
+function deadlyNoteUpdate(e) {
+	var note = e.note;
+	if (note.noteType != "Deadly Note" || note.extra.exists("sung")) return;
+	if (note.strumTime > Conductor.songPosition) return;
+	note.extra.set("sung", true);
+	var soulRow = strumLines.members[0];
+	if (note.strumLine == soulRow) return; // a deadly note in Soul's own row is animated by the engine as usual
+	for (char in soulRow.characters)
+		if (char != null)
+			char.playSingAnim(note.strumID);
+}
+
 function onNoteCreation(event) {
 	if (event.noteType != "Deadly Note") return;
 	event.note.avoid = true;
