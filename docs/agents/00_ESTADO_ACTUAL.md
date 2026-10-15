@@ -65,6 +65,8 @@ Entre los dos bloques de Kiyu van los crasheos y una cutscene (ver
 7. **Nota mortal (BE-42):** boceto del tipo de nota `Deadly Note` (receta N). Falta arte final, sonido, animación de muerte y variantes.
 8. **Noteskin de Zyra (BE-52, receta S):** flechas simples, receptoras gris oscuro, splash y efecto de nota larga en la fila de Zyra (Soul sigue con el aspecto del motor). Zyra lo vio en el juego en Limbo (macOS) y dio el visto bueno. Pendiente: sus PNG con transparencia real, decidir la flecha izquierda (muy oscura) y el aspecto de las notas especiales; Zyra necesita libertad total sobre las flechas en las animaciones (filas que se mezclan), así que cualquier cambio de aspecto por nota debe pasar por `KEEP_ENGINE_SKIN` o un tipo de nota nuevo.
 
+8. **Ideas anotadas de Zyra (2026-10-14), por hacer:** (a) **perspectiva 3D real de las filas con un shader** sobre la cámara del HUD, para que todo se sienta inmersivo (hoy hay solo el efecto de carretera en las notas, BE-46); (b) opcional: parámetro "ocultar la otra fila" en `Strum Move`; (c) arte final, sonido y animación de muerte de las notas mortales; (d) personajes reales (Soul, Zyra) para sustituir `dad`/`bf` de prueba.
+
 ## 5. Inconsistencias conocidas (no las arregles sin preguntar)
 
 - Los documentos del antiguo pipeline local de voces (ADR-0004, nunca aprobado) se eliminaron el 2026-10-09: la música y las voces salen de Suno. Si ves una referencia a ellos, ignórala.
