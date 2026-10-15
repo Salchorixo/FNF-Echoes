@@ -57,6 +57,7 @@ Entre los dos bloques de Kiyu van los crasheos y una cutscene (ver
 5. **Secuencia final** (BACK → FINAL SEQUENCE): crasheo 1 real y controlado, menú roto, crasheo 2 falso, cutscene, bloque 2. Se apoya en la coreografía de ventana.
 6. **Canciones dentro del mod**: crear `songs/<cancion>/` con la estructura del motor (ver `03_RECETAS.md`).
 7. **Nota mortal (BE-42):** boceto del tipo de nota `Deadly Note` (receta N). Falta arte final, sonido, animación de muerte y variantes.
+8. **Ideas anotadas de Zyra (2026-10-14), por hacer:** (a) **perspectiva 3D real de las filas con un shader** sobre la cámara del HUD, para que todo se sienta inmersivo (hoy hay solo el efecto de carretera en las notas, BE-46); (b) opcional: parámetro "ocultar la otra fila" en `Strum Move`; (c) arte final, sonido y animación de muerte de las notas mortales; (d) personajes reales (Soul, Zyra) para sustituir `dad`/`bf` de prueba.
 
 ## 5. Inconsistencias conocidas (no las arregles sin preguntar)
 

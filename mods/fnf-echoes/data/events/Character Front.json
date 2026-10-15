@@ -1,0 +1,6 @@
+{
+	"params": [
+		{"name": "Strumline", "type": "StrumLine", "defaultValue": 0},
+		{"name": "In front of the arrows", "type": "Bool", "defaultValue": true}
+	]
+}

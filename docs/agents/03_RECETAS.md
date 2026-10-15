@@ -169,3 +169,12 @@ Boceto de BE-42: `mods/fnf-echoes/data/notes/Deadly Note.hx` (tipo de nota con s
 3. **Probar un chart:** en el editor, **Enter** lanza el *playtest* desde la posición actual y **ESC** vuelve al editor.
 4. Probado en macOS con una canción de prueba (3 notas mortales y una normal): dejarlas pasar no suma fallos; pulsar las cuatro teclas sin parar lleva al game over. Falta: arte final, sonido, animación de muerte y variantes.
 
+## Receta P — Perspectiva de las filas y Soul por delante (BE-46, prototipo)
+
+Dos eventos del chart (`data/events/*.json` define los parámetros y `*.hx` los ejecuta, igual que la receta O):
+
+- **`Character Front`** (fila + Bool): con "sí", los personajes de **esa fila** (0 = Soul, 1 = Zyra, cualquiera) se dibujan **por encima de las flechas**, que así parecen ir por detrás de ellos; cada fila es independiente (Zyra delante, luego Soul, ambos, ninguno). Las flechas viven en la cámara del HUD, que se dibuja sobre la del juego, y un personaje no puede quedar "en medio" de dos cámaras; por eso el script crea una **cámara extra por encima del HUD** que copia el scroll y el zoom de la cámara del juego cada cuadro (`postUpdate`) y mueve a los personajes a ella. Se quita en `destroy()` (si no, la cámara se queda al salir de la canción).
+- **`Lane Perspective`** (fila, intensidad 0 a 1, duración, easing): efecto de carretera **solo en las notas**: cuanto más lejos de su flecha, más pequeñas y más cerca del punto de fuga (el centro de la fila). Se aplica en `postUpdate`, después de que el motor coloque cada nota (el motor reasigna `x`/`y` cada cuadro, así que no hay que deshacer nada). Los sostenidos solo se adelgazan.
+
+Límites: no es perspectiva 3D real (no inclina la fila entera ni deforma las flechas, eso pediría un shader en la cámara del HUD); Los personajes que se mueven son los de la fila elegida.
+

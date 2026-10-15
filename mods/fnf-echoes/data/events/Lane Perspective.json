@@ -1,0 +1,9 @@
+{
+	"params": [
+		{"name": "Strumline", "type": "StrumLine", "defaultValue": 1},
+		{"name": "Strength", "type": "Float(0, 1, 0.1, 2)", "defaultValue": 0.6},
+		{"name": "Duration (steps)", "type": "Float(0, 64, 1, 1)", "defaultValue": 8},
+		{"name": "Ease", "type": "DropDown('linear', 'quad', 'cube', 'sine', 'expo', 'back', 'bounce', 'elastic')", "defaultValue": "quad"},
+		{"name": "Ease way", "type": "DropDown('In', 'Out', 'InOut')", "defaultValue": "Out"}
+	]
+}
