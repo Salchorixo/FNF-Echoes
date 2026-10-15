@@ -14,8 +14,8 @@ import flixel.math.FlxRect;
 // The layout numbers are variables to tune by eye.
 
 var HUD_SCALE = 0.8;
-var HUD_X = -4.0;          // the drawing starts 5 px inside its canvas (x 5 * scale): this leaves it flush with the screen's left edge
-var HUD_Y = 245.0;         // the drawing ends at canvas y 584: 245 + 584 * 0.8 = 712 on a 720 px screen
+var HUD_X = 0.0;           // the v2 drawing (outlined) touches the left of its canvas: x 0 leaves it flush with the screen edge
+var HUD_Y = 240.0;         // the drawing ends at canvas y 591: 240 + 591 * 0.8 = 713 on a 720 px screen
 // x0 = where the fill image starts (it goes under Zyra's head), vis = where the groove becomes visible, right after the head: 0 % is empty there.
 var HEALTH_BOX = {x0: 100, vis: 152, x1: 378, y0: 474, y1: 518};
 var SANITY_Y0 = 222;
