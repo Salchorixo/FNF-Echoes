@@ -5,6 +5,9 @@ import flixel.util.FlxColor;
 import flixel.util.FlxTimer;
 import funkin.backend.scripting.ModState;
 import funkin.backend.scripting.Script;
+import funkin.backend.system.Flags;
+import funkin.editors.charter.Charter;
+import openfl.Lib;
 
 // Song selection (the screen after ECHO 1), from Zyra's vertical sketch:
 //   left   a glass window with the level's mechanic (placeholder content for now),
@@ -622,10 +625,24 @@ function moveTo(index:Int) {
 	FlxTween.tween(zyraAnchor, {y: targetY}, 0.38, {ease: FlxEase.cubeOut});
 }
 
+// The editors leave through the main menu: mark the return the way the main menu does (see MainMenuState.markReturn()), so that it does
+// not repeat its intro.
+function openLimbo() {
+	FlxG.save.data.echoesMenuReturn = Math.round((Date.now().getTime() - Lib.getTimer()) / 1000);
+	FlxG.switchState(new Charter("limbo", "hard", ""));
+}
+
 // PROTOTYPE (see the header): completes the selected song and unlocks the next node.
 function confirmSelection() {
 	if (!canConfirm || !nodes[currentIndex].unlocked)
 		return;
+
+	// Song 1 (Limbo) opens the engine's chart editor with its chart: from there Enter plays it (BE-50). The final game will play it
+	// straight from here; the other two songs do not exist yet and keep the prototype below.
+	if (currentIndex == 0 && !Flags.DISABLE_EDITORS) {
+		openLimbo();
+		return;
+	}
 
 	nodes[currentIndex].completed = true;
 	// The desktop of the main menu takes the theme of the song you finished (BE-16): the change plays when
