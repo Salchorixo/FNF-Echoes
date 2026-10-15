@@ -255,3 +255,12 @@ BE-44: `mods/fnf-echoes/data/events/Strum Move.json` (parámetros que muestra el
 3. Para el middle scroll de Limbo: un evento en la fila 1 con `Center` y otro en la fila 0 con opacidad 0. Para que Zyra pase a la izquierda cuando canta Soul: fila 1 con `Left`; para volver: fila 1 con `Right`. Para que Soul recupere su fila: fila 0 con `Default` y opacidad 1.
 4. Las notas siguen a las flechas (el motor copia la posición de la flecha a cada nota); los tipos de nota con script (receta N) no cambian.
 
+## Receta P — Perspectiva de las filas y Soul por delante (BE-46, prototipo)
+
+Dos eventos del chart (`data/events/*.json` define los parámetros y `*.hx` los ejecuta, igual que la receta O):
+
+- **`Soul Front`** (Bool): con "sí", el personaje de la fila 0 (Soul) se dibuja **por encima de las flechas**, que así parecen ir por detrás de él. Las flechas viven en la cámara del HUD, que se dibuja sobre la del juego, y un personaje no puede quedar "en medio" de dos cámaras; por eso el script crea una **cámara extra por encima del HUD** que copia el scroll y el zoom de la cámara del juego cada cuadro (`postUpdate`) y mueve a Soul a ella. Se quita en `destroy()` (si no, la cámara se queda al salir de la canción).
+- **`Lane Perspective`** (fila, intensidad 0 a 1, duración, easing): efecto de carretera **solo en las notas**: cuanto más lejos de su flecha, más pequeñas y más cerca del punto de fuga (el centro de la fila). Se aplica en `postUpdate`, después de que el motor coloque cada nota (el motor reasigna `x`/`y` cada cuadro, así que no hay que deshacer nada). Los sostenidos solo se adelgazan.
+
+Límites: no es perspectiva 3D real (no inclina la fila entera ni deforma las flechas, eso pediría un shader en la cámara del HUD); Soul Front mueve solo a los personajes de la fila 0.
+
