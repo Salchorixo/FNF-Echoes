@@ -275,3 +275,13 @@ Zyra entra en un trance y tiene que **replicar lo que cantó Soul**; lo que fall
 5. **Cómo mirar qué pasa:** el registro dice `[Replica] parts: N (notes per part: ...)` al empezar la canción y `[Replica] part settled: X fails of Y -> Z% per hit` al cerrar cada parte.
 6. Pendiente: arte y sonido del veneno, una barra visual de la réplica y que Soul "muestre" las notas.
 
+## Receta R — HUD de Zyra: barra de vida y barra vertical (BE-51)
+
+El dibujo de Zyra (`images/game/hud/skin.png`, 600×600 transparente) es solo una **skin** que va encima; debajo hay rellenos simples que hacen el trabajo. `mods/fnf-echoes/songs/healthHud.hx` (se carga en todas las canciones) los coloca en la esquina inferior izquierda de la cámara del HUD, **por debajo de las flechas**, y oculta la barra y los iconos del motor.
+
+- `fill_health.png`: rectángulo en la ranura de la barra horizontal; se recorta de izquierda (la cabeza) a derecha según `health / maxHealth`, con movimiento suave.
+- `fill_trail.png`: el mismo rectángulo en rosa pálido, detrás: al perder vida se queda 0,35 s y luego **se drena** despacio (`DRAIN_HOLD`, `DRAIN_SPEED`).
+- `fill_sanity.png`: el hueco del marco vertical, en verde, de abajo hacia arriba. Aún nada la baja: otro script llama `scripts.call("setSanity", [0 a 1])` cuando exista esa mecánica.
+- Los cuatro PNG comparten el lienzo, así que se apilan en el mismo sitio. Para cambiar el dibujo: reemplazar `skin.png` y, si cambian las ranuras, ajustar `HEALTH_BOX`, `SANITY_Y0/Y1` y regenerar los rellenos (sus medidas salen de la transparencia del PNG). Posición y tamaño: `HUD_X`, `HUD_Y`, `HUD_SCALE`.
+- Pendiente: parte 2 (rota, cadenas) con un evento del chart, estados de la cabeza y la mecánica de la barra vertical.
+
