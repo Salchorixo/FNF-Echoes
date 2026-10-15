@@ -1,0 +1,6 @@
+<!DOCTYPE codename-engine-stage>
+<!-- Completely black stage (DS-1): no background, no props, only the characters. Zyra uses it to imagine the poses and the animations. -->
+<stage zoom="0.9" name="black" folder="stages/default/" startCamPosY="600" startCamPosX="1000">
+	<dad />
+	<boyfriend />
+</stage>
