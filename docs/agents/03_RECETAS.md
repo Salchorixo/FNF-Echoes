@@ -169,3 +169,14 @@ Boceto de BE-42: `mods/fnf-echoes/data/notes/Deadly Note.hx` (tipo de nota con s
 3. **Probar un chart:** en el editor, **Enter** lanza el *playtest* desde la posición actual y **ESC** vuelve al editor.
 4. Probado en macOS con una canción de prueba (3 notas mortales y una normal): dejarlas pasar no suma fallos; pulsar las cuatro teclas sin parar lleva al game over. Falta: arte final, sonido, animación de muerte y variantes.
 
+## Receta Q — Réplica y veneno ("Replica Note", BE-49)
+
+Zyra entra en un trance y tiene que **replicar lo que cantó Soul**; lo que falle se vuelve veneno. Script: `mods/fnf-echoes/data/notes/Replica Note.hx`.
+
+1. **Chart:** las notas de Soul van en su fila como siempre; las que Zyra debe replicar van en **su fila** con el tipo `Replica Note` (*Note > Edit Note Types List*, añadirlo y elegirlo; se ven en azul claro). Zyra las acierta y se anima como con cualquier nota.
+2. **Parte de réplica:** un grupo de notas `Replica Note` separadas de la siguiente por **menos de 3 s** (`GAP` en el script). No hay que marcar el final: lo calcula solo.
+3. **Fallar:** dejar pasar o fallar una nota de la réplica, **y también pulsar de más** (una tecla sin nota) dentro de la parte.
+4. **Veneno:** 0,6 s después de la última nota de la parte, `porcentaje = fallos / total` (máx. 100 %). Si es mayor que 0 se aplican **5 golpes, uno cada 2 s** (fijos), cada uno resta `porcentaje × la barra de vida entera`. Ejemplo: 10 notas y 2 fallos = 20 % de la barra cada 2 s durante 10 s. Los venenos se acumulan; con la vida a 0 salta el game over del motor. Cada golpe destella el HUD en verde (no con "Reducir destellos").
+5. **Cómo mirar qué pasa:** el registro dice `[Replica] parts: N (notes per part: ...)` al empezar la canción y `[Replica] part settled: X fails of Y -> Z% per hit` al cerrar cada parte.
+6. Pendiente: arte y sonido del veneno, una barra visual de la réplica y que Soul "muestre" las notas.
+
