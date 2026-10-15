@@ -174,7 +174,7 @@ Boceto de BE-42: `mods/fnf-echoes/data/notes/Deadly Note.hx` (tipo de nota con s
 El dibujo de Zyra (`images/game/hud/skin.png`, 600×600 transparente) es solo una **skin** que va encima; debajo hay rellenos simples que hacen el trabajo. `mods/fnf-echoes/songs/healthHud.hx` (se carga en todas las canciones) los coloca en la esquina inferior izquierda de la cámara del HUD, **por debajo de las flechas**, y oculta la barra y los iconos del motor.
 
 - `fill_health.png`: rectángulo en la ranura de la barra horizontal; se recorta de izquierda (la cabeza) a derecha según `health / maxHealth`, con movimiento suave.
-- `fill_trail.png`: el mismo rectángulo en rosa pálido, detrás: al perder vida se queda 0,35 s y luego **se drena** despacio (`DRAIN_HOLD`, `DRAIN_SPEED`).
+- `fill_trail.png`: el mismo rectángulo en rosa más claro, detrás: al perder vida se queda 0,35 s y luego **se drena** despacio (`DRAIN_HOLD`, `DRAIN_SPEED`).
 - `fill_sanity.png`: el hueco del marco vertical, en verde, de abajo hacia arriba. Aún nada la baja: otro script llama `scripts.call("setSanity", [0 a 1])` cuando exista esa mecánica.
 - Los cuatro PNG comparten el lienzo, así que se apilan en el mismo sitio. Para cambiar el dibujo: reemplazar `skin.png` y, si cambian las ranuras, ajustar `HEALTH_BOX`, `SANITY_Y0/Y1` y regenerar los rellenos (sus medidas salen de la transparencia del PNG). Posición y tamaño: `HUD_X`, `HUD_Y`, `HUD_SCALE`.
 - Pendiente: parte 2 (rota, cadenas) con un evento del chart, estados de la cabeza y la mecánica de la barra vertical.
