@@ -19,6 +19,7 @@ import funkin.backend.scripting.Script;
 // Zyra's icon is animated at runtime (breathing, irregular blinking, looking towards the node you move
 // to) from two small sheets of poses; when he is on the LAST song with the last song unlocked it
 // changes to the predator face (slow lids, a contracting pupil, a glitch tic now and then).
+// The node labels are the SONG names (BE-41): LIMBO, DOPAMINE, PLACEBO (the nodes keep the characters' keys soul/taro/kiyu).
 // All pixel art comes from AI_export_song_mood.py and AI_build_song_select.py (private art folder) at
 // native resolution, shown at 3x with no smoothing. The nodes are little spheres:
 //   SOUL  black sphere with spikes, corrupted, with a calm pale-blue part;
@@ -296,9 +297,9 @@ function setMood(key:String, animate:Bool) {
 	pencilDark.alpha = light ? 0 : 1;
 	for (i in 0...nameSprites.length) {
 		var name = nameSprites[i];
-		name.loadGraphic(Paths.image('menus/songs/' + moodNames(key)), true, 34, 12);
+		name.loadGraphic(Paths.image('menus/songs/' + moodNames(key)), true, 60, 12);
 		pixelSprite(name);
-		name.setPosition(nodeCx - 59 * pixel, nodes[i].y - 6 * pixel);
+		name.setPosition(nodeCx - 85 * pixel, nodes[i].y - 6 * pixel);
 		name.animation.frameIndex = i * 2 + (nodes[i].unlocked ? 0 : 1);
 	}
 	pointer.color = moodLine(key, true);
@@ -385,9 +386,9 @@ function buildNodes() {
 		fx.animation.onFinish.add((_) -> fx.visible = false);
 
 		var nameSprite = new FlxSprite();
-		nameSprite.loadGraphic(Paths.image('menus/songs/' + moodNames("soul")), true, 34, 12); // setMood swaps the sheet
+		nameSprite.loadGraphic(Paths.image('menus/songs/' + moodNames("soul")), true, 60, 12); // setMood swaps the sheet
 		pixelSprite(nameSprite);
-		nameSprite.setPosition(nodeCx - 59 * pixel, node.y - 6 * pixel);
+		nameSprite.setPosition(nodeCx - 85 * pixel, node.y - 6 * pixel);
 		nameSprite.alpha = 0;
 		add(nameSprite);
 		nameSprites.push(nameSprite);

@@ -44,6 +44,7 @@ Entre los dos bloques de Kiyu van los crasheos y una cutscene (ver
 
 ## 4. En curso / siguiente paso
 
+0. **Nombres (decisión de Zyra, 2026-10-14):** las canciones se llaman **Limbo** (1, personaje Soul), **Dopamine** (2, Taro) y **Placebo** (3, Kiyu); el selector muestra los de las canciones (BE-41).
 0. **Charteo (2026-10-14):** empieza con la canción 1, que se llama **Limbo** (Soul es el personaje; issue DS-1). `mods/fnf-echoes/songs/limbo/` existe: `meta.json` (**150 BPM exactos**, 4/4, solo dificultad `hard`), `song/Inst.ogg` y `song/Voices.ogg` (de `inst 1st song.wav` y `voice 1st song.wav`, **recortados 130 ms al inicio** para que el primer tiempo caiga en 0 y la cuadrícula del editor cuadre) y `charts/hard.json` vacío (dos líneas: `dad` oponente y `bf` jugador, de prueba). Medido sobre el audio: pulso a 150,00 BPM sin cambios de tempo, primer tiempo a 130 ms (±10), duración 129,8 s tras recortar. Para volver a generar el audio: `ffmpeg -i "inst 1st song.wav" -af "atrim=start=0.130,asetpts=PTS-STARTPTS" -c:a vorbis -strict -2 -b:a 192k Inst.ogg` (igual con la voz). BE-40 añadió la tecla **7** del menú para abrir los editores. **Voces de Limbo (decisión de Zyra):** canta primero Zyra solo y luego entra Soul; van **por turnos**, nunca a la vez. En el chart, mientras no existan los personajes del mod: línea `bf` = Zyra (jugador) y línea `dad` = Soul (oponente).
 0. **Ahora (2026-10-14):** los menús están integrados en `main` y el repo está limpio (solo `main`, sin worktrees). Zyra empieza el **charteo de las notas de la música** (antes de las animaciones): se crea su issue en DESIGN → CHARTS y **entonces** su worktree desde `main` (ver `GIT_WORKFLOW.md` §12). Pendiente en paralelo: **probar los menús en Windows** (BE-39, VM) y las decisiones de Zyra listadas en el relevo de §7 (espera de ~13 s de pantalla negra al abrir, calidad de pantalla, widgets de Ajustes por tema, sonidos de la transición, `themeBySong`).
 1. **Antes de usar la transparencia con arte y canciones (bloquean, en este orden):**
@@ -54,6 +55,7 @@ Entre los dos bloques de Kiyu van los crasheos y una cutscene (ver
 4. **Probar la transparencia y la pantalla completa en un PC con Windows real** (BE-10 y la coreografía están hechos y probados en VM). Se necesita un PC prestado: el `.exe` del flujo `windows.yml` del fork + el mod (receta en la trampa nº 18). Plan B si algo falla: color clave (ADR-0003) y, si nada funciona, escritorio falso dibujado por el juego ("EchoOS").
 5. **Secuencia final** (BACK → FINAL SEQUENCE): crasheo 1 real y controlado, menú roto, crasheo 2 falso, cutscene, bloque 2. Se apoya en la coreografía de ventana.
 6. **Canciones dentro del mod**: crear `songs/<cancion>/` con la estructura del motor (ver `03_RECETAS.md`).
+7. **Nota mortal (BE-42):** boceto del tipo de nota `Deadly Note` (receta N). Falta arte final, sonido, animación de muerte y variantes.
 
 ## 5. Inconsistencias conocidas (no las arregles sin preguntar)
 
