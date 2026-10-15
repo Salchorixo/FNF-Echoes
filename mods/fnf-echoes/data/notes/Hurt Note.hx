@@ -1,3 +1,6 @@
+import flixel.tweens.FlxTween;
+import flixel.tweens.FlxEase;
+
 // "Hurt Note" (BE-45): the gentler sibling of "Deadly Note". A note of Soul's that escapes into Zyra's row while Soul HAS his own row
 // again: touching it does not kill, it takes half of the health bar. Letting it pass costs nothing and Botplay never touches it.
 // Soul sings when it reaches the strums, like with the deadly note (same code, copied because mod scripts cannot import each other).
@@ -14,10 +17,22 @@ function hurtNoteUpdate(e) {
 	if (note.strumTime > Conductor.songPosition) return;
 	note.extra.set("sung", true);
 	var soulRow = strumLines.members[0];
-	if (note.strumLine == soulRow) return;
 	for (char in soulRow.characters)
 		if (char != null)
 			char.playSingAnim(note.strumID);
+	infect(note);
+}
+
+// PROVISIONAL (BE-45): the note is "swallowed" by its arrow: it stops being drawn (it still counts if you press it in time) and the
+// arrow turns black, like an infection, and slowly recovers. To improve later: a proper animation (spreading, glitch, sound).
+function infect(note) {
+	var strum = note.strumLine.members[note.noteData];
+	if (strum == null) return;
+	note.visible = false;
+	var old = strum.extra.get("infection");
+	if (old != null) old.cancel();
+	strum.color = 0xFF000000;
+	strum.extra.set("infection", FlxTween.color(strum, 0.7, 0xFF000000, 0xFFFFFFFF, {startDelay: 0.5, ease: FlxEase.quadOut}));
 }
 
 function onNoteCreation(event) {
