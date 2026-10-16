@@ -1,0 +1,15 @@
+<!DOCTYPE codename-engine-splashes>
+<splashes sprite="game/splashes/zyra" alpha="1">
+	<strum id="0">
+		<anim name="splashleft1" anim="zyra left splash" fps="24" x="0" y="0" />
+	</strum>
+	<strum id="1">
+		<anim name="splashdown1" anim="zyra down splash" fps="24" x="0" y="0" />
+	</strum>
+	<strum id="2">
+		<anim name="splashup1" anim="zyra up splash" fps="24" x="0" y="0" />
+	</strum>
+	<strum id="3">
+		<anim name="splashright1" anim="zyra right splash" fps="24" x="0" y="0" />
+	</strum>
+</splashes>

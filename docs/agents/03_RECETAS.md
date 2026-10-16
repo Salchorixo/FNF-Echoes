@@ -169,3 +169,16 @@ Boceto de BE-42: `mods/fnf-echoes/data/notes/Deadly Note.hx` (tipo de nota con s
 3. **Probar un chart:** en el editor, **Enter** lanza el *playtest* desde la posición actual y **ESC** vuelve al editor.
 4. Probado en macOS con una canción de prueba (3 notas mortales y una normal): dejarlas pasar no suma fallos; pulsar las cuatro teclas sin parar lleva al game over. Falta: arte final, sonido, animación de muerte y variantes.
 
+---
+
+## Receta S — La noteskin de Zyra (BE-52): flechas, receptoras, splash y notas largas
+
+La fila de Zyra (strum line 1) usa su propio aspecto; la de Soul conserva el del motor hasta que tenga el suyo. Todo vive en el mod, sin tocar `engine/`.
+
+1. **Atlas de notas y receptoras:** `images/game/notes/zyra.png` + `zyra.xml`, con los nombres que espera el motor (`purple0000`, `arrowLEFT0000`, `left press0000`, `left confirm0000`..`0003`, `purple hold piece0000`, `purple hold end0000`...). Cuatro direcciones: left=purple, down=blue, up=green, right=red. Los marcos miden ~156 px, como el atlas del motor, así que no hay que tocar escalas.
+2. **Splash del acierto:** `images/game/splashes/zyra.png` + `data/splashes/zyra.xml` (formato del motor: `<splashes sprite=... alpha=...>` con un `<strum id>` por dirección y su `<anim anim="prefijo del atlas">`).
+3. **Script de canción `songs/noteskin.hx`** (vale para todas): `onStrumCreation` cambia el sprite de las receptoras de la fila 1; `onNoteCreation` cambia el sprite de las notas y pone `note.splash = "zyra"`; `KEEP_ENGINE_SKIN` es la lista de tipos de nota que conservan el aspecto del motor (vacía: para las notas de Soul que se cuelan en la fila de Zyra, lo decide ella).
+4. **Efecto de nota larga** (dibujado por el script con `images/game/holdfx/ring.png` y `sliver.png`, blancas y teñidas por dirección): mientras llegan piezas de una nota larga (`onPlayerHit` con `isSustainNote`), un anillo fino late cada 0,25 s y unas astillas suben hacia la receptora; al soltar sale un anillo y unas astillas. **Trampa:** en downscroll la `HudCamera` refleja las **posiciones** pero no voltea los sprites, así que en coordenadas el cuerpo de la nota está siempre en +y; no inviertas la dirección a mano.
+5. **Cómo se regenera:** el arte se hornea con `AI_export_noteskin.py` (carpeta de producción, privada) a partir de las flechas simples que dibujó Zyra. **Ojo:** esas flechas están rehechas limpias desde una captura con el cuadriculado incluido; hay que sustituirlas por sus PNG con transparencia real.
+6. **Probar:** abre Limbo desde el selector (ENTER en el nodo, y ENTER en el editor para el playtest). NO PROBADO: otras canciones, juego con las dos filas llenas de notas y Windows.
+
