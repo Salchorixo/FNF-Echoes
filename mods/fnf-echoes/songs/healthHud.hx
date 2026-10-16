@@ -37,6 +37,9 @@ var sanityShown = 1.0;
 function makeSprite(name) {
 	var spr = new FlxSprite(HUD_X, HUD_Y);
 	spr.loadGraphic(Paths.image('game/hud/' + name));
+	// In downscroll the HUD camera mirrors the POSITIONS (sprites stay unflipped): y becomes height - y - frameHeight. Pre-mirror it so the HUD stays in the bottom-left corner.
+	if (PlayState.instance.downscroll)
+		spr.y = camHUD.height - spr.frameHeight - HUD_Y;
 	spr.origin.set(0, 0);
 	spr.scale.set(HUD_SCALE, HUD_SCALE);
 	spr.antialiasing = true;
