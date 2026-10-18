@@ -50,7 +50,7 @@ function spawn(kind, i, angle) {
 	spr.loadGraphic(Paths.image(kind == "ring" ? "game/holdfx/ring" : "game/holdfx/sliver"));
 	spr.antialiasing = true;
 	spr.scrollFactor.set();
-	spr.cameras = [camHUD];
+	spr.cameras = [strumLines.members[ZYRA_LINE].cameras[0]];     // the camera of the ROW (the group's, not a strum's own: a strum without its own camera reports the default one). A scene script may move the row to another camera and the effect must follow it
 	spr.color = TINTS[i];
 	spr.alpha = 0;
 	add(spr);
