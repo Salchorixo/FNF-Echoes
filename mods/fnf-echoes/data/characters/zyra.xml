@@ -13,12 +13,12 @@
 	<anim name="idle_c" anim="c_idle" x="0" y="0" fps="24" loop="false"/>
 	<anim name="singUP_c" anim="c_singUP" x="0" y="0" fps="24" loop="false"/>
 	<anim name="singDOWN_c" anim="c_singDOWN" x="0" y="0" fps="24" loop="false"/>
-	<anim name="singRIGHT_c" anim="c_singRIGHT" x="0" y="0" fps="24" loop="false"/>
 	<anim name="singLEFT_c" anim="c_singLEFT" x="0" y="0" fps="24" loop="false"/>
+	<anim name="singRIGHT_c" anim="c_singRIGHT" x="0" y="0" fps="24" loop="false"/>
 	<anim name="idle_d" anim="d_idle" x="0" y="0" fps="24" loop="false"/>
 	<anim name="singUP_d" anim="d_singUP" x="0" y="0" fps="24" loop="false"/>
 	<anim name="singDOWN_d" anim="d_singDOWN" x="0" y="0" fps="24" loop="false"/>
-	<anim name="singRIGHT_d" anim="d_singRIGHT" x="0" y="0" fps="24" loop="false"/>
 	<anim name="singLEFT_d" anim="d_singLEFT" x="0" y="0" fps="24" loop="false"/>
+	<anim name="singRIGHT_d" anim="d_singRIGHT" x="0" y="0" fps="24" loop="false"/>
 	<anim name="poseChange" anim="d_poseChange" x="0" y="0" fps="24" loop="false"/>
 </character>

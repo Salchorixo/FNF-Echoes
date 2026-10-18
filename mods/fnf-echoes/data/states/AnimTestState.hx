@@ -10,6 +10,7 @@ import openfl.Lib;
 // her sing poses by hand (hold a key: the pose stays; release: she goes back to the idle). Open it with the 8 key on the main menu.
 //
 //   the four note keys  play singLEFT / singDOWN / singUP / singRIGHT      R  reload the character (after exporting new frames)
+//   S  swap left and right in the camera set that is showing (the info line says which sets are swapped)
 //   5 6 7 8  how a held long note looks: still / creeping forward / slow loop / pulse (tell Zyra's choice to Claude)
 //   1 2 3 4  the camera set of her frames: Camera / Camera.001 / Camera.002 / pose 3 (going from 3 to 4 plays the pose change first)
 //   G  3x3 grid (Zyra's placement guide)                                    ESC  back to the menu
@@ -114,6 +115,14 @@ function update(elapsed) {
 	if (FlxG.keys.justPressed.TWO) FlxG.save.data.echoesZyraSet = 1;
 	if (FlxG.keys.justPressed.THREE) FlxG.save.data.echoesZyraSet = 2;
 	if (FlxG.keys.justPressed.FOUR) FlxG.save.data.echoesZyraSet = 3;
+	if (FlxG.keys.justPressed.S) {
+		// swap left and right for the camera set that is showing (to find out which way Zyra wants it)
+		var cur = FlxG.save.data.echoesZyraSwap;
+		if (cur == null) cur = [false, false, true, false];
+		var set = FlxG.save.data.echoesZyraSet;
+		cur[set] = !cur[set];
+		FlxG.save.data.echoesZyraSwap = cur;
+	}
 	if (FlxG.keys.justPressed.FIVE) FlxG.save.data.echoesZyraHoldStyle = 0;
 	if (FlxG.keys.justPressed.SIX) FlxG.save.data.echoesZyraHoldStyle = 1;
 	if (FlxG.keys.justPressed.SEVEN) FlxG.save.data.echoesZyraHoldStyle = 2;
@@ -155,5 +164,11 @@ function update(elapsed) {
 
 	var anim = char.getAnimName();
 	var frame = (char.animation.curAnim != null) ? char.animation.curAnim.curFrame : 0;
-	infoText.text = "ANIMATION TEST - the note keys play the poses (hold = pose stays) | 1-4 camera set | R reload | G grid | ESC back\n" + anim + "  frame " + frame + "   set " + (FlxG.save.data.echoesZyraSet + 1) + "   hold style " + (FlxG.save.data.echoesZyraHoldStyle == null ? 1 : FlxG.save.data.echoesZyraHoldStyle + 1) + " (5-8)";
+	var swapText = "3";
+	if (FlxG.save.data.echoesZyraSwap != null) {
+		swapText = "";
+		for (i in 0...4)
+			if (FlxG.save.data.echoesZyraSwap[i] == true) swapText += (i + 1) + " ";
+	}
+	infoText.text = "ANIMATION TEST - the note keys play the poses (hold = pose stays) | 1-4 camera set | R reload | G grid | ESC back\n" + anim + "  frame " + frame + "   set " + (FlxG.save.data.echoesZyraSet + 1) + "   hold style " + (FlxG.save.data.echoesZyraHoldStyle == null ? 1 : FlxG.save.data.echoesZyraHoldStyle + 1) + " (5-8)   swapped sets: " + swapText + " (S)";
 }

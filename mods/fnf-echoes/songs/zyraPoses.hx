@@ -9,11 +9,11 @@ import openfl.Lib;
 //    zoom 0.9: world 289..1711 x 200..1000), so she is placed once and every set of frames lands where it was drawn. The set depends only on the song time:
 //        0 s    set 0  Camera      5 s    set 1  Camera.001      7 s    set 2  Camera.002
 //        12.375 s  set 3  the pose change (27 frames at 24 fps), which ends at 13.5 s, when the last pose (pose 3, Camera.003) begins.
-//    All the cuts are moved CUT_LEAD ms earlier (200 ms: 4.8 s, 6.8 s and 12.175 s, so pose 3 begins at 13.3 s).
+//    All the cuts are moved CUT_LEAD ms earlier (300 ms: 4.7 s, 6.7 s and 12.075 s, so pose 3 begins at 13.2 s).
 //    The cuts are stateless (computed from the time), so a restart or a playtest from the middle of the song also shows the right set.
 var STAGE_LEFT = 289.0;
 var STAGE_TOP = 200.0;
-var CUT_LEAD = 200.0;            // every cut comes this much earlier (ms): at the exact time it felt late (Zyra's call)
+var CUT_LEAD = 300.0;            // every cut comes this much earlier (ms): at the exact time it felt late (Zyra's call)
 var CUT_B = 5000.0 - CUT_LEAD;
 var CUT_C = 7000.0 - CUT_LEAD;
 var CUT_POSE_CHANGE = 13500.0 - 27.0 / 24.0 * 1000.0 - CUT_LEAD;

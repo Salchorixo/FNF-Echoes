@@ -21,6 +21,9 @@ var BREATH_Y = 1.6;              // (cycling through the frames next to the peak
 var LEAD_FRAMES = 2;             // a note's pose starts this many frames in, so its key frame lands sooner (24 fps: 2 frames = 83 ms; 3 = on the beat); not for the last set (pose 3)
 var HOLD_GRACE = 130.0;          // ms without a piece before the note counts as released
 var SUFFIX = ["", "_b", "_c", "_d"];
+// From some cameras the sides come out mirrored: in those sets the left arrow plays the right render and vice versa (Zyra's call per set; the playground
+// toggles it with the S key through FlxG.save.data.echoesZyraSwap while she decides).
+var SWAP = [false, false, true, false];
 var shakeClock = 0.0;
 var inHold = false;
 var lastSet = -1;
@@ -38,6 +41,18 @@ function baseName(name) {
 	if (n > 2 && name.charAt(n - 2) == "_" && (name.charAt(n - 1) == "b" || name.charAt(n - 1) == "c" || name.charAt(n - 1) == "d"))
 		return name.substr(0, n - 2);
 	return name;
+}
+
+function swapped(set) {
+	var o = FlxG.save.data.echoesZyraSwap;
+	if (o != null && o[set] != null) return o[set] == true;
+	return SWAP[set];
+}
+
+function mirrorSide(base) {
+	if (base == "singLEFT") return "singRIGHT";
+	if (base == "singRIGHT") return "singLEFT";
+	return base;
 }
 
 function isPlainPose(base) {
@@ -87,7 +102,8 @@ function onPlayAnim(event) {
 	var base = baseName(event.animName);
 	if (isPlainPose(base)) {
 		if (poseChangePlaying()) { event.cancel(); return; }       // the pose change finishes first
-		event.animName = base + SUFFIX[currentSet()];
+		var set = currentSet();
+		event.animName = (swapped(set) ? mirrorSide(base) : base) + SUFFIX[set];
 	}
 	var d = poseDir(event.animName);
 	if (d < 0) return;
