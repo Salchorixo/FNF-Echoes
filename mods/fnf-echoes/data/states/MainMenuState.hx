@@ -714,6 +714,7 @@ function update(elapsed) {
 
 	if (FlxG.keys.justPressed.F4) requestTheme(themer.call("next", [theme])); // test shortcut
 	if (introDone && !themeBusy && FlxG.keys.justPressed.SEVEN && !Flags.DISABLE_EDITORS) openEditors(); // the 7 key (BE-40, BE-43)
+	if (introDone && !themeBusy && FlxG.keys.justPressed.EIGHT && !Flags.DISABLE_EDITORS) openAnimTest(); // the 8 key: Zyra's animation playground (BE-53)
 
 	if (controls.UP_P) moveSelection(-1);
 	else if (controls.DOWN_P) {
@@ -761,6 +762,13 @@ function openEditors() {
 		applyCursor();
 	};
 	openSubState(sub);
+}
+
+// Zyra's animation playground (BE-53): no song, the four note keys play her poses. Leaves through this screen like the editors do.
+function openAnimTest() {
+	markReturn();
+	themer.call("restoreCursor");
+	FlxG.switchState(new ModState("AnimTestState"));
 }
 
 // Settings is not a screen: it is a window laid over this menu (BE-20), opened as a sub-state, so there is no

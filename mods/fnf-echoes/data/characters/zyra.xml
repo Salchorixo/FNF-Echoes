@@ -1,0 +1,24 @@
+<!DOCTYPE codename-engine-character>
+<character holdTime="9999" x="0" y="0" sprite="zyra" flipX="true" isPlayer="true" icon="bf" color="#3a3a46" scale="1.2344" antialiasing="true">
+	<anim name="idle" anim="a_idle" x="0" y="0" fps="24" loop="false"/>
+	<anim name="singUP" anim="a_singUP" x="0" y="0" fps="24" loop="false"/>
+	<anim name="singDOWN" anim="a_singDOWN" x="0" y="0" fps="24" loop="false"/>
+	<anim name="singLEFT" anim="a_singLEFT" x="0" y="0" fps="24" loop="false"/>
+	<anim name="singRIGHT" anim="a_singRIGHT" x="0" y="0" fps="24" loop="false"/>
+	<anim name="idle_b" anim="b_idle" x="0" y="0" fps="24" loop="false"/>
+	<anim name="singUP_b" anim="b_singUP" x="0" y="0" fps="24" loop="false"/>
+	<anim name="singDOWN_b" anim="b_singDOWN" x="0" y="0" fps="24" loop="false"/>
+	<anim name="singLEFT_b" anim="b_singLEFT" x="0" y="0" fps="24" loop="false"/>
+	<anim name="singRIGHT_b" anim="b_singRIGHT" x="0" y="0" fps="24" loop="false"/>
+	<anim name="idle_c" anim="c_idle" x="0" y="0" fps="24" loop="false"/>
+	<anim name="singUP_c" anim="c_singUP" x="0" y="0" fps="24" loop="false"/>
+	<anim name="singDOWN_c" anim="c_singDOWN" x="0" y="0" fps="24" loop="false"/>
+	<anim name="singLEFT_c" anim="c_singLEFT" x="0" y="0" fps="24" loop="false"/>
+	<anim name="singRIGHT_c" anim="c_singRIGHT" x="0" y="0" fps="24" loop="false"/>
+	<anim name="idle_d" anim="d_idle" x="0" y="0" fps="24" loop="false"/>
+	<anim name="singUP_d" anim="d_singUP" x="0" y="0" fps="24" loop="false"/>
+	<anim name="singDOWN_d" anim="d_singDOWN" x="0" y="0" fps="24" loop="false"/>
+	<anim name="singRIGHT_d" anim="d_singRIGHT" x="0" y="0" fps="24" loop="false"/>
+	<anim name="singLEFT_d" anim="d_singLEFT" x="0" y="0" fps="24" loop="false"/>
+	<anim name="poseChange" anim="d_poseChange" x="0" y="0" fps="24" loop="false"/>
+</character>
