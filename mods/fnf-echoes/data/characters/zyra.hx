@@ -18,6 +18,7 @@ var self = this;
 var PEAK = 3;                    // key frame of every pose, counting from 0 (Zyra's Blender frames 105, 120, 135 and 150 of poses that start at 102, 117, 132, 147)
 var BREATH_X = 0.8;              // while a long note is held she stays on the key frame and only breathes: a sub-pixel movement of the sprite (pixels)
 var BREATH_Y = 1.6;              // (cycling through the frames next to the peak looked like a slow return)
+var LEAD_FRAMES = 2;             // a note's pose starts this many frames in, so its key frame lands sooner (24 fps: 2 frames = 83 ms; 3 = on the beat)
 var HOLD_GRACE = 130.0;          // ms without a piece before the note counts as released
 var SUFFIX = ["", "_b", "_c", "_d"];
 var shakeClock = 0.0;
@@ -96,7 +97,7 @@ function onPlayAnim(event) {
 		return;
 	}
 	event.force = true;
-	event.startingFrame = 0;
+	event.startingFrame = LEAD_FRAMES;
 	inHold = false;
 	shakeClock = 0.0;
 }
