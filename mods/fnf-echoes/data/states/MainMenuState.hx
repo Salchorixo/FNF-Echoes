@@ -715,6 +715,7 @@ function update(elapsed) {
 	if (FlxG.keys.justPressed.F4) requestTheme(themer.call("next", [theme])); // test shortcut
 	if (introDone && !themeBusy && FlxG.keys.justPressed.SEVEN && !Flags.DISABLE_EDITORS) openEditors(); // the 7 key (BE-40, BE-43)
 	if (introDone && !themeBusy && FlxG.keys.justPressed.EIGHT && !Flags.DISABLE_EDITORS) openAnimTest(); // the 8 key: Zyra's animation playground (BE-53)
+	if (introDone && !themeBusy && FlxG.keys.justPressed.NINE && !Flags.DISABLE_EDITORS) openMistTest(); // the 9 key: mist and reflection playground (BE-54)
 
 	if (controls.UP_P) moveSelection(-1);
 	else if (controls.DOWN_P) {
@@ -769,6 +770,13 @@ function openAnimTest() {
 	markReturn();
 	themer.call("restoreCursor");
 	FlxG.switchState(new ModState("AnimTestState"));
+}
+
+// Mist and reflection playground (BE-54): Zyra on a black screen with the mist, keys to try the light, the flash and the push. Leaves through this screen like the editors do.
+function openMistTest() {
+	markReturn();
+	themer.call("restoreCursor");
+	FlxG.switchState(new ModState("MistTestState"));
 }
 
 // Settings is not a screen: it is a window laid over this menu (BE-20), opened as a sub-state, so there is no
