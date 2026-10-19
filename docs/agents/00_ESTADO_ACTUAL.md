@@ -57,6 +57,7 @@ Entre los dos bloques de Kiyu van los crasheos y una cutscene (ver
 5. **Secuencia final** (BACK → FINAL SEQUENCE): crasheo 1 real y controlado, menú roto, crasheo 2 falso, cutscene, bloque 2. Se apoya en la coreografía de ventana.
 6. **Canciones dentro del mod**: crear `songs/<cancion>/` con la estructura del motor (ver `03_RECETAS.md`).
 7. **Nota mortal (BE-42):** boceto del tipo de nota `Deadly Note` (receta N). Falta arte final, sonido, animación de muerte y variantes.
+8. **Noteskin de Zyra (BE-52, receta S):** flechas simples, receptoras gris oscuro, splash y efecto de nota larga en la fila de Zyra (Soul sigue con el aspecto del motor). Zyra lo vio en el juego en Limbo (macOS) y dio el visto bueno. Pendiente: sus PNG con transparencia real, decidir la flecha izquierda (muy oscura) y el aspecto de las notas especiales; Zyra necesita libertad total sobre las flechas en las animaciones (filas que se mezclan), así que cualquier cambio de aspecto por nota debe pasar por `KEEP_ENGINE_SKIN` o un tipo de nota nuevo.
 
 ## 5. Inconsistencias conocidas (no las arregles sin preguntar)
 
