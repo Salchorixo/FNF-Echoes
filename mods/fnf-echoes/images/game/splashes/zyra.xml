@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TextureAtlas imagePath="zyra.png">
+	<SubTexture name="zyra left splash0000" x="0" y="0" width="300" height="300"/>
+	<SubTexture name="zyra left splash0001" x="302" y="0" width="300" height="300"/>
+	<SubTexture name="zyra left splash0002" x="604" y="0" width="300" height="300"/>
+	<SubTexture name="zyra left splash0003" x="906" y="0" width="300" height="300"/>
+	<SubTexture name="zyra left splash0004" x="0" y="302" width="300" height="300"/>
+	<SubTexture name="zyra left splash0005" x="302" y="302" width="300" height="300"/>
+	<SubTexture name="zyra left splash0006" x="604" y="302" width="300" height="300"/>
+	<SubTexture name="zyra left splash0007" x="906" y="302" width="300" height="300"/>
+	<SubTexture name="zyra left splash0008" x="0" y="604" width="300" height="300"/>
+	<SubTexture name="zyra left splash0009" x="302" y="604" width="300" height="300"/>
+	<SubTexture name="zyra left splash0010" x="604" y="604" width="300" height="300"/>
+	<SubTexture name="zyra down splash0000" x="906" y="604" width="300" height="300"/>
+	<SubTexture name="zyra down splash0001" x="0" y="906" width="300" height="300"/>
+	<SubTexture name="zyra down splash0002" x="302" y="906" width="300" height="300"/>
+	<SubTexture name="zyra down splash0003" x="604" y="906" width="300" height="300"/>
+	<SubTexture name="zyra down splash0004" x="906" y="906" width="300" height="300"/>
+	<SubTexture name="zyra down splash0005" x="0" y="1208" width="300" height="300"/>
+	<SubTexture name="zyra down splash0006" x="302" y="1208" width="300" height="300"/>
+	<SubTexture name="zyra down splash0007" x="604" y="1208" width="300" height="300"/>
+	<SubTexture name="zyra down splash0008" x="906" y="1208" width="300" height="300"/>
+	<SubTexture name="zyra down splash0009" x="0" y="1510" width="300" height="300"/>
+	<SubTexture name="zyra down splash0010" x="302" y="1510" width="300" height="300"/>
+	<SubTexture name="zyra up splash0000" x="604" y="1510" width="300" height="300"/>
+	<SubTexture name="zyra up splash0001" x="906" y="1510" width="300" height="300"/>
+	<SubTexture name="zyra up splash0002" x="0" y="1812" width="300" height="300"/>
+	<SubTexture name="zyra up splash0003" x="302" y="1812" width="300" height="300"/>
+	<SubTexture name="zyra up splash0004" x="604" y="1812" width="300" height="300"/>
+	<SubTexture name="zyra up splash0005" x="906" y="1812" width="300" height="300"/>
+	<SubTexture name="zyra up splash0006" x="0" y="2114" width="300" height="300"/>
+	<SubTexture name="zyra up splash0007" x="302" y="2114" width="300" height="300"/>
+	<SubTexture name="zyra up splash0008" x="604" y="2114" width="300" height="300"/>
+	<SubTexture name="zyra up splash0009" x="906" y="2114" width="300" height="300"/>
+	<SubTexture name="zyra up splash0010" x="0" y="2416" width="300" height="300"/>
+	<SubTexture name="zyra right splash0000" x="302" y="2416" width="300" height="300"/>
+	<SubTexture name="zyra right splash0001" x="604" y="2416" width="300" height="300"/>
+	<SubTexture name="zyra right splash0002" x="906" y="2416" width="300" height="300"/>
+	<SubTexture name="zyra right splash0003" x="0" y="2718" width="300" height="300"/>
+	<SubTexture name="zyra right splash0004" x="302" y="2718" width="300" height="300"/>
+	<SubTexture name="zyra right splash0005" x="604" y="2718" width="300" height="300"/>
+	<SubTexture name="zyra right splash0006" x="906" y="2718" width="300" height="300"/>
+	<SubTexture name="zyra right splash0007" x="0" y="3020" width="300" height="300"/>
+	<SubTexture name="zyra right splash0008" x="302" y="3020" width="300" height="300"/>
+	<SubTexture name="zyra right splash0009" x="604" y="3020" width="300" height="300"/>
+	<SubTexture name="zyra right splash0010" x="906" y="3020" width="300" height="300"/>
+</TextureAtlas>
