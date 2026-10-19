@@ -14,6 +14,12 @@
 //   hudZoom    the zoom the HUD camera has (the beat bounce): the whole projected plane grows around the centre of the screen
 //   flatMode   for the shots where the row is NOT on a plane: the flat picture is only made smaller (flatScale, around the middle of the receptors) and moved
 //              down (flatShiftY pixels); the notes fade in at the top in the same way
+//   rollRad/shiftPx  the camera LEANS with the notes (songs/limboScene.hx): the world cameras roll and move, and so must the arrows that live in the scene, so the
+//              plane is seen through the same roll (radians, clockwise) and shift (screen pixels) as they are
+//   desat/tint a COMMON PALETTE for the arrows: their colours are pulled a little towards grey (desat, 0..1) and towards the cool tone of the scene (tint)
+//   mirror*    the arrows are REFLECTED in the floor (the same floor where Zyra's reflection is): the plane is mirrored about z = 0 and seen through the floor,
+//              dimmer (mirrorAlpha), fading with depth below the floor (mirrorFade metres), with ripples (mirrorWave metres) and short sideways jumps of bands
+//              (mirrorGlitch), tinted like water (mirrorTint)
 //   fade       the notes fade in between fadeStart and fadeEnd (share of the screen height away from the receptors) so they do not pop in half way
 // Every strength is a live uniform. Only 0.0-style floats and no switch, as the engine's compatibility guide asks.
 uniform vec3 camPos;
@@ -33,14 +39,68 @@ uniform vec2 camOffset;
 uniform float hudZoom;
 uniform float fadeStart;
 uniform float fadeEnd;
+uniform float rollRad;
+uniform vec2 shiftPx;
+uniform float desat;
+uniform vec3 tint;
+uniform float time;
+uniform float mirrorAlpha;
+uniform float mirrorFade;
+uniform float mirrorWave;
+uniform float mirrorGlitch;
+uniform vec3 mirrorTint;
 uniform float flatMode;
 uniform float flatScale;
 uniform float flatShiftY;
+
+vec4 grade(vec4 c) {
+	if (c.a <= 0.001) return c;
+	vec3 rgb = c.rgb / c.a;
+	float l = dot(rgb, vec3(0.299, 0.587, 0.114));
+	rgb = mix(rgb, vec3(l) * tint, desat);
+	return vec4(rgb * c.a, c.a);
+}
+
+float hash2(vec2 p) {
+	return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+}
+
+float gZ = 1.0;     // height of the point the last onPlane() call hit
+
+// what the flat picture shows where the ray `d` meets the plane (O, R, U); transparent when it misses
+vec4 onPlane(vec3 O, vec3 R, vec3 U, vec3 d, float ripple, float jump) {
+	vec3 n = cross(R, U);
+	float den = dot(n, d);
+	gZ = 1.0;
+	if (abs(den) < 0.000001) return vec4(0.0, 0.0, 0.0, 0.0);
+	float t = dot(n, O - camPos) / den;
+	if (t <= 0.0) return vec4(0.0, 0.0, 0.0, 0.0);
+	vec3 p3 = camPos + d * t;
+	gZ = p3.z;
+	vec3 p = p3 - O;
+	float u = dot(p, R);
+	float v = dot(p, U);
+	if (ripple > 0.0 || jump > 0.0) {
+		float band = floor(abs(v) * 8.0);
+		float tick = floor(time * 14.0);
+		u += ripple * sin(v * 9.0 - time * 3.2) + (hash2(vec2(band, tick)) - 0.5) * step(0.75, hash2(vec2(band + 9.0, tick))) * jump;
+	}
+	vec2 src = vec2(flatCentre.x + u / mpp, flatCentre.y - v / mpp);
+	vec2 sq = (src - camOffset) / camSize;
+	if (sq.x < 0.0 || sq.x > 1.0 || sq.y < 0.0 || sq.y > 1.0) return vec4(0.0, 0.0, 0.0, 0.0);
+	float dist = abs(src.y - flatCentre.y) / hudSize.y;
+	float fade = 1.0 - smoothstep(fadeStart, fadeEnd, dist);
+	return grade(textureCam(bitmap, sq)) * fade;
+}
 
 void main() {
 	vec2 q = getCamPos(openfl_TextureCoordv);
 	vec2 scr = q * camSize + camOffset;
 	scr = (scr - hudSize * 0.5) / hudZoom + hudSize * 0.5;
+	if (flatMode < 0.5) {
+		vec2 dd = scr - hudSize * 0.5 - shiftPx;
+		scr = vec2(cos(rollRad) * dd.x + sin(rollRad) * dd.y, 0.0 - sin(rollRad) * dd.x + cos(rollRad) * dd.y) + hudSize * 0.5;
+	}
 	vec2 rp = scr / hudPerRender;
 	vec3 d = camFwd * focal + camRight * (rp.x - 960.0) + camUp * (540.0 - rp.y);
 
@@ -53,29 +113,19 @@ void main() {
 			return;
 		}
 		float fdist = abs(fsrc.y - flatCentre.y) / hudSize.y;
-		gl_FragColor = textureCam(bitmap, fq) * (1.0 - smoothstep(fadeStart, fadeEnd, fdist));
+		gl_FragColor = grade(textureCam(bitmap, fq)) * (1.0 - smoothstep(fadeStart, fadeEnd, fdist));
 		return;
 	}
 
-	vec3 n = cross(planeR, planeU);
-	float den = dot(n, d);
-	if (abs(den) < 0.000001) {
-		gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
-		return;
+	vec4 real = onPlane(planeO, planeR, planeU, d, 0.0, 0.0);
+	vec4 refl = vec4(0.0, 0.0, 0.0, 0.0);
+	if (mirrorAlpha > 0.001) {
+		// the reflection: the mirrored plane, seen where the ray has already gone through the floor
+		vec3 om = vec3(planeO.x, planeO.y, 0.0 - planeO.z);
+		vec3 um = vec3(planeU.x, planeU.y, 0.0 - planeU.z);
+		vec4 r = onPlane(om, planeR, um, d, mirrorWave, mirrorGlitch * 0.25);
+		if (gZ < 0.0)
+			refl = vec4(r.rgb * mirrorTint, r.a) * (mirrorAlpha * (1.0 - smoothstep(0.0, mirrorFade, 0.0 - gZ)));
 	}
-	float t = dot(n, planeO - camPos) / den;
-	if (t <= 0.0) {
-		gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
-		return;
-	}
-	vec3 p = camPos + d * t - planeO;
-	vec2 src = vec2(flatCentre.x + dot(p, planeR) / mpp, flatCentre.y - dot(p, planeU) / mpp);
-	vec2 sq = (src - camOffset) / camSize;
-	if (sq.x < 0.0 || sq.x > 1.0 || sq.y < 0.0 || sq.y > 1.0) {
-		gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
-		return;
-	}
-	float dist = abs(src.y - flatCentre.y) / hudSize.y;
-	float fade = 1.0 - smoothstep(fadeStart, fadeEnd, dist);
-	gl_FragColor = textureCam(bitmap, sq) * fade;
+	gl_FragColor = real + refl * (1.0 - real.a);
 }

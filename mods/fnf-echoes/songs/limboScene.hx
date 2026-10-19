@@ -4,6 +4,7 @@ import flixel.text.FlxText;
 import flixel.util.FlxColor;
 import funkin.backend.shaders.CustomShader;
 import funkin.game.HudCamera;
+import openfl.Lib;
 
 // Limbo's scene (BE-57, BE-56): the arrows of Zyra live INSIDE the scene, in the perspective of Zyra's real Blender camera.
 //
@@ -13,7 +14,9 @@ import funkin.game.HudCamera;
 //    arrows are foreshortened, the lanes converge to a vanishing point and a long note leans with them. The notes fade in at the top. Zyra is drawn ABOVE the arrows
 //    in this shot: her character goes to an extra camera over the arrows'.
 // 2. THE RAISED ARM (pose 3, set 3): Zyra's body stays below the arrows and her arm, rendered apart (images/characters/zyra_arm), is drawn above them.
-// 3. THE BEGINNING: the song starts all black (Zyra and the health bar are hidden, the arrows are there) and they are revealed in REVEAL_MS. Soul's row (strum line 0)
+// 3. THE BEGINNING: the song starts all black (Zyra and the health bar are hidden, the arrows are there) and they are revealed in REVEAL_MS; the row of arrows slides in from the left
+//    and lands in its place as Zyra finishes appearing (SLIDE_IN); the receptors have full opacity and are uncovered by glitching on and off, and some of the first notes
+//    tremble in opacity (introGlitch). Soul's row (strum line 0)
 //    is hidden until a little before his first note: the first part is Zyra's alone.
 // The other shots keep the flat arrows of the engine until Zyra says how she wants them. Only in Limbo.
 //
@@ -43,7 +46,36 @@ var FLAT_DOWN = 24.0;                        // how many pixels lower it sits
 var EXTRA_PX = 900.0;                        // the camera of the arrows is this much taller than the screen, so the notes are already there when they cross its top
 var FADE_START = 1.6;                        // the notes fade between this share of the screen height away from their arrow and ... (far beyond the screen: it only hides the cut)
 var FADE_END = 2.0;                          // ... this one
+var SHOW_HEALTH_HUD = false;                 // Zyra: the health bar is out for now
+var DESAT = 0.3;                             // the common palette of the arrows: pulled towards grey ...
+var TINT = [0.93, 0.97, 1.08];               // ... and towards the cool tone of the scene
+var ASCII_ON = false;                        // Zyra took the ASCII veil out for now (shaders/AsciiVeil.frag and images/game/ascii stay; true brings it back)
+var ASCII_ARROWS = 0.3;                      // the veil of ASCII characters: over the arrows (strength 0..1) ...
+var ASCII_RECEPTORS = 0.3;                   // over the row of receptors (the fixed arrows) the veil is only this share of what it is over the notes
+var ASCII_WORLD = 0.08;                      // ... and, very light, over the mist and Zyra
+var ASCII_CELL = [8.0, 14.0];                // one character, in pixels of the screen
+var ASCII_INK = [0.72, 0.84, 1.0];           // the colour of the characters, mixed with the colour of what they are over
+var LEAN_ROLL = 1.0;                         // the camera LEANS with the notes: how many degrees it rolls towards the side of the note (left, right) ...
+var LEAN_SHIFT = 11.0;                       // ... and how many pixels it moves (to the side of the note; up and down only move)
+var LEAN_HOLD_MS = 280.0;                    // a note holds the lean this long (a long note keeps renewing it); then the camera comes back
+var LEAN_IN = 5.0;                           // how fast it leans (1/s) and how fast it comes back
+var LEAN_OUT = 3.5;
+var WHIP_ON = false;                         // the throw, roll and zoom of the camera at every cut: OFF (Zyra's call: it did not feel continuous); true brings it back
+var WHIP_MS = 800.0;                         // a camera cut throws the camera and it LANDS softly: how long it takes to settle
+// each cut: how far it is thrown (pixels), how much it rolls (degrees) and how much it zooms in when the new shot arrives. [camera.001, camera.002, pose change, inside the pose change]
+var WHIPS = [[70.0, 0.0, 1.0, 0.025], [-70.0, 0.0, -1.0, 0.025], [0.0, -35.0, 0.0, 0.03], [90.0, 18.0, 1.4, 0.035]];
+var MIRROR_ALPHA = 0.32;                     // the arrows are reflected in the floor, like Zyra: how strong the reflection is (0 = none) ...
+var MIRROR_FADE = 2.2;                       // ... how deep it goes before it is gone (metres) ...
+var MIRROR_WAVE = 0.02;                      // ... the ripples of the water (metres) and the short sideways jumps (the same glitch as Zyra's reflection)
+var MIRROR_GLITCH = 0.35;
+var MIRROR_TINT = [0.78, 0.8, 0.84];        // grey water (it was blue)
 var REVEAL_MS = 2500.0;                      // Zyra and the health bar come out of the black during the first seconds of the song
+var SLIDE_IN = 1.6;                          // at the very beginning the row slides in from the left and lands as Zyra finishes appearing: it starts with its middle at a quarter of the screen (the middle of the left half), 1.6 m along the row from its place
+var GLITCH_MS = 2500.0;                      // the receptors are uncovered by glitching on and off (full opacity, no fade) during this long, while the row slides in
+var GLOW_PEAK = 0.8;                         // while a receptor is still transparent it lights up a little with the notes of its OWN lane: how bright at most (alpha)
+var GLOW_LEAD_MS = 350.0;                    // it starts to rise this long before each note reaches it and fades out after
+var TREMBLE_END_MS = 4700.0;                 // some of the falling notes tremble in opacity (only the opacity) until the first camera cut
+var TREMBLE_SHARE = 0.25;                    // how many of them (0..1)
 var SOUL_LEAD_MS = 2000.0;                   // Soul's row appears this long before his first note
 var TUNE = true;                             // the keys that move the plane
 
@@ -55,6 +87,21 @@ var uiCam = null;
 var tuneText = null;
 var armSpr = null;
 var lastSet = -1;
+var leanTX = 0.0;
+var leanTY = 0.0;
+var leanX = 0.0;
+var leanY = 0.0;
+var leanMidX = 0.0;       // the lean goes through two smoothings in a row: it starts and stops softly (an ease), it does not snap
+var leanMidY = 0.0;
+var leanLast = -99999.0;
+var whipT = 99.0;
+var whipDX = 0.0;
+var whipDY = 0.0;
+var whipRoll = 0.0;
+var innerCut = false;
+var asciiShaders = [];
+var asciiArrows = null;
+var asciiTime = 0.0;
 var hudSprites = null;        // the sprites of the health HUD (scripts can not see each other's variables: they are found by their image)
 var soulShowAt = null;
 var soulShown = false;
@@ -88,7 +135,24 @@ function postCreate() {
 	warp.hset("camOffset", [0.0, arrowCam.y]);
 	warp.hset("fadeStart", FADE_START);
 	warp.hset("fadeEnd", FADE_END);
+	warp.hset("mirrorAlpha", MIRROR_ALPHA);
+	warp.hset("mirrorFade", MIRROR_FADE);
+	warp.hset("mirrorWave", MIRROR_WAVE);
+	warp.hset("mirrorGlitch", MIRROR_GLITCH);
+	warp.hset("mirrorTint", MIRROR_TINT);
+	warp.hset("time", 0.0);
+	warp.hset("rollRad", 0.0);
+	warp.hset("shiftPx", [0.0, 0.0]);
+	warp.hset("desat", DESAT);
+	warp.hset("tint", TINT);
 	arrowCam.addShader(warp);
+	// the veil of characters over the arrows (a taller camera that sits partly off the screen) and, much lighter, over the world camera
+	if (ASCII_ON) {
+		asciiArrows = makeAscii([1280.0, 720.0 + EXTRA_PX], [0.0, arrowCam.y], ASCII_ARROWS);
+		asciiArrows.hset("quiet", ASCII_RECEPTORS);
+		arrowCam.addShader(asciiArrows);
+		camGame.addShader(makeAscii([1280.0, 720.0], [0.0, 0.0], ASCII_WORLD));
+	}
 
 	// a camera above the arrows' one that copies the game camera (scroll and zoom) every frame: what is drawn there is in front of the arrows
 	front = new FlxCamera();
@@ -120,6 +184,71 @@ function postCreate() {
 	zyra().alpha = 0.0;
 }
 
+// The note that is hit sets where the camera leans: 0 left, 1 down, 2 up, 3 right (a long note renews it with every piece)
+function onPlayerHit(event) {
+	if (!isLimbo || event.note == null) return;
+	var d = event.note.strumID;
+	leanTX = (d == 0) ? -1.0 : ((d == 3) ? 1.0 : 0.0);
+	leanTY = (d == 2) ? -1.0 : ((d == 1) ? 1.0 : 0.0);
+	leanLast = Lib.getTimer();
+}
+
+// a camera cut: the new shot arrives thrown to one side, rolled and zoomed in, and the camera lands in place with a soft deceleration
+function startWhip(i) {
+	if (!WHIP_ON) return;
+	var w = WHIPS[i];
+	whipDX = w[0];
+	whipDY = w[1];
+	whipRoll = w[2];
+	whipT = 0.0;
+	camGame.zoom += w[3];                  // the engine brings the zoom back to the stage's by itself
+}
+
+// the lean of the world cameras (the arrows that live in the scene follow it through the shader)
+function updateLean(elapsed, set) {
+	var active = (Lib.getTimer() - leanLast) < LEAN_HOLD_MS;
+	var tx = active ? leanTX : 0.0;
+	var ty = active ? leanTY : 0.0;
+	var rate = active ? LEAN_IN : LEAN_OUT;
+	var f = Math.min(1.0, elapsed * rate);
+	leanMidX += (tx - leanMidX) * f;
+	leanMidY += (ty - leanMidY) * f;
+	leanX += (leanMidX - leanX) * f;
+	leanY += (leanMidY - leanY) * f;
+	// the camera rolls towards the side of the note and moves towards it, so what it sees moves the other way
+	whipT += elapsed;
+	var u = Math.min(1.0, whipT / (WHIP_MS / 1000.0));
+	var land = Math.pow(1.0 - u, 4.0);       // fast at the start, a long soft landing at the end
+	camGame.angle = leanX * LEAN_ROLL + whipRoll * land;
+	camGame.x = 0.0 - leanX * LEAN_SHIFT + whipDX * land;
+	camGame.y = 0.0 - leanY * LEAN_SHIFT + whipDY * land;
+	front.angle = camGame.angle;
+	front.x = camGame.x;
+	front.y = camGame.y;
+	warp.hset("rollRad", camGame.angle * 0.017453292);
+	warp.hset("shiftPx", [camGame.x, camGame.y]);
+}
+
+function makeAscii(camSize, camOffset, strength) {
+	var sh = new CustomShader("AsciiVeil");
+	sh.hset("glyphs", FlxG.bitmap.add(Paths.image("game/ascii/ramp")));      // Paths.image gives the PATH; the shader wants the loaded picture
+	sh.hset("camSize", camSize);
+	sh.hset("camOffset", camOffset);
+	sh.hset("cell", ASCII_CELL);
+	sh.hset("count", 10.0);
+	sh.hset("strength", strength);
+	sh.hset("minLuma", 0.05);
+	sh.hset("gain", 1.5);
+	sh.hset("inkMix", 0.85);
+	sh.hset("time", 0.0);
+	sh.hset("inkColor", ASCII_INK);
+	sh.hset("quietY", 0.0);
+	sh.hset("quietH", 1.0);
+	sh.hset("quiet", 1.0);
+	asciiShaders.push(sh);
+	return sh;
+}
+
 // ---- the plane --------------------------------------------------------------------------------------------------------------------------
 
 // the final screen pivot of a strum (after the downscroll flip): x - offset + origin; y mirrored when downscroll
@@ -130,6 +259,13 @@ function pivotX(o) {
 function pivotY(o) {
 	if (PlayState.instance.downscroll) return arrowCam.height - o.y - o.height - o.offset.y + o.origin.y;
 	return o.y - o.offset.y + o.origin.y;
+}
+
+// how far to the left of its place the row is (metres along the row): only at the start of the song, while Zyra comes out of the black
+function slideOffset() {
+	var a = Math.max(0.0, Math.min(1.0, Conductor.songPosition / REVEAL_MS));
+	var e = 1.0 - Math.pow(1.0 - a, 3.0);       // it arrives fast and settles softly
+	return 0.0 - SLIDE_IN * (1.0 - e);
 }
 
 function updateWarp(set) {
@@ -145,12 +281,31 @@ function updateWarp(set) {
 	var tilt = PLANE_TILT * 0.017453292;
 	var cy = Math.cos(yaw);
 	var sy = Math.sin(yaw);
-	warp.hset("planeO", [PLANE_X, PLANE_Y, PLANE_Z]);
+	var slide = slideOffset();
+	warp.hset("planeO", [PLANE_X + cy * slide, PLANE_Y + sy * slide, PLANE_Z]);
 	warp.hset("planeR", [cy, sy, 0.0]);
 	warp.hset("planeU", [0.0 - sy * Math.sin(tilt), cy * Math.sin(tilt), Math.cos(tilt)]);
 	warp.hset("flatCentre", [(x0 + x3) * 0.5, pivotY(line.members[0]) + arrowCam.y]);
 	warp.hset("mpp", mpp);
-	warp.hset("hudZoom", camHUD.zoom);
+	warp.hset("hudZoom", set == 0 ? camGame.zoom / PlayState.instance.defaultCamZoom : camHUD.zoom);       // in the scene the arrows zoom with the world
+	// where the row of receptors is on the screen, for the veil to be quieter there
+	var qy = 0.0;
+	var qh = 40.0;
+	if (set == 0) {
+		var p0 = project(PLANE_X, PLANE_Y, PLANE_Z);
+		var yaw2 = PLANE_YAW * 0.017453292;
+		var pa = project(PLANE_X - Math.cos(yaw2) * 1.5 * LANE_SPACING, PLANE_Y - Math.sin(yaw2) * 1.5 * LANE_SPACING, PLANE_Z);
+		var pb = project(PLANE_X + Math.cos(yaw2) * 1.5 * LANE_SPACING, PLANE_Y + Math.sin(yaw2) * 1.5 * LANE_SPACING, PLANE_Z);
+		qy = (pa.y + pb.y) * 0.5;
+		qh = Math.max(pa.k, pb.k) * LANE_SPACING * 0.6;
+	} else {
+		qy = pivotY(line.members[0]) + arrowCam.y + FLAT_DOWN;
+		qh = 55.0 * FLAT_SCALE;
+	}
+	if (asciiArrows != null) {
+		asciiArrows.hset("quietY", qy);
+		asciiArrows.hset("quietH", qh);
+	}
 	warp.hset("flatMode", set == 0 ? 0.0 : 1.0);
 	warp.hset("flatScale", FLAT_SCALE);
 	warp.hset("flatShiftY", FLAT_DOWN);
@@ -172,10 +327,14 @@ function findHud() {
 function reveal(t) {
 	var a = Math.max(0.0, Math.min(1.0, t / REVEAL_MS));
 	a = a * a * (3.0 - 2.0 * a);
-	if (hudSprites == null) findHud();
+	if (hudSprites == null) {
+		findHud();
+		for (s in hudSprites) s.visible = SHOW_HEALTH_HUD;
+	}
 	if (revealDone) return;
 	zyra().alpha = a;
-	for (s in hudSprites) s.alpha = a;
+	if (SHOW_HEALTH_HUD)
+		for (s in hudSprites) s.alpha = a;
 	if (a >= 1.0) revealDone = true;
 }
 
@@ -197,21 +356,101 @@ function soulRow(t) {
 	}
 }
 
+// ---- the beginning: the receptors glitch on and some notes tremble -------------------------------------------------------------------------------
+
+var trembling = null;
+var trembleDone = false;
+var glitchDone = false;
+var laneTimes = null;                        // the strum times of the notes of each lane, for the glow of the transparent receptors
+
+function hash1(a, b) {
+	var v = Math.sin(a * 127.1 + b * 311.7) * 43758.5453;
+	return v - Math.floor(v);
+}
+
+// The engine fades the receptors in by itself (alpha 0 -> 1 in a second): here they have FULL opacity and instead they are uncovered by glitching, lane by lane,
+// each one on and off in 60 ms ticks that are on more and more often until it stays on. Some of the first notes tremble in opacity (alpha only, no movement).
+// how much a transparent receptor glows now: it rises as a note of its lane comes, peaks as it reaches the receptor and fades out
+function laneGlow(lane, t) {
+	var g = 0.0;
+	for (nt in laneTimes[lane]) {
+		var dt = t - nt;
+		var v = 0.0;
+		if (dt < 0.0) {
+			if (dt > 0.0 - GLOW_LEAD_MS) {
+				var k = 1.0 + dt / GLOW_LEAD_MS;
+				v = k * k * GLOW_PEAK;
+			}
+		} else {
+			v = Math.exp(0.0 - dt / 320.0) * GLOW_PEAK;
+		}
+		if (v > g) g = v;
+	}
+	return g;
+}
+
+function introGlitch(t) {
+	var line = strumLines.members[1];
+	if (laneTimes == null) {
+		laneTimes = [[], [], [], []];
+		for (n in line.notes.members)
+			if (n != null && n.strumTime < GLITCH_MS + 500.0 && n.strumID >= 0 && n.strumID < 4) laneTimes[n.strumID].push(n.strumTime);
+	}
+	if (!glitchDone) {
+		var p = t / GLITCH_MS;
+		for (i in 0...line.members.length) {
+			var q = Math.max(0.0, Math.min(1.0, (p - 0.4 - 0.1 * i) / 0.3));      // completely transparent at first (it only glows with its notes), then lane by lane
+			var a = 1.0;
+			if (q < 1.0) {
+				a = 0.0;
+				if (q > 0.0) {
+					var h = hash1(i + 1.0, Math.floor(t / 60.0));
+					if (h < q * 0.75) a = 1.0;
+					else if (h < q * 0.75 + 0.1) a = 0.2;
+				}
+			}
+			if (a < 1.0 && t < GLITCH_MS) a = Math.max(a, laneGlow(i, t));
+			line.members[i].alpha = a;
+		}
+		if (t > GLITCH_MS + 1500.0) glitchDone = true;           // a little later than the glitch: the engine's own fade has finished by then
+	}
+	if (trembleDone) return;
+	if (trembling == null) {
+		trembling = [];
+		for (n in line.notes.members)
+			if (n != null && !n.isSustainNote && n.strumTime < TREMBLE_END_MS + 3000.0 && hash1(n.strumTime * 0.001, n.strumID + 3.0) < TREMBLE_SHARE)
+				trembling.push(n);
+	}
+	var tick = Math.floor(t / 70.0);
+	for (n in trembling) {
+		if (t >= TREMBLE_END_MS) n.alpha = 1.0;
+		else n.alpha = (hash1(n.strumTime * 0.01 + n.strumID, tick) < 0.3) ? 0.6 : 1.0;
+	}
+	if (t >= TREMBLE_END_MS) trembleDone = true;
+}
+
 // ---- every frame -------------------------------------------------------------------------------------------------------------------------
 
 function postUpdate(elapsed) {
 	if (!isLimbo) return;
 	front.scroll.copyFrom(camGame.scroll);
 	front.zoom = camGame.zoom;
+	asciiTime += elapsed;
+	for (a in asciiShaders) a.hset("time", asciiTime);
+	warp.hset("time", asciiTime);
 	var t = Conductor.songPosition;
 	reveal(t);
 	soulRow(t);
+	introGlitch(t);
 
 	var set = FlxG.save.data.echoesZyraSet;
 	if (set == null) set = 0;
 	var z = zyra();
 
 	if (set != lastSet) {
+		if (lastSet == 0) startWhip(0);
+		else if (lastSet == 1) startWhip(1);
+		else if (lastSet == 2) startWhip(2);
 		// first shot: Zyra above the arrows, and the arrows on their own camera (warped); every other: below them, flat as the engine draws them (the arm, in pose 3, is above)
 		z.cameras = (set == 0) ? [front] : [camGame];
 		strumLines.members[1].cameras = [arrowCam];
@@ -220,9 +459,21 @@ function postUpdate(elapsed) {
 	}
 	tune(elapsed, set);
 	updateWarp(set);
+	updateLean(elapsed, set);
+	publishArrowLights(set);
+
+	// the pose change cuts to its last camera on its tenth frame (the render's frame 177): that cut gets its own throw
+	var cur = z.animation.curAnim;
+	if (cur != null && cur.name == "poseChange") {
+		if (!innerCut && cur.curFrame >= 9) {
+			startWhip(3);
+			innerCut = true;
+		}
+	} else {
+		innerCut = false;
+	}
 
 	// the arm of pose 3: same animation and frame as the body, over the arrows
-	var cur = z.animation.curAnim;
 	if (set == 3 && cur != null && cur.name != "poseChange" && armSpr.animation.getByName(cur.name) != null) {
 		if (armSpr.animation.name != cur.name) armSpr.animation.play(cur.name, true);
 		armSpr.animation.curAnim.paused = true;
@@ -237,6 +488,22 @@ function postUpdate(elapsed) {
 	} else {
 		armSpr.visible = false;
 	}
+}
+
+// where the four receptors are in the scene (metres), for the mist to take their light (songs/limboMist.hx, BE-54); null when the row is not on the plane
+function publishArrowLights(set) {
+	if (set != 0) {
+		FlxG.save.data.echoesArrowLights = null;
+		return;
+	}
+	var yaw = PLANE_YAW * 0.017453292;
+	var slide = slideOffset();
+	var lights = [];
+	for (i in 0...4) {
+		var along = (i - 1.5) * LANE_SPACING;
+		lights.push([PLANE_X + Math.cos(yaw) * (along + slide), PLANE_Y + Math.sin(yaw) * (along + slide), PLANE_Z + 0.15]);
+	}
+	FlxG.save.data.echoesArrowLights = lights;
 }
 
 function tune(elapsed, set) {
@@ -271,6 +538,7 @@ function r2(v) {
 }
 
 function destroy() {
+	FlxG.save.data.echoesArrowLights = null;
 	if (front != null && FlxG.cameras.list.contains(front)) FlxG.cameras.remove(front);
 	if (arrowCam != null && FlxG.cameras.list.contains(arrowCam)) FlxG.cameras.remove(arrowCam);
 	if (uiCam != null && FlxG.cameras.list.contains(uiCam)) FlxG.cameras.remove(uiCam);
