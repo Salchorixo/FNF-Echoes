@@ -3,6 +3,7 @@ import flixel.FlxSprite;
 import flixel.text.FlxText;
 import flixel.util.FlxColor;
 import funkin.backend.scripting.ModState;
+import funkin.backend.scripting.Script;
 import funkin.game.Character;
 import openfl.Lib;
 
@@ -10,6 +11,7 @@ import openfl.Lib;
 // her sing poses by hand (hold a key: the pose stays; release: she goes back to the idle). Open it with the 8 key on the main menu.
 //
 //   the four note keys  play singLEFT / singDOWN / singUP / singRIGHT      R  reload the character (after exporting new frames)
+//   E  alternative eyes on / off (Zyra's hand-drawn eyes, for the poses that have them: set 3 all four notes, set 4 left and down)
 //   S  swap left and right in the camera set that is showing (the info line says which sets are swapped)
 //   5 6 7 8  how a held long note looks: still / creeping forward / slow loop / pulse (tell Zyra's choice to Claude)
 //   1 2 3 4  the camera set of her frames: Camera / Camera.001 / Camera.002 / pose 3 (going from 3 to 4 plays the pose change first)
@@ -29,6 +31,8 @@ var gridOn = true;
 var infoText;
 var keySprites = [];
 var singDir = -1;
+var eyes;
+var altOn = false;
 
 function create() {
 	FlxG.camera.bgColor = FlxColor.BLACK;
@@ -45,6 +49,9 @@ function create() {
 	char.y = STAGE_TOP - char.frameHeight * (1 - char.scale.y) / 2;
 	add(char);
 	char.dance();
+	eyes = Script.create(Paths.script('scripts/effects/zyraEyes'));
+	eyes.load();
+	eyes.call("attach", [char]);
 
 	// grid: thirds of the 1280x720 screen
 	for (i in 1...3) {
@@ -127,6 +134,10 @@ function update(elapsed) {
 	if (FlxG.keys.justPressed.SIX) FlxG.save.data.echoesZyraHoldStyle = 1;
 	if (FlxG.keys.justPressed.SEVEN) FlxG.save.data.echoesZyraHoldStyle = 2;
 	if (FlxG.keys.justPressed.EIGHT) FlxG.save.data.echoesZyraHoldStyle = 3;
+	if (FlxG.keys.justPressed.E) {
+		altOn = !altOn;
+		eyes.call("setAlt", [altOn]);
+	}
 	if (FlxG.keys.justPressed.G) {
 		gridOn = !gridOn;
 		for (s in grid) s.visible = gridOn;
@@ -162,6 +173,7 @@ function update(elapsed) {
 		}
 	}
 
+	eyes.call("update");
 	var anim = char.getAnimName();
 	var frame = (char.animation.curAnim != null) ? char.animation.curAnim.curFrame : 0;
 	var swapText = "3";
@@ -170,5 +182,5 @@ function update(elapsed) {
 		for (i in 0...4)
 			if (FlxG.save.data.echoesZyraSwap[i] == true) swapText += (i + 1) + " ";
 	}
-	infoText.text = "ANIMATION TEST - the note keys play the poses (hold = pose stays) | 1-4 camera set | R reload | G grid | ESC back\n" + anim + "  frame " + frame + "   set " + (FlxG.save.data.echoesZyraSet + 1) + "   hold style " + (FlxG.save.data.echoesZyraHoldStyle == null ? 1 : FlxG.save.data.echoesZyraHoldStyle + 1) + " (5-8)   swapped sets: " + swapText + " (S)";
+	infoText.text = "ANIMATION TEST - the note keys play the poses (hold = pose stays) | 1-4 camera set | R reload | G grid | ESC back\n" + anim + "  frame " + frame + "   set " + (FlxG.save.data.echoesZyraSet + 1) + "   hold style " + (FlxG.save.data.echoesZyraHoldStyle == null ? 1 : FlxG.save.data.echoesZyraHoldStyle + 1) + " (5-8)   swapped sets: " + swapText + " (S)   alt eyes: " + (altOn ? "ON" : "off") + " (E)";
 }
