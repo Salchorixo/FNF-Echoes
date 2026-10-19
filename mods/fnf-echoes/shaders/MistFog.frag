@@ -17,6 +17,8 @@
 //   quality  how many steps each ray takes (3..8): the knob between looks and speed
 //   light model: the light scatters forward (the fog glows when you look towards it), and Zyra casts a real volumetric shadow through the lit
 //           fog (a dark shaft behind her, found analytically, no extra steps)
+//   aPos0..3/aCol0..3/aR  the four ARROWS are lights too: each one lights the mist around it (position in metres, colour already multiplied by its intensity,
+//           radius aR in metres), so the arrows seem to give off light into the air instead of lying over it
 //   pushPos/pushAmt/pushR/pushMeters  Zyra opens the mist: around pushPos (metres) the air is thrown outwards and thinned (pushAmt 0..1)
 //   light3/lightR  a light in the world (metres, radius in metres): the fog near it glows and takes its colour; flash is a short pulse; tintMix =
 //           how much of the light's colour reaches the mist (the mist is dark grey, so it is small); breath (0..1) lifts density and glow for a moment
@@ -52,6 +54,15 @@ uniform float flash;
 uniform float breath;
 uniform vec3 lightColor;
 uniform float tintMix;
+uniform vec3 aPos0;
+uniform vec3 aPos1;
+uniform vec3 aPos2;
+uniform vec3 aPos3;
+uniform vec3 aCol0;
+uniform vec3 aCol1;
+uniform vec3 aCol2;
+uniform vec3 aCol3;
+uniform float aR;
 uniform vec3 baseColor;
 
 float hash3(vec3 p) {
@@ -199,6 +210,13 @@ void main() {
 		vec3 col = mix(baseColor, lightColor, clamp(lit, 0.0, 1.0) * tintMix) * (0.25 + 0.8 * lit);
 		// body and texture: the cores of the clouds are brighter, the tops catch more light and the thick parts shade themselves
 		col *= (0.7 + 0.6 * gCloud) * (0.8 + 0.4 * clamp(p.z / 1.2, 0.0, 1.0)) * (1.0 - 0.45 * ai);
+		// the light of the arrows: it takes the mist's own shape (it is added before the mist is mixed into the picture) and keeps each arrow's colour
+		vec3 q0 = p - aPos0;
+		vec3 q1 = p - aPos1;
+		vec3 q2 = p - aPos2;
+		vec3 q3 = p - aPos3;
+		float rr = aR * aR;
+		col += aCol0 * exp(-dot(q0, q0) / rr) + aCol1 * exp(-dot(q1, q1) / rr) + aCol2 * exp(-dot(q2, q2) / rr) + aCol3 * exp(-dot(q3, q3) / rr);
 		C += T * ai * col;
 		T *= 1.0 - ai;
 	}

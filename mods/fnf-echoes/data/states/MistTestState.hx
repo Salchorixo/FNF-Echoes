@@ -23,9 +23,7 @@ var CENTER_X = 289 + 0.645 * 1422;     // where Zyra drew her (see AnimTestState
 var FEET_Y = 200 + 0.95 * 800;
 var POSE_CHANGE_SECONDS = 27 / 24;     // pose change animation: frames 168-194 at 24 fps
 var PUSH_STRENGTH = 1000.0;
-var CAMERA_NAMES = ["Camera", "Camera.002"];
-var PX_SCALE = 0.695;                  // game pixels per Blender render pixel: the size of Zyra on screen (389 px tall as she placed her)
-var GROUND_GAP = -16.0;                // the true ground contact of her feet is a little above the bottom of her sprite (game pixels)
+var CAMERA_NAMES = ["Camera", "Camera.001", "Camera.002", "Camera.003"];     // the camera of each set of Zyra's frames (DS-2)
 var LIGHTS = [0xFFE8E6E0, 0xFF9CB4FF, 0xFFC8A8FF];
 var GLITCH_LEVELS = [0.0, 0.35, 0.7, 1.0];
 
@@ -48,17 +46,18 @@ function create() {
 	FlxG.cameras.add(uiCam, false);
 
 	if (FlxG.save.data.echoesMistCam == null) FlxG.save.data.echoesMistCam = 0;
+	FlxG.save.data.echoesZyraSet = FlxG.save.data.echoesMistCam;          // her frames of that camera
 	char = new Character(0, 0, CHARACTER, true);
-	if (char.frameHeight > 500) char.scale.set(PX_SCALE, PX_SCALE);      // the Blender frames are full size; the old test frames are already small
-	var sc = char.scale.x;
-	char.x = CENTER_X - char.frameWidth / 2;
-	char.y = FEET_Y - char.frameHeight * (1 + sc) / 2;                   // the scaled sprite grows around its centre: bottom edge on FEET_Y
+	// her frames are the whole Blender render, and the render frame is what the stage shows: she goes to the corner of the stage (her sprite grows around its centre)
+	char.x = 289.0 - char.frameWidth * (1 - char.scale.x) / 2;
+	char.y = 200.0 - char.frameHeight * (1 - char.scale.y) / 2;
 
 	// draw order: reflection, back mist, Zyra, front mist
 	mist = Script.create(Paths.script('scripts/effects/mist'));
 	mist.load();
-	mist.call("setView", [CAMERA_NAMES[FlxG.save.data.echoesMistCam], CENTER_X, FEET_Y, sc]);
-	mist.call("setReflection", [0.2, GROUND_GAP]);
+	mist.call("setStageView", [CAMERA_NAMES[FlxG.save.data.echoesMistCam]]);
+	mist.call("setInsertBefore", [null]);
+	mist.call("setReflection", [0.2, 0.0]);
 	mist.call("createReflection", [char, null]);
 	mist.call("createBack", [null]);
 	add(char);
