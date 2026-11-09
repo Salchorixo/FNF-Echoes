@@ -2,7 +2,7 @@
 
 // The whole game recorded on a 90s camcorder tape and played back on a worn VCR (BE-59; Zyra, 2026-11-08: "almost real"
 // glitches, the analog fear of the backrooms). A real-time port of the approved mockup (production: 02_Scenes/menú/
-// AI_build_menu_vhs_mockup_v06.py). It runs as a filter on the whole game (scripts/effects/vhsShader.hx), so it works in
+// AI_build_menu_vhs_mockup_v06.py). scripts/effects/vhsShader.hx puts it on every camera of the state; it works in
 // "tape pixels": the picture is always treated as 1280x720 whatever the window size.
 //
 // What the tape always does
@@ -58,8 +58,9 @@ vec2 barrel(vec2 uv) {
 	return 0.5 + c * (1.0 + lens * dot(n, n)) / (1.0 + lens);
 }
 
+// the camera's picture at a point in tape pixels (textureCam: the camera's texture can be larger than what it shows)
 vec4 tap(vec2 p) {
-	return texture2D(bitmap, clamp(p / TAPE, vec2(0.0), vec2(1.0)));
+	return textureCam(bitmap, clamp(p / TAPE, vec2(0.0), vec2(1.0)));
 }
 
 vec3 toYIQ(vec3 c) {
@@ -77,7 +78,7 @@ float band(float line, float top, float height) {
 
 void main() {
 	float frame = mod(floor(time * 30.0), 4096.0);             // the tape runs at 30 pictures a second (kept small for float precision)
-	vec2 uv = barrel(openfl_TextureCoordv);
+	vec2 uv = barrel(getCamPos(openfl_TextureCoordv));
 	vec2 p = uv * TAPE;
 
 	// ---- the edit: how strong each part of it is right now
