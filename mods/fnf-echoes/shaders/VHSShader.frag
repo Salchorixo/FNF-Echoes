@@ -1,7 +1,7 @@
 #pragma header
 
 // The whole game recorded on a 90s camcorder tape and played back on a worn VCR (BE-59; Zyra, 2026-11-08: "almost real"
-// glitches, the analog fear of the backrooms). A real-time port of the approved mockup (production: 02_Scenes/menú/
+// glitches, the analog fear of the backrooms). A real-time port of the approved mockup (production: 02_Scenes/menu (with the accent)/
 // AI_build_menu_vhs_mockup_v06.py). scripts/effects/vhsShader.hx puts it on every camera of the state; it works in
 // "tape pixels": the picture is always treated as 1280x720 whatever the window size.
 //
