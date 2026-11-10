@@ -1,6 +1,6 @@
 # ADR-0006: Plantilla de ADR con problemas, pruebas y reglas para cualquier agente
 
-**Estado:** Proposed
+**Estado:** Accepted (Zyra, 2026-11-10)
 **Fecha:** 2026-11-10
 **Decide:** Salchorizo (Zyra)
 **Issue:** BE-65
@@ -61,4 +61,4 @@ Cuenta la historia completa de la rama en una o dos pantallas: qué se decidió,
 ## Pendiente
 
 - [ ] Escribir los ADR que faltan para las ramas que ya están en `main` (la cinta, el menú, las transiciones, la HUD, la réplica, Limbo...), si Zyra lo decide.
-- [ ] Zyra pasa este ADR a **Accepted** al aprobar la PR.
+- [x] Zyra pasa este ADR a **Accepted** al aprobar la PR (2026-11-10).
