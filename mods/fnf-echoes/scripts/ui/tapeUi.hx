@@ -5,6 +5,7 @@ import flixel.text.FlxText;
 import flixel.util.FlxGradient;
 import flixel.util.FlxSpriteUtil;
 import funkin.backend.scripting.Script;
+import funkin.backend.MusicBeatTransition;
 import openfl.Lib;
 
 // The screens of the tape (style E of the design canvas, BE-61): one of Limbo's places with Zyra's idle on top, the darker
@@ -46,6 +47,7 @@ var playArrow;
 
 function buildScene(placeName) {
 	place = placeName;
+	MusicBeatTransition.script = 'scripts/effects/tapeTransition';   // the tape's transitions (BE-63)
 	FlxG.state.add(new FlxSprite().loadGraphic(Paths.image("menus/tape/bg_" + place)));
 	zyra = new FlxSprite(ZYRA_X, ZYRA_Y).loadGraphic(Paths.image("menus/tape/zyra_" + place + "_0"));
 	FlxG.state.add(zyra);

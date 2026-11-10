@@ -5,7 +5,7 @@
 > Si algo de aquí no coincide con el repo, **manda el repo**: corrige este
 > archivo y dilo en el relevo.
 
-**Última actualización:** 2026-11-09 (la cinta VHS de videocámara para todo el juego, BE-59; antes: 2026-10-17, neblina de Limbo, BE-54; antes: 2026-10-14, los menús nuevos ya están en `main`: PR #19 a #22, BE-33).
+**Última actualización:** 2026-11-10 (las transiciones de la cinta, BE-63; antes: 2026-11-09, la cinta VHS de videocámara para todo el juego, BE-59; antes: 2026-10-17, neblina de Limbo, BE-54; antes: 2026-10-14, los menús nuevos ya están en `main`: PR #19 a #22, BE-33).
 
 ---
 
@@ -44,6 +44,12 @@ Entre los dos bloques de Kiyu van los crasheos y una cutscene (ver
 
 ## 4. En curso / siguiente paso
 
+0. **Transiciones de la cinta (BE-63, 2026-11-10, decisión de Zyra sobre los mockups del canvas):**
+   - **Todos los cambios entre pantallas de la cinta:** el **punto de edición**: salto vertical, franja de arcoíris, color que tarda en fijarse y reloj que salta.
+   - **El punto de edición se desgasta con la historia:** `FlxG.save.data.echoesTapeWear`, de 1 a 3. Con 1 es limpio; con 2 hay más salto, el color tarda más y salen dropouts; con 3, además, se cuelan dos fotogramas del lugar vacío. La historia aún no lo cambia; la tecla **5** del menú lo rota para probar.
+   - **Solo al entrar y al salir de una canción:** la **cinta mordida**. La imagen ondula, se rasga, se estira y colapsa en una línea, y sale TRACKING.
+   - **Dónde vive:** `scripts/effects/tapeTransition.hx` + `shaders/TapeTransition.frag` (trampa nº 32).
+   - **Pendiente:** el visto bueno de Zyra en el juego y quién sube el desgaste (¿una Echo, una canción?).
 0. **Nombres (decisión de Zyra, 2026-10-14):** las canciones se llaman **Limbo** (1, personaje Soul), **Dopamine** (2, Taro) y **Placebo** (3, Kiyu); el selector muestra los de las canciones (BE-41).
 0. **Charteo (2026-10-14):** empieza con **Soul** (issue DS-1). BE-40 añade el atajo **7** del menú principal para abrir los editores del motor. Datos de Soul medidos del audio: 150 BPM (±1), primer pulso hacia 0,14 s, 129,93 s de duración; el audio de partida está en la carpeta de producción (`MUSIC OST - INST/inst 1st song.wav`).
 0. **Limbo desde el selector (BE-50):** ENTER (o clic) en el nodo de **Limbo** abre el **editor de charts** con la canción; de ahí Enter lanza el playtest. Los nodos 2 y 3 siguen con el prototipo. El chart de Limbo usa el escenario negro `black` (DS-1).
