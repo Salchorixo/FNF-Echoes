@@ -180,7 +180,7 @@ docs: workflow de Linear y PR (BE-40)
 3. Abre la PR **contra `main`**:
    - **Título:** igual que un commit (`tipo: qué hace (ID)`).
    - **Idioma y tono:** en **español**, con **lenguaje natural**, como si se lo contaras a una persona: qué cambia, por qué y cómo se probó. Usa los términos técnicos (archivos, funciones, shaders, estados del motor) cuando ayuden a entender, no para rellenar. **Sin firma de IA** al final.
-   - **Descripción:** usa esta plantilla.
+   - **Descripción:** la plantilla está en **`.github/pull_request_template.md`**, y GitHub la pone sola al abrir una PR desde la web. Si la abres por terminal (`gh pr create --body-file ...`), copia esa estructura: es la misma para personas y para cualquier agente. Resumen:
      ```markdown
      Closes BE-12
 

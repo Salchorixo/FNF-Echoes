@@ -19,7 +19,7 @@ silencio.
 4. **Código en inglés** (nombres y comentarios). **Documentación y commits en español.** No se mezclan.
 5. **El contenido del mod es HScript** en `mods/fnf-echoes/`. Ahí **no hay clases propias ni `import` entre archivos del mod**. Se comparte con `Script.create(...)` + `.load()` + `.call(...)` (ver `docs/agents/02_HSCRIPT_CODENAME.md`).
 6. **Nunca trabajes ni commitees sobre `main`.** Todo, por pequeño que sea, va en su propia rama `zyra/<tipo>/<ID>-<descripcion-corta>` (p. ej. `zyra/feature/BE-65-pantalla-de-carga`), con **su ADR** en `docs/adr/`, y entra por PR (ver `docs/GIT_WORKFLOW.md` y ADR-0005).
-6b. **Commits y PR sin firma de IA:** nada de `Co-authored-by: Claude`, "Hecho en pareja con Claude" ni "Generated with ...". Las PR van en español, con lenguaje natural y los términos técnicos que ayuden a entender.
+6b. **Commits y PR sin firma de IA:** nada de `Co-authored-by: Claude`, "Hecho en pareja con Claude" ni "Generated with ...". Las PR van en español, con lenguaje natural y los términos técnicos que ayuden a entender, con la plantilla `.github/pull_request_template.md` (GitHub la pone sola; si abres la PR por terminal, copia su estructura). Estas reglas valen para **cualquier** agente, aunque su herramienta haga otra cosa por defecto.
 7. **Una tarea a la vez.** Si la tarea crece o toca algo que no se pidió, para y pregunta.
 8. **Antes de decir "funciona", pruébalo.** Si no pudiste compilar o ejecutar, escribe literalmente "NO PROBADO" y por qué.
 9. **Al terminar o al dejar algo a medias, deja el relevo escrito** (`docs/agents/01_PROTOCOLO_DE_SESION.md` §3) y actualiza `00_ESTADO_ACTUAL.md`.
