@@ -83,11 +83,11 @@ mods/fnf-echoes/songs/<nombre-cancion>/
 
 ## Receta H — ADR nuevo (uno por rama)
 
-0. **Cada rama lleva su ADR** (ADR-0005), aunque el cambio sea pequeño: explica qué se decidió en esa rama y por qué. Va en la misma PR.
-1. Número siguiente al último en `docs/adr/` (hoy el último es 0005; el 0004 se saltó a propósito). Si otra rama abierta cogió el mismo número, el segundo que llegue a `main` renumera el suyo al rebasar.
-2. Nombre: `NNNN-titulo-en-kebab-case.md`, en español.
-3. Secciones: Estado · Fecha · Contexto · Decisión · Opciones consideradas · Consecuencias · Action Items (copia el formato de un ADR existente). En el título o en la cabecera, el ID de la issue y la rama.
-4. Estado inicial: **Proposed**. Solo Zyra lo pasa a **Accepted**.
+0. **Cada rama lleva su ADR** (ADR-0005), aunque el cambio sea pequeño. Va en la misma PR.
+1. **Abre `docs/adr/PLANTILLA.md`**, lee sus reglas de escritura y copia su bloque a `docs/adr/NNNN-titulo-en-kebab-case.md`, con el número siguiente al último (el 0004 se saltó a propósito).
+2. Rellena **todas** las secciones: cabecera (estado, fecha, issue, rama, PR, relacionados), Contexto, Decisión, Opciones consideradas, **Problemas encontrados y cómo se resolvieron**, **Cómo se probó**, Consecuencias y Pendiente. Si una no aplica, escribe "Ninguno." en lugar de borrarla.
+3. Los problemas van con su síntoma (error literal), su causa y su arreglo. El detalle técnico va como trampa nueva en `04_TRAMPAS_CONOCIDAS.md`, y el ADR la enlaza por su número.
+4. Estado inicial: **Proposed**. Solo Zyra lo pasa a **Accepted**. Una vez aceptado no se reescribe: se le añade una actualización con fecha, o se reemplaza por un ADR nuevo (Superseded).
 
 ## Receta I — Que el juego mueva su propia ventana (Zyra la lanza desde dentro)
 

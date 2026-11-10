@@ -25,7 +25,7 @@ Las 9 reglas que no se negocian:
 5. **Nadie commitea directo a `main`.** Todo entra por PR.
 6. **Antes de mergear, te lees tu propio diff** en la pestaña *Files changed* y marcas el checklist (§6). El revisor eres tú: la revisión no se salta, se hace uno mismo.
 7. **Merge con "Rebase and merge"** (§7). Cada commit de la rama acaba tal cual en `main`, por eso cada commit debe ser limpio.
-8. **Cada rama trae su ADR** en `docs/adr/`, en la misma PR (§6 y ADR-0005).
+8. **Cada rama trae su ADR** en `docs/adr/`, escrito con `docs/adr/PLANTILLA.md`, en la misma PR (§6 y ADR-0005).
 9. **Sin firma de IA** en commits ni PR: nada de `Co-authored-by: Claude`, "Hecho en pareja con Claude" ni "Generated with ..." (ADR-0005).
 
 ---
@@ -194,7 +194,7 @@ docs: workflow de Linear y PR (BE-40)
      (decisiones, cosas que Zyra debe saber)
      ```
    - **`Closes BE-12`** (o `Fixes`/`Resolves`) en la descripción es lo que mueve la issue a Done al mergear. Si la PR solo hace **parte** de la issue, usa `Part of BE-12` (no la cierra).
-   - **El ADR de la rama va en la misma PR** (receta H de `docs/agents/03_RECETAS.md`). Siempre, no solo en decisiones grandes: si la rama es pequeña, el ADR es corto, pero existe.
+   - **El ADR de la rama va en la misma PR**, escrito con `docs/adr/PLANTILLA.md` (receta H de `docs/agents/03_RECETAS.md`). Siempre, no solo en decisiones grandes: si la rama es pequeña, el ADR es corto, pero existe.
 4. Si aún no está lista, ábrela como **borrador** (*Draft*): la issue pasa a In Progress y no a In Review.
 5. **Autorrevisión (obligatoria, aunque nadie más lo exija):** en *Files changed*, lee tu propio diff como si fuera de otra persona y comprueba:
    - [ ] Solo hay cambios relacionados con la issue (nada de reformateos ni archivos colados).

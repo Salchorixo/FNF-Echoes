@@ -58,7 +58,7 @@ escritorio). Resumen en `docs/agents/05_GLOSARIO_Y_LORE.md`.
 | Arte, Blender, animaciones o efectos visuales | Esa documentación es **privada** y no está en este repo: pregúntale a Zyra. No crees documentos de arte ni de Blender aquí. |
 | Compilar el motor o tocar código nativo | `docs/adr/0001-motor-y-stack-tecnologico.md` (receta macOS) y `docs/adr/0003-transparencia-de-ventana.md` |
 | Proponer un cambio de arquitectura | `docs/adr/` + `docs/CODING_STANDARDS.md` |
-| Abrir una rama, escribir su ADR o una PR | `docs/GIT_WORKFLOW.md` y `docs/adr/0005-reglas-de-ramas-pr-y-adr.md` |
+| Abrir una rama, escribir su ADR o una PR | `docs/GIT_WORKFLOW.md`, `docs/adr/PLANTILLA.md` (la plantilla de ADR, obligatoria) y `docs/adr/0005-reglas-de-ramas-pr-y-adr.md` |
 | Crear una carpeta o mover archivos | `docs/PROJECT_STRUCTURE.md` |
 | Ramas, commits, PR | `docs/GIT_WORKFLOW.md` |
 
