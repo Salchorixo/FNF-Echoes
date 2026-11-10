@@ -16,6 +16,7 @@ import openfl.Lib;
 //   vhsFx.call('setPause', [true]);    // the deck's pause bars (false to take them away)
 //   vhsFx.call('rollOnce');            // the vertical hold slips and the picture rolls once
 //   vhsFx.call('setColourLoss', [0.5]);  // extra loss of colour, 0 = none, 1 = grey
+//   vhsFx.call('exclude', [cam]);      // a camera the tape must not cover (the deck's own OSD: PLAY, SP), before or after attach
 //
 // How worn the tape is comes from the setting "RUIDO DE LA CINTA" (FlxG.save.data.echoesTapeNoise, 0..1, default 1:
 // the look Zyra approved). At 0 the picture keeps the tape's softness and colour but loses the noise, the wobble and
@@ -27,6 +28,7 @@ var ROLL_SECONDS = 0.55;
 
 var shaders = [];
 var cameras = [];
+var excluded = [];
 var start = 0.0;
 var seed = 0.0;
 var cutSeed = 0.0;
@@ -57,12 +59,21 @@ function attach() {
 }
 
 function addTo(cam) {
-	if (cameras.indexOf(cam) != -1) return;
+	if (cameras.indexOf(cam) != -1 || excluded.indexOf(cam) != -1) return;
 	var shader = new CustomShader("VHSShader");
 	shader.hset("lens", LENS);
 	cam.addShader(shader);
 	cameras.push(cam);
 	shaders.push(shader);
+}
+
+function exclude(cam) {
+	excluded.push(cam);
+	var i = cameras.indexOf(cam);
+	if (i == -1) return;
+	cam.removeShader(shaders[i]);
+	cameras.splice(i, 1);
+	shaders.splice(i, 1);
 }
 
 // Takes the tape away (it also happens on its own when the state changes).
