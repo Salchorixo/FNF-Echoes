@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TextureAtlas imagePath="1.png">
+	<SubTexture name="f0096" x="0" y="0" width="1280" height="720" frameX="0" frameY="0" frameWidth="1280" frameHeight="720"/>
+	<SubTexture name="f0097" x="1282" y="0" width="1280" height="720" frameX="0" frameY="0" frameWidth="1280" frameHeight="720"/>
+	<SubTexture name="f0098" x="2564" y="0" width="1280" height="720" frameX="0" frameY="0" frameWidth="1280" frameHeight="720"/>
+	<SubTexture name="f0151" x="0" y="722" width="418" height="720" frameX="0" frameY="0" frameWidth="1280" frameHeight="720"/>
+	<SubTexture name="f0152" x="420" y="722" width="567" height="720" frameX="-473" frameY="0" frameWidth="1280" frameHeight="720"/>
+	<SubTexture name="f0153" x="989" y="722" width="1280" height="720" frameX="0" frameY="0" frameWidth="1280" frameHeight="720"/>
+	<SubTexture name="f0156" x="2271" y="722" width="590" height="720" frameX="0" frameY="0" frameWidth="1280" frameHeight="720"/>
+	<SubTexture name="f0157" x="2863" y="722" width="627" height="720" frameX="-653" frameY="0" frameWidth="1280" frameHeight="720"/>
+	<SubTexture name="f0214" x="0" y="1444" width="1280" height="720" frameX="0" frameY="0" frameWidth="1280" frameHeight="720"/>
+	<SubTexture name="f0249" x="1282" y="1444" width="1280" height="720" frameX="0" frameY="0" frameWidth="1280" frameHeight="720"/>
+	<SubTexture name="f0250" x="2564" y="1444" width="1280" height="720" frameX="0" frameY="0" frameWidth="1280" frameHeight="720"/>
+	<SubTexture name="f0251" x="0" y="2166" width="1280" height="720" frameX="0" frameY="0" frameWidth="1280" frameHeight="720"/>
+	<SubTexture name="f0305" x="1282" y="2166" width="569" height="720" frameX="-54" frameY="0" frameWidth="1280" frameHeight="720"/>
+	<SubTexture name="f0306" x="1853" y="2166" width="501" height="720" frameX="-779" frameY="0" frameWidth="1280" frameHeight="720"/>
+	<SubTexture name="f0309" x="2356" y="2166" width="304" height="720" frameX="0" frameY="0" frameWidth="1280" frameHeight="720"/>
+	<SubTexture name="f0310" x="2662" y="2166" width="727" height="720" frameX="-130" frameY="0" frameWidth="1280" frameHeight="720"/>
+	<SubTexture name="f0311" x="3391" y="2166" width="311" height="720" frameX="-969" frameY="0" frameWidth="1280" frameHeight="720"/>
+	<SubTexture name="f0213" x="0" y="2888" width="1280" height="706" frameX="0" frameY="-11" frameWidth="1280" frameHeight="720"/>
+	<SubTexture name="f0058" x="1282" y="2888" width="1280" height="704" frameX="0" frameY="-16" frameWidth="1280" frameHeight="720"/>
+	<SubTexture name="f0060" x="2564" y="2888" width="1280" height="698" frameX="0" frameY="-22" frameWidth="1280" frameHeight="720"/>
+</TextureAtlas>
