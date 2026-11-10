@@ -39,6 +39,13 @@ var trackStrength = 1.0;
 var rollAt = -1.0;
 var paused = false;
 var colourLoss = 0.0;
+// last values emitted to shaders, so hset() is skipped when a uniform did not change
+var lastSeed:Float = -1.0;
+var lastNoise:Float = -1.0;
+var lastCutSeed:Float = -1.0;
+var lastTrackSeed:Float = -1.0;
+var lastPaused:Bool = false;
+var lastColourLoss:Float = -1.0;
 var tickFn;     // the same function objects are kept for add and remove: naming a script function twice may give two closures
 var detachFn;
 var cameraFn;
@@ -98,17 +105,24 @@ function tick() {
 	var noise = FlxG.save.data.echoesTapeNoise;
 	var trackLeft = trackUntil - t;
 	var r = rollAt < 0 ? 1.0 : (t - rollAt) / ROLL_SECONDS;
+	var cutAge = cutAt < 0 ? -1.0 : t - cutAt;
+	var tracking = trackLeft > 0 ? trackStrength * Math.min(1, trackLeft / 0.3) : 0.0;
+	var rollVal = r < 1 ? 1 - (1 - r) * (1 - r) : 0.0;
+	var pauseVal = paused ? 1.0 : 0.0;
+	var noiseVal = noise == null ? 1.0 : noise;
 	for (shader in shaders) {
+		// siempre cambian cada frame
 		shader.hset("time", t);
-		shader.hset("seed", seed);
-		shader.hset("noise", noise == null ? 1.0 : noise);
-		shader.hset("cutAge", cutAt < 0 ? -1.0 : t - cutAt);
-		shader.hset("cutSeed", cutSeed);
-		shader.hset("tracking", trackLeft > 0 ? trackStrength * Math.min(1, trackLeft / 0.3) : 0.0);
-		shader.hset("trackSeed", trackSeed);
-		shader.hset("pauseOn", paused ? 1.0 : 0.0);
-		shader.hset("roll", r < 1 ? 1 - (1 - r) * (1 - r) : 0.0);
-		shader.hset("satDrop", colourLoss);
+		shader.hset("cutAge", cutAge);
+		shader.hset("tracking", tracking);
+		shader.hset("roll", rollVal);
+		// cambian rara vez: saltar si no variaron (evita reflexión por frame)
+		if (seed != lastSeed) { shader.hset("seed", seed); lastSeed = seed; }
+		if (noiseVal != lastNoise) { shader.hset("noise", noiseVal); lastNoise = noiseVal; }
+		if (cutSeed != lastCutSeed) { shader.hset("cutSeed", cutSeed); lastCutSeed = cutSeed; }
+		if (trackSeed != lastTrackSeed) { shader.hset("trackSeed", trackSeed); lastTrackSeed = trackSeed; }
+		if (paused != lastPaused) { shader.hset("pauseOn", pauseVal); lastPaused = paused; }
+		if (colourLoss != lastColourLoss) { shader.hset("satDrop", colourLoss); lastColourLoss = colourLoss; }
 	}
 }
 
