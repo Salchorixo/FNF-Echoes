@@ -357,6 +357,7 @@ function update(elapsed) {
 	updatePicture(elapsed);
 	updateClock(elapsed);
 	playArrow.visible = Std.int(Lib.getTimer() / 500) % 2 == 0;
+	if (subState != null) return;     // Settings (or the editors) open over the menu: the picture moves, the keys are theirs
 
 	if (FlxG.keys.justPressed.SEVEN && !Flags.DISABLE_EDITORS) openEditors();
 	if (FlxG.keys.justPressed.EIGHT && !Flags.DISABLE_EDITORS) FlxG.switchState(new ModState("AnimTestState"));
@@ -380,7 +381,7 @@ function openEditors() {
 // Settings is a window over this menu (BE-20); the menu keeps moving behind it.
 function openSettings() {
 	persistentUpdate = true;
-	var sub = new ModSubState("OptionsState");
+	var sub = new ModSubState("TapeOptionsState");
 	sub.closeCallback = () -> onSettingsClosed();
 	openSubState(sub);
 }

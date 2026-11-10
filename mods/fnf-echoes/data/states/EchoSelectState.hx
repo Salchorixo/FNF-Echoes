@@ -3,7 +3,7 @@ import funkin.backend.scripting.ModState;
 import funkin.backend.scripting.Script;
 
 // Choosing an Echo (BE-61, style E of the design canvas): the Echoes are tapes found, in the tape's index. Echo 1 is the only
-// one recovered; Echo 2 is locked and Echo 3 damaged (they can be chosen, but they only shake). Under the tape, like every
+// one recovered (the thumbnails are provisional: images/menus/tape/echo_thumb_*.png); Echo 2 is locked and Echo 3 damaged (they can be chosen, but they only shake). Under the tape, like every
 // screen (scripts/ui/tapeUi.hx). The old screen (three Vista windows, chains, ink) is kept, unused, in LegacyEchoSelectState.hx.
 
 var i18n;
@@ -23,9 +23,9 @@ function create() {
 	ui.load();
 	ui.call("buildScene", ["hills2"]);
 	ui.call("buildIndex", [i18n.call("get", ["TAPES FOUND"]), "3", [
-		{label: "ECHO 1", time: "00:43:12", dim: false},
-		{label: "ECHO 2", time: i18n.call("get", ["LOCKED"]), dim: true},
-		{label: "E▒HO 3", time: i18n.call("get", ["DAMAGED"]), dim: true}
+		{label: "ECHO 1", time: "00:43:12", dim: false, thumb: "menus/tape/echo_thumb_1"},
+		{label: "ECHO 2", time: i18n.call("get", ["LOCKED"]), dim: true, thumb: "menus/tape/echo_thumb_2"},
+		{label: "E▒HO 3", time: i18n.call("get", ["DAMAGED"]), dim: true, thumb: "menus/tape/echo_thumb_3"}
 	]]);
 	ui.call("setFooter", [i18n.call("get", ["RECOVERED"]), i18n.call("get", ["ESC BACK"])]);
 	ui.call("buildOsd", ["PLAY"]);
