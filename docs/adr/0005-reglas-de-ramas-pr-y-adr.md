@@ -1,6 +1,6 @@
 # ADR-0005: Ramas `zyra/<tipo>/...`, PR en español natural, sin firma de IA y un ADR por rama
 
-**Status:** Proposed
+**Status:** Accepted (Zyra, 2026-11-10)
 **Date:** 2026-11-10
 **Deciders:** Salchorizo
 
@@ -62,4 +62,4 @@ Se descarta: es irreversible, rompe los enlaces a commits que ya existen (Linear
 
 - [x] `AGENTS.md`, `docs/GIT_WORKFLOW.md`, `docs/agents/01_PROTOCOLO_DE_SESION.md` y la receta H de `docs/agents/03_RECETAS.md` con las reglas nuevas.
 - [x] Quitar la firma de IA de las descripciones de las PR existentes.
-- [ ] Zyra pasa este ADR a **Accepted** al aprobar la PR.
+- [x] Zyra pasa este ADR a **Accepted** al aprobar la PR (2026-11-10).
