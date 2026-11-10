@@ -68,8 +68,6 @@ var placeIndex = 0;
 var holdLeft = 3.0;
 var poseTime = 0.0;
 var pose = 0;
-var clockOffset = 0;
-var clockTime = 0.0;
 var ghostTime = 0.0;
 var ghostLength = 0.0;
 var ghostWait = 3.0;
@@ -153,7 +151,8 @@ function cutToNextPlace() {
 	placeIndex = next;
 	showPlace();
 	vhsFx.call("cut");
-	clockOffset += CLOCK_JUMPS[FlxG.random.int(0, CLOCK_JUMPS.length - 1)];
+	var c = FlxG.save.data.echoesTapeClock;
+	FlxG.save.data.echoesTapeClock = (c == null ? 0.0 : c) + CLOCK_JUMPS[FlxG.random.int(0, CLOCK_JUMPS.length - 1)];
 	holdLeft = HOLDS[FlxG.random.int(0, HOLDS.length - 1)];
 	ghost.visible = false;
 	ghostTime = ghostLength;
@@ -320,8 +319,11 @@ function buildBurnedOsd() {
 }
 
 function updateClock(elapsed) {
-	clockTime += elapsed;
-	var sec = CLOCK_START + Std.int(clockTime) + clockOffset;
+	// the clock of the tape is shared by every screen (scripts/ui/tapeUi.hx)
+	var c = FlxG.save.data.echoesTapeClock;
+	c = (c == null ? 0.0 : c) + elapsed;
+	FlxG.save.data.echoesTapeClock = c;
+	var sec = CLOCK_START + Std.int(c);
 	var hours = Std.int(sec / 3600) % 24;
 	var h = hours % 12 == 0 ? 12 : hours % 12;
 	var m = Std.int(sec / 60) % 60;
