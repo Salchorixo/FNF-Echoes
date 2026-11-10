@@ -14,7 +14,6 @@ import funkin.backend.scripting.Script;
 import funkin.backend.utils.CoolUtil;
 import openfl.Lib;
 import funkin.menus.TitleState;
-import funkin.menus.credits.CreditsMain;
 
 // Main menu (BE-60; Zyra, 2026-10-27 to 2026-11-09): a camcorder tape found somewhere. The picture is one of Limbo's places
 // (the hills, the pool, the hall), rendered in Blender without Zyra; it changes by itself at irregular times and every change
@@ -279,7 +278,7 @@ function confirmSelection() {
 		case "SETTINGS":
 			openSettings();
 		case "CREDITS":
-			FlxG.switchState(new CreditsMain());
+			FlxG.switchState(new ModState("TapeCreditsState"));
 		case "FOLDER":
 			// the art gallery does not exist yet
 			rows[selected].time.text = i18n.call("get", ["NOT YET"]);

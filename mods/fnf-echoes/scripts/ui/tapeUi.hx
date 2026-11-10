@@ -72,9 +72,9 @@ function buildIndex(title, right, entries) {
 		var y = LIST_Y + 40 + i * ROW_H;
 		var row = {
 			number: text(LIST_X, y + 10, 52, 18, false, "left"),
-			label: text(LIST_X + 52, y, LIST_W - 52 - 160, 26, false, "left"),
-			labelBold: text(LIST_X + 52, y - 2, LIST_W - 52 - 160, 30, true, "left"),
-			time: text(LIST_X + LIST_W - 160, y + 10, 160, 18, false, "right"),
+			label: text(LIST_X + 52, y, LIST_W - 52 - 140, 26, false, "left"),
+			labelBold: text(LIST_X + 52, y - 2, LIST_W - 52 - 140, 30, true, "left"),
+			time: text(LIST_X + LIST_W - 140, y + 10, 140, 18, false, "right"),
 			y: y,
 			dim: entries[i].dim == true
 		};
