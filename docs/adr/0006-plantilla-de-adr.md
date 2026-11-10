@@ -5,7 +5,7 @@
 **Decide:** Salchorizo (Zyra)
 **Issue:** BE-65
 **Rama:** `zyra/docs/BE-65-plantilla-de-adr`
-**PR:** (se rellena al abrirla)
+**PR:** #46
 **Relacionados:** ADR-0005 (un ADR por rama), ADR-0003 (ejemplo de ADR con un intento fallido y su actualización), receta H
 
 ## Contexto
