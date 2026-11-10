@@ -68,16 +68,28 @@ function buildIndex(title, right, entries) {
 	hr.text = right;
 	hr.alpha = 0.85;
 	FlxG.state.add(new FlxSprite(LIST_X, LIST_Y + 26).makeGraphic(LIST_W, 1, 0x66F2F2EE));
+	// an entry with `thumb` (an image path) gets a small picture between its number and its label
+	var hasThumbs = false;
+	for (e in entries) if (e.thumb != null) hasThumbs = true;
+	if (hasThumbs) ROW_H = 60;
+	var labelX = LIST_X + 52 + (hasThumbs ? 88 : 0);
 	for (i in 0...entries.length) {
 		var y = LIST_Y + 40 + i * ROW_H;
 		var row = {
 			number: text(LIST_X, y + 10, 52, 18, false, "left"),
-			label: text(LIST_X + 52, y, LIST_W - 52 - 140, 26, false, "left"),
-			labelBold: text(LIST_X + 52, y - 2, LIST_W - 52 - 140, 30, true, "left"),
+			label: text(labelX, y, LIST_X + LIST_W - 140 - labelX, 26, false, "left"),
+			labelBold: text(labelX, y - 2, LIST_X + LIST_W - 140 - labelX, 30, true, "left"),
 			time: text(LIST_X + LIST_W - 140, y + 10, 140, 18, false, "right"),
+			thumb: null,
 			y: y,
 			dim: entries[i].dim == true
 		};
+		if (entries[i].thumb != null) {
+			row.thumb = new FlxSprite(LIST_X + 52, y - 2).loadGraphic(Paths.image(entries[i].thumb));
+			row.thumb.setGraphicSize(72, 44);
+			row.thumb.updateHitbox();
+			FlxG.state.add(row.thumb);
+		}
 		row.number.text = (i + 1 < 10 ? "0" : "") + (i + 1);
 		row.label.text = row.labelBold.text = entries[i].label;
 		row.time.text = entries[i].time;
@@ -113,6 +125,7 @@ function select(index) {
 		rows[i].label.visible = !on;
 		var a = rows[i].dim ? (on ? 0.6 : 0.4) : (on ? 1.0 : 0.72);
 		rows[i].label.alpha = rows[i].labelBold.alpha = rows[i].number.alpha = rows[i].time.alpha = a;
+		if (rows[i].thumb != null) rows[i].thumb.alpha = rows[i].dim ? 0.55 : (on ? 1.0 : 0.8);
 	}
 	barFill.scale.x = (index + 1) / rows.length;
 }
