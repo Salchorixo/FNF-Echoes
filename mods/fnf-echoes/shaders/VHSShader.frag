@@ -34,6 +34,7 @@ uniform float roll;
 uniform float satDrop;
 
 const vec2 TAPE = vec2(1280.0, 720.0);
+const float TONE_DEN = 0.738154; // 1.0 - exp(-1.34), precomputed
 
 // a hash without sin() (Dave Hoskins): the usual fract(sin(...)) makes diagonal patterns on some GPUs
 float hash(vec2 p) {
@@ -152,7 +153,7 @@ void main() {
 	float glow = max(yWide * inv - 0.8, 0.0) * 0.7;
 
 	// ---- tone: blacks lifted, highlights rolled off
-	luma = 0.04 + 0.93 * (1.0 - exp(-luma * 1.34)) / (1.0 - exp(-1.34)) + glow;
+	luma = 0.04 + 0.93 * (1.0 - exp(-luma * 1.34)) / TONE_DEN + glow;
 
 	// ---- noise: streaks on the luma, a touch on the chroma
 	luma += (streak(q.x, line, frame, 16.0) - 0.5) * 0.018 * noise;
@@ -167,7 +168,7 @@ void main() {
 
 	// the colour fringes, added as differences so they do not undo the tone above
 	float fringe = 0.5 * min(sat, 1.0);
-	float rShift = max(tap(q + vec2(-2.0, 0.0)).r, tap(q + vec2(-5.0, 0.0)).r * 0.6);
+	float rShift = max(l1.r, l2.r * 0.6);
 	col.r += max(rShift - c0.r, 0.0) * inv * fringe;
 	col.b += (tap(q + vec2(1.0, 0.0)).b - c0.b) * inv * fringe;
 
