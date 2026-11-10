@@ -72,7 +72,7 @@ mismo formato: síntoma → causa → qué hacer.
 
 ### 16. El shader VHS anula la transparencia
 - **Causa:** `VHSShader.frag` termina en `gl_FragColor = vec4(col, 1.0)`: fuerza alfa 1 en toda la pantalla.
-- **Qué hacer:** antes de usar transparencia en un estado con VHS, que el shader conserve el alfa de origen. Está pendiente como issue aparte.
+- **Resuelto en BE-59:** el shader nuevo trabaja con el alfa premultiplicado y lo conserva (solo pinta opaco en las barras de un evento: blanking, tracking, nieve). Si escribes otro shader de cámara para un estado transparente, haz lo mismo: `gl_FragColor = vec4(color * a, a)`.
 
 ### 17. En Windows, DWM por sí solo no hace la ventana transparente
 - **Síntoma:** `DwmEnableBlurBehindWindow` devuelve `S_OK` (HRESULT 0) pero el fondo sigue negro.
@@ -139,3 +139,13 @@ mismo formato: síntoma → causa → qué hacer.
 - **Causa:** todas las instancias comparten el mismo guardado (`~/Library/Application Support/Yoshman29/CodenameEngine.sol` y `.../CodenameEngine/options.sol`) y la última en cerrar sobrescribe; además las teclas sintéticas van a la ventana en primer plano, y Zyra puede estar usando una.
 - **Qué hacer:** una sola instancia de prueba, cerrada por su botón rojo (así vuelca el guardado); antes de empezar apunta los ajustes de partida y al acabar compruébalos en el archivo (`strings -a archivo.sol | grep -o "echoes[A-Za-z]*[^g]*"`).
 
+
+### 30. Un shader como filtro de `FlxG.game` no dibuja nada
+- **Síntoma:** `FlxG.game.filters = [new ShaderFilter(shader)]` no da error, pero la imagen no cambia.
+- **Causa:** no se encontró; en este motor el filtro sobre el juego entero no se aplica.
+- **Qué hacer:** pon el shader en cada cámara (`cam.addShader`, uno por cámara: cada uno lleva sus uniformes de tamaño) y escucha `FlxG.cameras.cameraAdded` para las que lleguen después. Ejemplo: `scripts/effects/vhsShader.hx`. En el `.frag` lee la cámara con `getCamPos(openfl_TextureCoordv)` y `textureCam(bitmap, uv)`.
+
+### 31. Un carácter no ASCII en un shader lo rompe en macOS (pantalla negra)
+- **Síntoma:** la cámara con el shader sale **negra** y el log dice `Unable to initialize the shader program` / `ERROR: Compiled fragment shader was corrupt.`
+- **Causa:** el driver de OpenGL del Mac no acepta caracteres fuera de ASCII en el código del shader, **ni siquiera en un comentario** (en BE-59 fue la tilde de "menú" en una ruta).
+- **Qué hacer:** los `.frag` y `.vert` van solo en ASCII (comentarios en inglés, como pide el estándar). Para buscarlos: `LC_ALL=C grep -n '[^ -~	]' archivo.frag`.
