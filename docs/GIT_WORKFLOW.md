@@ -13,10 +13,10 @@ Linear: Backlog → Todo → In Progress → In Review → Done
                             │              │          ▲
          (se crea la rama   │   (se abre   │  (se mergea la PR:
           con el ID)        │    la PR)    │   Linear lo mueve solo)
-GitHub:               rama BE-12  →   PR "Closes BE-12"  →  Rebase and merge → main
+GitHub:     rama zyra/feature/BE-12-...  →  PR "Closes BE-12" (+ su ADR)  →  Rebase and merge → main
 ```
 
-Las 7 reglas que no se negocian:
+Las 9 reglas que no se negocian:
 
 1. **Todo trabajo tiene una issue de Linear.** (Excepción: §9.)
 2. **Una issue = una rama = una PR.** Una cosa por PR.
@@ -25,6 +25,8 @@ Las 7 reglas que no se negocian:
 5. **Nadie commitea directo a `main`.** Todo entra por PR.
 6. **Antes de mergear, te lees tu propio diff** en la pestaña *Files changed* y marcas el checklist (§6). El revisor eres tú: la revisión no se salta, se hace uno mismo.
 7. **Merge con "Rebase and merge"** (§7). Cada commit de la rama acaba tal cual en `main`, por eso cada commit debe ser limpio.
+8. **Cada rama trae su ADR** en `docs/adr/`, en la misma PR (§6 y ADR-0005).
+9. **Sin firma de IA** en commits ni PR: nada de `Co-authored-by: Claude`, "Hecho en pareja con Claude" ni "Generated with ..." (ADR-0005).
 
 ---
 
@@ -120,21 +122,27 @@ Reglas:
 
 ## 5. Ramas
 
-Nombre: `tipo/ID-descripcion-corta-en-kebab-case`.
+**Todo trabajo, por pequeño que sea, va en su propia rama.** Nombre (ADR-0005):
+
+```
+zyra/<tipo>/<ID>-<descripcion-corta-en-kebab-case>
+```
+
+`zyra/` va siempre delante; `<tipo>` es lo que se está haciendo (tabla de abajo); `<ID>` es la issue de Linear.
 
 | Tipo | Cuándo usarlo | Ejemplo |
 |---|---|---|
-| `feature/` | Sistema o contenido nuevo | `feature/BE-12-transparencia-windows` |
-| `fix/` | Corrección de un bug | `fix/BE-30-shader-vhs-parpadeo` |
-| `docs/` | Solo documentación (ADRs, este archivo, manual de agentes) | `docs/BE-41-adr-voces-suno` |
-| `chore/` | Mantenimiento sin lógica nueva (config, estructura, ignorados) | `chore/BE-8-gitignore-audio` |
-| `refactor/` | Reordenar código sin cambiar comportamiento | `refactor/BE-22-extraer-maptoken` |
+| `zyra/feature/` | Sistema o contenido nuevo | `zyra/feature/BE-12-transparencia-windows` |
+| `zyra/fix/` | Corrección de un bug | `zyra/fix/BE-30-shader-vhs-parpadeo` |
+| `zyra/docs/` | Solo documentación (ADRs, este archivo, manual de agentes) | `zyra/docs/BE-41-adr-voces-suno` |
+| `zyra/chore/` | Mantenimiento sin lógica nueva (config, estructura, ignorados) | `zyra/chore/BE-8-gitignore-audio` |
+| `zyra/refactor/` | Reordenar código sin cambiar comportamiento | `zyra/refactor/BE-22-extraer-maptoken` |
 
-- **El ID es obligatorio.** Es lo que enlaza la rama con la issue. Puedes usar el botón "Copy git branch name" de Linear (da algo como `usuario/be-12-titulo`), pero **respeta el prefijo `tipo/`** de arriba; Linear reconoce el ID en cualquier parte del nombre.
+- **El ID es obligatorio.** Es lo que enlaza la rama con la issue. Puedes usar el botón "Copy git branch name" de Linear (da algo como `usuario/be-12-titulo`), pero **cámbialo al formato `zyra/<tipo>/<ID>-...`** de arriba; Linear reconoce el ID en cualquier parte del nombre.
 - Se crea **siempre desde `main` actualizada**:
   ```bash
   git checkout main && git pull origin main
-  git checkout -b feature/BE-12-transparencia-windows
+  git checkout -b zyra/feature/BE-12-transparencia-windows
   ```
 - **No apilar ramas.** Una rama nace de `main`, no de otra feature. Si tu tarea depende de otra aún no mergeada: espera a que se mergee, o une ambas en una sola issue/PR. (Lección aprendida: en la Fase 1-6 se apilaron 7 ramas, cada PR se mergeó contra la anterior y al final el código **no llegó a `main`** hasta una PR de consolidación, la #12.)
 - Una rama = un tema. Si a mitad aparece un arreglo sin relación, va en **su propia issue, rama y PR**.
@@ -158,7 +166,7 @@ docs: workflow de Linear y PR (BE-40)
 - Tipos: `feat`, `fix`, `docs`, `chore`, `refactor`, `legal`.
 - **El ID va al final del asunto.** Con "Rebase and merge" los commits llegan a `main` uno a uno, sin la PR alrededor; el ID es lo que permite, años después, saber a qué issue pertenece cada línea de `git log`.
 - **Cada commit explica una cosa y se entiende solo.** Nada de `WIP`, `cambios varios`, `arreglo`. Como se mergea con rebase, **lo que commiteas es lo que queda en `main` para siempre**.
-- Los trailers de coautoría de agentes (`Co-Authored-By: ...`) se mantienen.
+- **Sin firma de IA:** ni `Co-authored-by: Claude` (ni de ningún otro agente), ni "Hecho en pareja con Claude", ni "Generated with ...". El mensaje termina en el cuerpo, limpio (ADR-0005). Si tu herramienta añade esas líneas sola, quítalas antes de commitear.
 
 ### Pull Request
 
@@ -171,6 +179,7 @@ docs: workflow de Linear y PR (BE-40)
 2. Revisa el checklist de `docs/CODING_STANDARDS.md`.
 3. Abre la PR **contra `main`**:
    - **Título:** igual que un commit (`tipo: qué hace (ID)`).
+   - **Idioma y tono:** en **español**, con **lenguaje natural**, como si se lo contaras a una persona: qué cambia, por qué y cómo se probó. Usa los términos técnicos (archivos, funciones, shaders, estados del motor) cuando ayuden a entender, no para rellenar. **Sin firma de IA** al final.
    - **Descripción:** usa esta plantilla.
      ```markdown
      Closes BE-12
@@ -179,11 +188,13 @@ docs: workflow de Linear y PR (BE-40)
      ## Por qué
      ## Cómo se probó
      (qué ejecutaste y qué viste; si no: "NO PROBADO, porque ...")
+     ## ADR
+     (enlace al ADR de esta rama: docs/adr/NNNN-....md)
      ## Notas
-     (decisiones, ADR enlazado, cosas que Zyra debe saber)
+     (decisiones, cosas que Zyra debe saber)
      ```
    - **`Closes BE-12`** (o `Fixes`/`Resolves`) en la descripción es lo que mueve la issue a Done al mergear. Si la PR solo hace **parte** de la issue, usa `Part of BE-12` (no la cierra).
-   - Si hay decisión de arquitectura no trivial, el ADR va **en la misma PR**.
+   - **El ADR de la rama va en la misma PR** (receta H de `docs/agents/03_RECETAS.md`). Siempre, no solo en decisiones grandes: si la rama es pequeña, el ADR es corto, pero existe.
 4. Si aún no está lista, ábrela como **borrador** (*Draft*): la issue pasa a In Progress y no a In Review.
 5. **Autorrevisión (obligatoria, aunque nadie más lo exija):** en *Files changed*, lee tu propio diff como si fuera de otra persona y comprueba:
    - [ ] Solo hay cambios relacionados con la issue (nada de reformateos ni archivos colados).
@@ -191,7 +202,8 @@ docs: workflow de Linear y PR (BE-40)
    - [ ] Código en inglés, documentación en español.
    - [ ] Probado, o marcado "NO PROBADO" con motivo.
    - [ ] Los cambios en `docs/` y `00_ESTADO_ACTUAL.md` reflejan lo que cambió.
-   - [ ] Los commits están limpios (se van a `main` tal cual).
+   - [ ] Los commits están limpios (se van a `main` tal cual) y sin firma de IA.
+   - [ ] El ADR de la rama está en la PR.
 6. Resuelve tus propios comentarios (los de agentes o los tuyos) antes de mergear.
 
 ---
@@ -283,7 +295,7 @@ Sin el alias, a mano:
 
 ```bash
 git checkout main && git pull --ff-only origin main
-git branch -D feature/BE-12-transparencia-windows
+git branch -D zyra/feature/BE-12-transparencia-windows
 ```
 
 Y comprueba tres cosas:
@@ -297,7 +309,7 @@ Y comprueba tres cosas:
 ## 9. Excepciones
 
 - **Cambios sin issue**: un typo de documentación o un `.gitignore` de una línea no necesitan issue. Rama `docs/descripcion-corta` o `chore/descripcion-corta`, commit sin ID y PR normal. Si crece más de 1-2 archivos, **crea la issue**.
-- **Hotfix** (el juego no abre): issue `Urgent` + etiqueta `Bug`, rama `fix/BE-XX-...` desde `main`, PR mínima, merge, y el resto del trabajo se rebasea encima.
+- **Hotfix** (el juego no abre): issue `Urgent` + etiqueta `Bug`, rama `zyra/fix/BE-XX-...` desde `main`, PR mínima, merge, y el resto del trabajo se rebasea encima.
 - **Push directo a `main`**: solo lo puede hacer Zyra y solo para documentación pura de procedimiento (como la primera subida del manual de agentes, 2026-10-02). **Ningún agente** pushea a `main`, ni siquiera con permiso técnico para hacerlo (`AGENTS.md` §0.6). Si Zyra lo hace, lo hace conscientemente y sin código dentro.
 - **Cowork / Claude Code a la vez**: ver "Sincronización: git, no magia" en `docs/WORKFLOW.md`. Antes de empezar: `git status`, `git branch --show-current`, `git log --oneline -10`.
 
@@ -324,7 +336,7 @@ Tarea: *"Prototipar la transparencia real de ventana en Windows"* (issue `BE-12`
 # 1) Empezar (Linear: la issue pasa a In Progress al crear la rama)
 git checkout main
 git pull origin main
-git checkout -b feature/BE-12-transparencia-windows
+git checkout -b zyra/feature/BE-12-transparencia-windows
 
 # 2) Trabajar en commits pequeños
 git add engine/source/funkin/backend/utils/native/Windows.hx
@@ -335,7 +347,7 @@ git commit -m "docs: añade resultado de la prueba de color clave al ADR-0003 (B
 # 3) Dejar la rama al día y subirla
 git fetch origin
 git rebase origin/main
-git push -u origin feature/BE-12-transparencia-windows
+git push -u origin zyra/feature/BE-12-transparencia-windows
 
 # 4) Abrir la PR (Linear: pasa a In Review)
 gh pr create --base main \
@@ -379,7 +391,7 @@ Desde el checkout principal, con `main` actualizada (la rama nace de `main`, com
 ```bash
 cd "/Volumes/Zyras Zone/Projects/FNF_Echoes"
 git checkout main && git pull --ff-only origin main
-git worktree add -b docs/BE-6-git-done-y-worktrees \
+git worktree add -b zyra/docs/BE-6-git-done-y-worktrees \
   "/Volumes/Zyras Zone/Projects/FNF_Echoes-worktrees/BE-6-git-done-y-worktrees" main
 ```
 

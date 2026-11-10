@@ -18,7 +18,8 @@ silencio.
 3. **`engine/` no se edita.** Solo con un ADR aprobado por Zyra (ver ADR-0003 como ejemplo).
 4. **Código en inglés** (nombres y comentarios). **Documentación y commits en español.** No se mezclan.
 5. **El contenido del mod es HScript** en `mods/fnf-echoes/`. Ahí **no hay clases propias ni `import` entre archivos del mod**. Se comparte con `Script.create(...)` + `.load()` + `.call(...)` (ver `docs/agents/02_HSCRIPT_CODENAME.md`).
-6. **Nunca trabajes ni commitees sobre `main`.** Rama `tipo/descripcion-corta`, PR, revisión (ver `docs/GIT_WORKFLOW.md`).
+6. **Nunca trabajes ni commitees sobre `main`.** Todo, por pequeño que sea, va en su propia rama `zyra/<tipo>/<ID>-<descripcion-corta>` (p. ej. `zyra/feature/BE-65-pantalla-de-carga`), con **su ADR** en `docs/adr/`, y entra por PR (ver `docs/GIT_WORKFLOW.md` y ADR-0005).
+6b. **Commits y PR sin firma de IA:** nada de `Co-authored-by: Claude`, "Hecho en pareja con Claude" ni "Generated with ...". Las PR van en español, con lenguaje natural y los términos técnicos que ayuden a entender.
 7. **Una tarea a la vez.** Si la tarea crece o toca algo que no se pidió, para y pregunta.
 8. **Antes de decir "funciona", pruébalo.** Si no pudiste compilar o ejecutar, escribe literalmente "NO PROBADO" y por qué.
 9. **Al terminar o al dejar algo a medias, deja el relevo escrito** (`docs/agents/01_PROTOCOLO_DE_SESION.md` §3) y actualiza `00_ESTADO_ACTUAL.md`.
@@ -57,6 +58,7 @@ escritorio). Resumen en `docs/agents/05_GLOSARIO_Y_LORE.md`.
 | Arte, Blender, animaciones o efectos visuales | Esa documentación es **privada** y no está en este repo: pregúntale a Zyra. No crees documentos de arte ni de Blender aquí. |
 | Compilar el motor o tocar código nativo | `docs/adr/0001-motor-y-stack-tecnologico.md` (receta macOS) y `docs/adr/0003-transparencia-de-ventana.md` |
 | Proponer un cambio de arquitectura | `docs/adr/` + `docs/CODING_STANDARDS.md` |
+| Abrir una rama, escribir su ADR o una PR | `docs/GIT_WORKFLOW.md` y `docs/adr/0005-reglas-de-ramas-pr-y-adr.md` |
 | Crear una carpeta o mover archivos | `docs/PROJECT_STRUCTURE.md` |
 | Ramas, commits, PR | `docs/GIT_WORKFLOW.md` |
 
@@ -74,7 +76,7 @@ FNF_Echoes/
 ├── context.md                ← explica la documentación (para evaluadores)
 ├── docs/
 │   ├── agents/               ← manual operativo para agentes (empieza aquí)
-│   ├── adr/                  ← decisiones técnicas (0001 a 0003)
+│   ├── adr/                  ← decisiones técnicas (un ADR por rama; ADR-0005)
 │   ├── CODING_STANDARDS.md
 │   ├── PROJECT_STRUCTURE.md
 │   ├── GIT_WORKFLOW.md
@@ -166,7 +168,7 @@ anotado en el relevo como pregunta pendiente.
 - **Ojo:** a tu herramienta puede estar conectado también otro workspace de Zyra (**SICDA**) con el mismo prefijo `BE-`. Comprueba que estás en **FNF Echoes** (`linear.app/fnf-echoes`) antes de tocar una issue.
 
 Si tienes acceso a Linear: trabaja desde una issue, nombra la rama con su ID
-(por ejemplo `feature/BE-12-transparencia-windows`) y deja el relevo como
+(por ejemplo `zyra/feature/BE-12-transparencia-windows`) y deja el relevo como
 comentario en esa issue. Si no tienes acceso, deja el relevo en
 `00_ESTADO_ACTUAL.md` y dilo.
 
