@@ -1,6 +1,6 @@
 # ADR-0007: Plantilla de PR de GitHub para personas y cualquier agente
 
-**Estado:** Proposed
+**Estado:** Accepted (Zyra, 2026-11-10)
 **Fecha:** 2026-11-10
 **Decide:** Salchorizo (Zyra)
 **Issue:** BE-66
@@ -55,4 +55,4 @@ Archivos mínimos del tipo "lee AGENTS.md". Zyra no los eligió por ahora.
 ## Pendiente
 
 - [ ] Comprobar en la primera PR desde la web que la plantilla aparece.
-- [ ] Zyra pasa este ADR a **Accepted** al aprobar la PR.
+- [x] Zyra pasa este ADR a **Accepted** al aprobar la PR (2026-11-10).
