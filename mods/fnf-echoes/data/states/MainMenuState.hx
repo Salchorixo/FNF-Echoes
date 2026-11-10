@@ -3,6 +3,7 @@ import flixel.FlxSprite;
 import flixel.math.FlxPoint;
 import flixel.math.FlxRect;
 import flixel.text.FlxText;
+import flixel.tweens.FlxTween;
 import flixel.util.FlxColor;
 import flixel.util.FlxGradient;
 import flixel.util.FlxSpriteUtil;
@@ -60,6 +61,7 @@ var MUSIC_ID = 9071;
 var i18n;
 var vhsFx;
 var deckCam;
+var uiCam;            // the index and its shade: it fades away while Settings is open, so the window reads on its own
 var bg;
 var ghost;
 var zyra;
@@ -108,8 +110,12 @@ function create() {
 	add(zyra);
 	showPlace();
 
+	uiCam = new FlxCamera();
+	uiCam.bgColor = 0x00000000;
+	FlxG.cameras.add(uiCam, false);
 	// the darker side where the index is read
 	var shade = FlxGradient.createGradientFlxSprite(Std.int(FlxG.width * 0.62), FlxG.height, [0xA6000000, 0x33000000, 0x00000000], 1, 0);
+	shade.cameras = [uiCam];
 	add(shade);
 
 	buildIndex();
@@ -212,6 +218,7 @@ function text(x, y, w, size, bold, align) {
 	var t = new FlxText(x, y, w, "");
 	t.setFormat(Paths.font(bold ? FONT_BOLD : FONT), size, WHITE, align);
 	t.antialiasing = true;
+	t.cameras = [uiCam];
 	add(t);
 	return t;
 }
@@ -223,7 +230,9 @@ function buildIndex() {
 	headerRight = text(LIST_X, LIST_Y - 4, LIST_W, 16, false, "right");
 	headerRight.text = "ECHOES";
 	headerRight.alpha = 0.85;
-	add(new FlxSprite(LIST_X, LIST_Y + 26).makeGraphic(LIST_W, 1, 0x66F2F2EE));
+	var rule = new FlxSprite(LIST_X, LIST_Y + 26).makeGraphic(LIST_W, 1, 0x66F2F2EE);
+	rule.cameras = [uiCam];
+	add(rule);
 
 	for (i in 0...ENTRIES.length) {
 		var y = LIST_Y + 40 + i * ROW_H;
@@ -242,9 +251,11 @@ function buildIndex() {
 
 	var barY = LIST_Y + 40 + ENTRIES.length * ROW_H + 14;
 	bar = new FlxSprite(LIST_X, barY).makeGraphic(LIST_W, 4, 0x40F2F2EE);
+	bar.cameras = [uiCam];
 	add(bar);
 	barFill = new FlxSprite(LIST_X, barY).makeGraphic(LIST_W, 4, WHITE);
 	barFill.origin.set(0, 0);
+	barFill.cameras = [uiCam];
 	add(barFill);
 	whereText = text(LIST_X, barY + 10, LIST_W, 16, false, "left");
 	whereText.alpha = 0.85;
@@ -381,6 +392,8 @@ function openEditors() {
 // Settings is a window over this menu (BE-20); the menu keeps moving behind it.
 function openSettings() {
 	persistentUpdate = true;
+	FlxTween.cancelTweensOf(uiCam);
+	FlxTween.tween(uiCam, {alpha: 0}, 0.25);
 	var sub = new ModSubState("TapeOptionsState");
 	sub.closeCallback = () -> onSettingsClosed();
 	openSubState(sub);
@@ -389,6 +402,8 @@ function openSettings() {
 // the language may have changed
 function onSettingsClosed() {
 	persistentUpdate = false;
+	FlxTween.cancelTweensOf(uiCam);
+	FlxTween.tween(uiCam, {alpha: 1}, 0.25);
 	header.text = i18n.call("get", ["TAPE INDEX"]);
 	musicText.text = i18n.call("get", ["MENU MUSIC"]);
 	for (i in 0...rows.length) rows[i].label.text = rows[i].labelBold.text = i18n.call("get", [ENTRIES[i].key]);

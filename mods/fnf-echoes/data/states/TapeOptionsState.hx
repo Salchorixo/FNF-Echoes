@@ -80,7 +80,7 @@ function create() {
 	cam.bgColor = 0x00000000;
 	FlxG.cameras.add(cam, false);
 
-	put(new FlxSprite().makeGraphic(FlxG.width, FlxG.height, 0xC8050506));
+	put(new FlxSprite().makeGraphic(FlxG.width, FlxG.height, 0x99050506));
 	header = text(X, Y - 4, SET_X + SET_W - X, 16, false, "left");
 	headerRight = text(X, Y - 4, SET_X + SET_W - X, 16, false, "right");
 	header.alpha = headerRight.alpha = 0.85;
