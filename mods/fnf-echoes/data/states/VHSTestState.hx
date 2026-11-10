@@ -41,8 +41,9 @@ function create() {
 	showPlace();
 
 	helpBack = new FlxSprite(0, 0).makeGraphic(FlxG.width, 56, FlxColor.fromRGB(0, 0, 0, 150));
+	helpBack.y = 70;                     // below the top of the picture, which the tape bends (flagging)
 	add(helpBack);
-	helpText = new FlxText(16, 10, FlxG.width - 32, "");
+	helpText = new FlxText(16, 80, FlxG.width - 32, "");
 	helpText.setFormat(Paths.font("vcr.ttf"), 16, FlxColor.WHITE, "left");
 	add(helpText);
 	refreshHelp();

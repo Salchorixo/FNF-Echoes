@@ -103,8 +103,8 @@ void main() {
 	bool blanking = rollPx > 0.5 && abs(p.y - seam) < 13.0;
 
 	// ---- horizontal: every line slides on its own
-	float wobble = 1.2 * noise * sin(line * 0.045 + time * 3.1 + seed);
-	float hook = ((6.0 + 3.0 * sin(time * 1.7)) * noise + 150.0 * sync * mix(0.7, 1.2, hash(vec2(cutSeed, 5.0)))) * exp(-y / 38.0);
+	float wobble = 0.6 * noise * sin(line * 0.045 + time * 3.1 + seed);
+	float hook = ((4.0 + 2.0 * sin(time * 1.7)) * noise + 150.0 * sync * mix(0.7, 1.2, hash(vec2(cutSeed, 5.0)))) * exp(-y / 38.0);
 	float dx = wobble + hook + editSkew * (y - TAPE.y * 0.5);
 
 	// bad tracking: one or two bands drift up through the picture
@@ -155,8 +155,8 @@ void main() {
 	luma = 0.04 + 0.93 * (1.0 - exp(-luma * 1.34)) / (1.0 - exp(-1.34)) + glow;
 
 	// ---- noise: streaks on the luma, a touch on the chroma
-	luma += (streak(q.x, line, frame, 16.0) - 0.5) * 0.028 * noise;
-	chroma.x += (streak(q.x, line + 3.0, frame, 40.0) - 0.5) * 0.015 * noise;
+	luma += (streak(q.x, line, frame, 16.0) - 0.5) * 0.018 * noise;
+	chroma.x += (streak(q.x, line + 3.0, frame, 40.0) - 0.5) * 0.01 * noise;
 
 	// ---- colour: tape saturation and warmth, and its losses
 	float sat = 1.1 * editColour * (1.0 - satDrop);
