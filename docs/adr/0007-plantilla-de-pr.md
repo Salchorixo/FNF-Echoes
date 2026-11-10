@@ -5,7 +5,7 @@
 **Decide:** Salchorizo (Zyra)
 **Issue:** BE-66
 **Rama:** `zyra/docs/BE-66-plantilla-de-pr`
-**PR:** (se rellena al abrirla)
+**PR:** #47
 **Relacionados:** ADR-0005 (reglas de ramas, PR y firma), ADR-0006 (plantilla de ADR)
 
 ## Contexto
