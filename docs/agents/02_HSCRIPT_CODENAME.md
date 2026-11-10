@@ -79,7 +79,7 @@ Scripts compartidos que existen hoy:
 | `scripts/ui/cardMenu.hx` | `create(labels)`, `changeSelection(dir)`, `getSelectedIndex()` | Grilla de tarjetas (hoy sin consumidores) |
 | `scripts/ui/translate.hx` | `get(key)` | Textos EN/ES de la UI |
 | `scripts/ui/nodeArtPanel.hx` | (ábrelo y revisa) | Panel de arte del tablero-mapa |
-| `scripts/effects/vhsShader.hx` | `attach()` | Pone el shader VHS en la cámara |
+| `scripts/effects/vhsShader.hx` | `attach()`, `cut()`, `badTracking(seg, ?fuerza)`, `setPause(on)`, `rollOnce()`, `setColourLoss(x)`, `detach()` | La cinta VHS en todas las cámaras del estado, con sus eventos (BE-59) |
 | `scripts/effects/windowFx.hx` | `begin()`, `launch(lado, seg, ease, overshoot, hitstop)`, `finish()`, `setRecenter(seg, ease)`, `update(elapsed)`, `getPhase()`, `popHits()`, `setTransparent(on)`, `setVirtualScreen(w, h)`, `restore()` | Zyra lanza la ventana desde dentro (Receta I) |
 
 Si esta tabla no coincide con los archivos, **mandan los archivos**: corrige la tabla.
