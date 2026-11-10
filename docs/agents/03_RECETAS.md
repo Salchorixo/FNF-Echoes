@@ -81,11 +81,12 @@ mods/fnf-echoes/songs/<nombre-cancion>/
 3. Escribe o revisa el ADR correspondiente (copia la estructura de `docs/adr/0003-transparencia-de-ventana.md`) y espera aprobación.
 4. Si se aprueba: el cambio va en su propia rama y su propia PR, con el ADR enlazado, y dejando claro qué plataforma afecta.
 
-## Receta H — ADR nuevo
+## Receta H — ADR nuevo (uno por rama)
 
-1. Número siguiente al último en `docs/adr/` (hoy el último es 0003).
+0. **Cada rama lleva su ADR** (ADR-0005), aunque el cambio sea pequeño: explica qué se decidió en esa rama y por qué. Va en la misma PR.
+1. Número siguiente al último en `docs/adr/` (hoy el último es 0005; el 0004 se saltó a propósito). Si otra rama abierta cogió el mismo número, el segundo que llegue a `main` renumera el suyo al rebasar.
 2. Nombre: `NNNN-titulo-en-kebab-case.md`, en español.
-3. Secciones: Estado · Fecha · Contexto · Decisión · Opciones consideradas · Consecuencias · Action Items (copia el formato de un ADR existente).
+3. Secciones: Estado · Fecha · Contexto · Decisión · Opciones consideradas · Consecuencias · Action Items (copia el formato de un ADR existente). En el título o en la cabecera, el ID de la issue y la rama.
 4. Estado inicial: **Proposed**. Solo Zyra lo pasa a **Accepted**.
 
 ## Receta I — Que el juego mueva su propia ventana (Zyra la lanza desde dentro)

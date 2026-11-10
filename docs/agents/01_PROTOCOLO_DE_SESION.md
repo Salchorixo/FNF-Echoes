@@ -19,7 +19,7 @@ otro agente) pueda continuar sin perder nada**.
 
 | Lo que ves | Qué haces |
 |---|---|
-| Estás en `main` | Crea una rama antes de tocar nada: `git checkout -b tipo/descripcion` |
+| Estás en `main` | Crea una rama antes de tocar nada: `git checkout -b zyra/<tipo>/<ID>-<descripcion>` |
 | Hay cambios sin commitear que no son tuyos | **No los borres ni los commitees.** Pregunta a Zyra de quién son. |
 | La "Última sesión" dejó algo a medias | Retómalo **antes** de empezar algo nuevo (ver §2). |
 | El estado no coincide con el repo | Manda el repo. Anótalo para corregir `00_ESTADO_ACTUAL.md` al final. |
@@ -42,7 +42,7 @@ plantilla:
 
 ```markdown
 - **Fecha:** AAAA-MM-DD
-- **Rama:** tipo/descripcion
+- **Rama:** zyra/<tipo>/<ID>-<descripcion>
 - **Issue:** BE-XX o DS-XX (o "sin issue")
 - **Objetivo de la sesión:** una frase.
 - **Qué se hizo:** lista corta, con rutas de archivo.
@@ -70,7 +70,7 @@ Un mal "Siguiente paso": *"Seguir con las opciones."*
 
 El flujo completo (issue de Linear → rama → PR → merge) está en `docs/GIT_WORKFLOW.md`. Lo mínimo:
 
-- Parte de una issue de Linear; su ID va en la rama (`feature/BE-12-descripcion`) y al final del commit.
+- Parte de una issue de Linear; su ID va en la rama (`zyra/feature/BE-12-descripcion`) y al final del commit. Cada rama lleva **su ADR** y los commits y PR van **sin firma de IA** (ADR-0005).
 - Commit pequeño, un tema: `tipo: descripción corta (BE-12)` en español (`feat`, `fix`, `docs`, `chore`, `refactor`).
 - Antes de abrir la PR: checklist de `docs/CODING_STANDARDS.md`.
 - La PR va **contra `main`**, con `Closes BE-12` y explica **qué** y **por qué**. Si hubo decisión de arquitectura, enlaza el ADR.
