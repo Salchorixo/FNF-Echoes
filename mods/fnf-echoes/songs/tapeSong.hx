@@ -8,6 +8,7 @@ import flixel.util.FlxSpriteUtil;
 import flixel.util.FlxTimer;
 import funkin.backend.scripting.ModSubState;
 import funkin.backend.scripting.Script;
+import funkin.backend.MusicBeatTransition;
 import openfl.Lib;
 
 // Every song is played back from the tape (BE-62; Zyra, 2026-11-08/09). Runs for every song (a script at the root of songs/).
@@ -56,6 +57,10 @@ var snakeThick = 3.0;
 var track = null;
 
 function postCreate() {
+	MusicBeatTransition.script = 'scripts/effects/tapeTransition';   // leaving the song chews the tape (BE-63)
+	// ...and so does arriving: the engine skips the arriving transition of a song that opens anything while it loads, so the
+	// song asks for it itself when the tape was chewed on the way in (the arriving half clears the mark)
+	if (FlxG.save.data.echoesTapeTrans == "chew") PlayState.instance.startTransition(null);
 	i18n = Script.create(Paths.script('scripts/ui/translate'));
 	i18n.load();
 	for (t in TRACKS) if (t.song == PlayState.SONG.meta.name.toLowerCase()) track = t;

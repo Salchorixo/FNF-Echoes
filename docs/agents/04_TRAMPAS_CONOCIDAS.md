@@ -149,3 +149,9 @@ mismo formato: síntoma → causa → qué hacer.
 - **Síntoma:** la cámara con el shader sale **negra** y el log dice `Unable to initialize the shader program` / `ERROR: Compiled fragment shader was corrupt.`
 - **Causa:** el driver de OpenGL del Mac no acepta caracteres fuera de ASCII en el código del shader, **ni siquiera en un comentario** (en BE-59 fue la tilde de "menú" en una ruta).
 - **Qué hacer:** los `.frag` y `.vert` van solo en ASCII (comentarios en inglés, como pide el estándar). Para buscarlos: `LC_ALL=C grep -n '[^ -~	]' archivo.frag`.
+
+### 32. La canción se salta la transición de llegada
+- **Síntoma:** el script de transición (`MusicBeatTransition.script`) corre al **salir** hacia una canción, pero su mitad de **llegada** nunca se abre en `PlayState`.
+- **Causa:** `PlayState.openSubState` pone `MusicBeatState.skipTransIn = true` si algo abre un subestado antes de que la canción termine de crearse, y el motor decide la llegada en `createPost`, antes del `postCreate` de los scripts de canción.
+- **Qué hacer:** el script de canción pide la llegada él mismo en su `postCreate`: `PlayState.instance.startTransition(null)`. Para saber si toca, la mitad que sale deja una marca en `FlxG.save.data`. Ejemplo: `songs/tapeSong.hx` con `FlxG.save.data.echoesTapeTrans` (BE-63).
+

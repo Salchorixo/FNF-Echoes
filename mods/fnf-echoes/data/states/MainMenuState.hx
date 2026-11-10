@@ -8,6 +8,7 @@ import flixel.util.FlxColor;
 import flixel.util.FlxGradient;
 import flixel.util.FlxSpriteUtil;
 import funkin.backend.system.Flags;
+import funkin.backend.MusicBeatTransition;
 import funkin.editors.EditorPicker;
 import funkin.backend.scripting.ModState;
 import funkin.backend.scripting.ModSubState;
@@ -131,6 +132,8 @@ function create() {
 	vhsFx.load();
 	vhsFx.call('exclude', [deckCam]);
 	vhsFx.call('attach');
+	// every change between the tape's screens is a camcorder edit; entering or leaving a song chews the tape (BE-63)
+	MusicBeatTransition.script = 'scripts/effects/tapeTransition';
 
 	FlxG.mouse.visible = true;
 	updateRows();
@@ -374,12 +377,22 @@ function update(elapsed) {
 	if (FlxG.keys.justPressed.EIGHT && !Flags.DISABLE_EDITORS) FlxG.switchState(new ModState("AnimTestState"));
 	if (FlxG.keys.justPressed.NINE && !Flags.DISABLE_EDITORS) FlxG.switchState(new ModState("MistTestState"));
 	if (FlxG.keys.justPressed.SIX && !Flags.DISABLE_EDITORS) FlxG.switchState(new ModState("VHSTestState"));
+	if (FlxG.keys.justPressed.FIVE && !Flags.DISABLE_EDITORS) cycleWear();
 
 	if (controls.UP_P) moveSelection(-1);
 	if (controls.DOWN_P) moveSelection(1);
 	updateMouse();
 	if (controls.ACCEPT) confirmSelection();
 	if (controls.BACK) FlxG.switchState(new TitleState());
+}
+
+// Test (BE-63): the 5 key cycles how worn the tape's edits are (1 clean, 2 worn, 3 the empty place slips in), until the story sets it.
+function cycleWear() {
+	var w = FlxG.save.data.echoesTapeWear;
+	w = (w == null ? 1 : w) % 3 + 1;
+	FlxG.save.data.echoesTapeWear = w;
+	FlxG.save.flush();
+	musicText.text = "TAPE WEAR " + w + "/3";
 }
 
 // The engine's editor picker (chart editor...) on the 7 key (BE-40, BE-43): the physical key, not controls.DEV_ACCESS.
