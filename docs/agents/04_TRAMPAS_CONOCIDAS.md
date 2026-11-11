@@ -142,8 +142,11 @@ mismo formato: síntoma → causa → qué hacer.
 
 ### 30. Un shader como filtro de `FlxG.game` no dibuja nada
 - **Síntoma:** `FlxG.game.filters = [new ShaderFilter(shader)]` no da error, pero la imagen no cambia.
-- **Causa:** no se encontró; en este motor el filtro sobre el juego entero no se aplica.
-- **Qué hacer:** pon el shader en cada cámara (`cam.addShader`, uno por cámara: cada uno lleva sus uniformes de tamaño) y escucha `FlxG.cameras.cameraAdded` para las que lleguen después. Ejemplo: `scripts/effects/vhsShader.hx`. En el `.frag` lee la cámara con `getCamPos(openfl_TextureCoordv)` y `textureCam(bitmap, uv)`.
+- **Causa (encontrada en OPT-shader-ram, ADR-0008), son tres:**
+  1. `FlxGame` vuelve a poner **su** lista de filtros en cada frame: lo que asignas a `filters` se pierde. Hay que usar `FlxG.game.setFilters([...])`.
+  2. `getCamPos` y `textureCam` usan `_camSize`, que el motor **solo rellena en las cámaras**. Sobre el juego entero vale 0 y la cuenta se va a NaN: no sale nada. En ese modo el `.frag` lee `openfl_TextureCoordv` y `texture2D(bitmap, ...)` directamente (ver `uniform wholeGame` en `shaders/VHSShader.frag`).
+  3. Sin recorte, la imagen del filtro mide **todo** lo que hay en el juego, incluido lo que está fuera de pantalla (la cámara de las flechas mide 1280×1620). El efecto queda descuadrado y gasta cientos de MB. Hay que recortarla con `FlxG.game.scrollRect = new Rectangle(0, 0, FlxG.stage.stageWidth, FlxG.stage.stageHeight)`.
+- **Qué hacer:** para un efecto de pantalla completa, **un solo** filtro en `FlxG.game` (ejemplo: `scripts/effects/vhsShader.hx`). Uno por cámara multiplica el coste: la cinta en 6 cámaras dejaba Limbo a la mitad de FPS. Lo que deba quedar fuera del filtro (el OSD de la casetera) se saca a una capa por encima de `FlxG.game` (`lift()` en el mismo script).
 
 ### 31. Un carácter no ASCII en un shader lo rompe en macOS (pantalla negra)
 - **Síntoma:** la cámara con el shader sale **negra** y el log dice `Unable to initialize the shader program` / `ERROR: Compiled fragment shader was corrupt.`
