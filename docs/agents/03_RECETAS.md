@@ -287,3 +287,14 @@ El dibujo de Zyra (`images/game/hud/skin.png`, 600×600 transparente) es solo un
 - Los cuatro PNG comparten el lienzo, así que se apilan en el mismo sitio. Para cambiar el dibujo: reemplazar `skin.png` y, si cambian las ranuras, ajustar `HEALTH_BOX`, `SANITY_Y0/Y1` y regenerar los rellenos (sus medidas salen de la transparencia del PNG). Posición y tamaño: `HUD_X`, `HUD_Y`, `HUD_SCALE`.
 - Pendiente: parte 2 (rota, cadenas) con un evento del chart, estados de la cabeza y la mecánica de la barra vertical.
 
+## Receta Y — Las imágenes de una canción: caché por partes y rendimiento (OPT-shader-ram, ADR-0008)
+
+Regla de Zyra: **nada se carga mientras suena la música** (da tirones). Cada canción tiene dos partes, con una cutscene al inicio y otra entre las partes: esos son los momentos seguros.
+
+1. **La lista va en `PARTS` de `mods/fnf-echoes/songs/songParts.hx`** (corre en todas las canciones). Por cada parte, `images` (las hojas que usa, con el nombre de `Paths.image`: `"characters/zyra/1"`) y `release` (cuándo, en ms de la canción, se libera lo que ya no se dibuja).
+2. Al crear la canción se carga la parte 0 **y se sube a la gráfica** (`getTexture`), para que su primer fotograma en pantalla no cueste nada, aunque caiga en un corte de cámara.
+3. La cutscene de entre las partes llama `PlayState.instance.scripts.call("startPart", [1])`: libera lo de la parte 0 que la 1 no usa y carga la 1.
+4. **Libera solo lo que de verdad no se vuelve a dibujar.** Si algo dibuja una hoja liberada, el juego se rompe. En Limbo vale porque las poses dependen solo del tiempo (`songs/zyraPoses.hx`).
+5. Los atlas de Zyra van **al 50 %** (escala `2.4688` en `data/characters/zyra.xml`). Tras exportar animaciones nuevas, pásalas por `AI_rescale_atlas.py` (herramienta privada de producción).
+6. **Shaders de pantalla completa:** que se salten los píxeles cuyo resultado se va a anular (transparentes, fuera de pantalla, multiplicados por 0). Así están `VHSShader.frag`, `WaterSurface.frag` y `PlaneWarp.frag`. Un efecto para toda la pantalla va **una sola vez** sobre `FlxG.game` (trampa nº 30), no en cada cámara.
+7. **Cómo medir:** el Mac en modo ahorro de batería y siempre el antes y el después en el mismo modo. RAM con `footprint -p <pid>` (es lo que muestra el Monitor de Actividad); fotogramas contados dentro del juego. Las cifras de referencia están en el ADR-0008.
