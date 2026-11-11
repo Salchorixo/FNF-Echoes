@@ -5,7 +5,7 @@
 **Decide:** Salchorizo (Zyra)
 **Issue:** BE-70
 **Rama:** `zyra/chore/BE-70-borrar-arte-viejo-del-splash`
-**PR:** (se rellena al abrirla)
+**PR:** #53
 **Relacionados:** ADR-0010 (salto de cinta), ADR-0012 (temblor de las sostenidas), receta S
 
 ## Contexto
