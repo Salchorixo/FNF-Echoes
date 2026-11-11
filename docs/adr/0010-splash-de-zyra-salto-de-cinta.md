@@ -5,7 +5,7 @@
 **Decide:** Salchorizo (Zyra)
 **Issue:** BE-52
 **Rama:** `zyra/feature/BE-52-flechas-splash`
-**PR:** (se rellena al abrirla)
+**PR:** #50
 **Relacionados:** receta S (`docs/agents/03_RECETAS.md`), trampa nº 21 (`docs/agents/04_TRAMPAS_CONOCIDAS.md`)
 
 ## Contexto
