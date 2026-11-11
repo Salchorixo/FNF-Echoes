@@ -1,6 +1,6 @@
 # ADR-0008: Optimización del shader VHS y reducción de RAM al entrar a una canción
 
-**Estado:** Proposed
+**Estado:** Accepted (Zyra, 2026-11-10: siguió toda la decisión en la sesión; el ADR va aceptado dentro de su PR)
 **Fecha:** 2026-11-10
 **Decide:** Salchorizo (Zyra)
 **Issue:** Ninguno (tarea de optimización solicitada directamente)
@@ -126,4 +126,5 @@ Sin ahorro de batería, la primera prueba daba 32 FPS con la cinta por cámara y
 - [ ] `TUNE = true` en `songs/limboScene.hx`: las teclas y el texto de ajuste del plano salen en la partida. Es una herramienta de Zyra; apagarla antes de publicar.
 - [ ] La canción carga sin usarlos `characters/dad.png` (22 MB, el rival del chart), las salpicaduras y las notas por defecto. Quitar a `dad` toca el chart: lo decide Zyra.
 - [ ] Probar en pantalla completa, con `windowFx` y en Windows.
-- [ ] Zyra lo ve en su pantalla y pasa este ADR a **Accepted** al aprobar la PR.
+- [x] ADR en **Accepted** (Zyra lo siguió en la sesión).
+- [ ] Zyra lo ve en su pantalla antes de fusionar.
