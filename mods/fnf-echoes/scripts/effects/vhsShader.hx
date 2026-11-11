@@ -46,7 +46,8 @@ var lastCutSeed:Float = -1.0;
 var lastTrackSeed:Float = -1.0;
 var lastPaused:Bool = false;
 var lastColourLoss:Float = -1.0;
-var tickFn;     // the same function objects are kept for add and remove: naming a script function twice may give two closures
+var sendAll = true;   // a new shader starts with every uniform at 0: the next tick sends it everything
+var tickFn;    // the same function objects are kept for add and remove: naming a script function twice may give two closures
 var detachFn;
 var cameraFn;
 
@@ -72,6 +73,7 @@ function addTo(cam) {
 	cam.addShader(shader);
 	cameras.push(cam);
 	shaders.push(shader);
+	sendAll = true;
 }
 
 function exclude(cam) {
@@ -110,20 +112,34 @@ function tick() {
 	var rollVal = r < 1 ? 1 - (1 - r) * (1 - r) : 0.0;
 	var pauseVal = paused ? 1.0 : 0.0;
 	var noiseVal = noise == null ? 1.0 : noise;
+	// the rare uniforms are decided once for ALL the shaders (deciding inside the loop sent them only to the first one)
+	var sendSeed = sendAll || seed != lastSeed;
+	var sendNoise = sendAll || noiseVal != lastNoise;
+	var sendCutSeed = sendAll || cutSeed != lastCutSeed;
+	var sendTrackSeed = sendAll || trackSeed != lastTrackSeed;
+	var sendPause = sendAll || paused != lastPaused;
+	var sendColourLoss = sendAll || colourLoss != lastColourLoss;
 	for (shader in shaders) {
-		// siempre cambian cada frame
+		// these change every frame
 		shader.hset("time", t);
 		shader.hset("cutAge", cutAge);
 		shader.hset("tracking", tracking);
 		shader.hset("roll", rollVal);
-		// cambian rara vez: saltar si no variaron (evita reflexión por frame)
-		if (seed != lastSeed) { shader.hset("seed", seed); lastSeed = seed; }
-		if (noiseVal != lastNoise) { shader.hset("noise", noiseVal); lastNoise = noiseVal; }
-		if (cutSeed != lastCutSeed) { shader.hset("cutSeed", cutSeed); lastCutSeed = cutSeed; }
-		if (trackSeed != lastTrackSeed) { shader.hset("trackSeed", trackSeed); lastTrackSeed = trackSeed; }
-		if (paused != lastPaused) { shader.hset("pauseOn", pauseVal); lastPaused = paused; }
-		if (colourLoss != lastColourLoss) { shader.hset("satDrop", colourLoss); lastColourLoss = colourLoss; }
+		// these change rarely: only sent when they did
+		if (sendSeed) shader.hset("seed", seed);
+		if (sendNoise) shader.hset("noise", noiseVal);
+		if (sendCutSeed) shader.hset("cutSeed", cutSeed);
+		if (sendTrackSeed) shader.hset("trackSeed", trackSeed);
+		if (sendPause) shader.hset("pauseOn", pauseVal);
+		if (sendColourLoss) shader.hset("satDrop", colourLoss);
 	}
+	lastSeed = seed;
+	lastNoise = noiseVal;
+	lastCutSeed = cutSeed;
+	lastTrackSeed = trackSeed;
+	lastPaused = paused;
+	lastColourLoss = colourLoss;
+	sendAll = false;
 }
 
 function cut() {
