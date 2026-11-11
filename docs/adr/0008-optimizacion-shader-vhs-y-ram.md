@@ -19,11 +19,14 @@ BE-59 estableció que el look VHS es la estética aprobada del juego y no debe c
 
 ## Decisión
 
-Tres cambios, sin tocar `engine/` ni el look aprobado de la cinta:
+Seis cambios, sin tocar `engine/` ni el look aprobado:
 
 1. **La cinta se dibuja una sola vez sobre todo el juego** (`scripts/effects/vhsShader.hx`): es un filtro en `FlxG.game` (`setFilters`), recortado a la ventana con `scrollRect`, en vez de un shader en cada cámara. El OSD de la casetera (PLAY, SP), que debe quedar nítido, se saca a una capa justo encima de `FlxG.game` (`exclude` → `lift`). La API para las pantallas no cambia (`attach`, `exclude`, `cut`, `badTracking`...). Por qué antes no funcionaba: trampa nº 30.
 2. **El shader se salta el trabajo donde no hay nada** (`shaders/VHSShader.frag`): si el píxel es transparente y no hay un evento que pinte el vacío (bandas de tracking, nieve, blanking), sale con `vec4(0)` tras 1 lectura en vez de 11. El resultado es idéntico (el color se multiplica por un alfa 0). También se reutilizan `l1.r`/`l2.r` en las franjas de color y se precalcula `TONE_DEN`. Los uniforms que cambian poco solo se mandan cuando cambian.
-3. **Los atlas de Zyra pasan al 50 %** (decisión de Zyra, 2026-11-10, viendo capturas del juego al 100, 75 y 50 %: bajo la cinta no se nota). La escala de `data/characters/zyra.xml` pasa de 1.2344 a 2.4688; los ojos, el brazo y el reflejo copian la escala del personaje. Herramienta privada: `FNF_Echoes_Production/01_Characters/Zyra/sprites/tools/AI_rescale_atlas.py`, que reescala fotograma a fotograma y vuelve a empaquetar.
+3. **El suelo de Limbo** (`WaterSurface.frag`, `mist.hx`): las dos capas de agua (detrás y delante de Zyra) calculaban el suelo **entero** en cada píxel (ondas, brillo, ~30 líneas de anillos) para multiplicar por 0 la parte que no les tocaba, y lo seguían haciendo cuando el agua ya se había ido. Ahora cada capa sale enseguida donde su resultado es 0, y sin agua las capas no se dibujan. Lo detectó Zyra ("el suelo genera lag").
+4. **El plano de flechas** (`PlaneWarp.frag`): su cámara mide 1280×1620 porque las notas tienen que existir antes de entrar; el 55 % que cae fuera de la pantalla ya no se dibuja (se sigue leyendo).
+5. **Caché por partes** (`songs/songParts.hx`, Receta Y): al crear la canción se carga la parte y se sube a la gráfica; lo que no se va a dibujar más se libera a su hora (Limbo: las hojas 1–3 de Zyra a los 13 s). La cutscene de entre las partes llama `startPart(1)`. Nunca carga a mitad de música (regla de Zyra).
+6. **Los atlas de Zyra pasan al 50 %** (decisión de Zyra, 2026-11-10, viendo capturas del juego al 100, 75 y 50 %: bajo la cinta no se nota). La escala de `data/characters/zyra.xml` pasa de 1.2344 a 2.4688; los ojos, el brazo y el reflejo copian la escala del personaje. Herramienta privada: `FNF_Echoes_Production/01_Characters/Zyra/sprites/tools/AI_rescale_atlas.py`, que reescala fotograma a fotograma y vuelve a empaquetar.
 
 ## Opciones consideradas
 
@@ -81,7 +84,18 @@ Los atlas ya están bien empaquetados (76–92 % de uso, sin fotogramas repetido
 | **+ recorte a la ventana (final)** | **40** | **1,33 GB** |
 | Referencia: sin cinta | 43 | 1,28 GB |
 
-Sin ahorro de batería, la misma prueba daba 32 FPS con la cinta por cámara y 63 sin cinta. En los menús, con la versión final: ~55–64 FPS y 350–550 MB.
+Después, midiendo cada fotograma entre los segundos 1 y 14 de Limbo (cinta puesta, ahorro de batería, 3 pasadas):
+
+| Versión | Fotogramas en 13 s | Más lentos de 33 ms | p95 | Peor | Footprint a los 14 s |
+|---|---|---|---|---|---|
+| Cinta única (punto de partida) | ~525 (~40 FPS) | ~118 | 53 ms | 72–123 ms | 1,32 GB |
+| + suelo | ~770 (~59 FPS) | 11–20 | 25 ms | 52–79 ms | 1,32 GB |
+| + caché por partes | ~780 | 8–14 | 23–27 ms | 39–48 ms | **1,27 GB** |
+| **+ plano de flechas (final)** | **~780 (~60 FPS)** | **3–8** | **~20 ms** | 47–58 ms | **1,27 GB** |
+
+La cámara de las flechas aún ocupa ~180 MB (medido quitándole el shader): sus imágenes ocultas miden 2560×3240 por la pantalla Retina, y hacen falta para leer las notas que vienen de lejos.
+
+Sin ahorro de batería, la primera prueba daba 32 FPS con la cinta por cámara y 63 sin cinta. En los menús, con la versión final: ~55–64 FPS y 350–550 MB.
 
 ## Cómo se probó
 
@@ -106,7 +120,10 @@ Sin ahorro de batería, la misma prueba daba 32 FPS con la cinta por cámara y 6
 - [x] Identificar los consumidores reales: los atlas de Zyra (RAM) y la cinta repetida por cámara (FPS).
 - [x] Atlas al 50 % (decisión de Zyra).
 - [x] La cinta una sola vez sobre el juego.
-- [ ] **Caché por partes** (pedido de Zyra): cada canción carga todo lo de una parte de una vez, en la cutscene del inicio o en la de entre las dos partes, y libera lo que ya no se usa (en Limbo, las hojas 1–3 de Zyra después de 12,4 s). Nunca carga a mitad de música. Liberar al entrar a una canción lo del menú, y viceversa.
-- [ ] La canción carga sin usarlos `characters/dad.png` (22 MB), las salpicaduras y las notas por defecto.
+- [x] Caché por partes (`songs/songParts.hx`). Lo del menú lo libera ya el motor al cambiar de estado (`FlxG.bitmap.clearCache`).
+- [x] El suelo y el plano de flechas de Limbo.
+- [ ] `startPart(1)` está listo pero sin probar de verdad: aún no hay cutscene entre las partes ni parte 2 de Limbo.
+- [ ] `TUNE = true` en `songs/limboScene.hx`: las teclas y el texto de ajuste del plano salen en la partida. Es una herramienta de Zyra; apagarla antes de publicar.
+- [ ] La canción carga sin usarlos `characters/dad.png` (22 MB, el rival del chart), las salpicaduras y las notas por defecto. Quitar a `dad` toca el chart: lo decide Zyra.
 - [ ] Probar en pantalla completa, con `windowFx` y en Windows.
 - [ ] Zyra lo ve en su pantalla y pasa este ADR a **Accepted** al aprobar la PR.
