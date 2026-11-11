@@ -135,6 +135,10 @@ void main() {
 		vec2 p = camPos.xy + ud.xy * s;
 		float farFade = 1.0 - smoothstep(14.0, 38.0, s);
 		float nearFade = smoothstep(1.5, 5.0, s);
+		// everything below is multiplied by this at the end: where it is 0 (the other layer's part of the floor, too near, too far, no water)
+		// the result is black anyway, so the waves, the glitter and the ~30 ring lines of this pixel are skipped (OPT-shader-ram)
+		float keep = inLayer * farFade * nearFade * amount;
+		if (keep > 0.0) {
 		float res = 1.0 / (1.0 + 0.08 * s);               // the small ripples are lost with distance (and do not shimmer into noise)
 
 		// where the water is disturbed: a few patches of a few metres that drift slowly; the rest is flat and shows nothing
@@ -176,7 +180,8 @@ void main() {
 		vec3 lines = pale * ambientRings(p, ud, s) * 1.4 + pale * eventRings(p, ring4, ud, s) * 0.9;
 		lines += rc0 * eventRings(p, ring0, ud, s) + rc1 * eventRings(p, ring1, ud, s) + rc2 * eventRings(p, ring2, ud, s) + rc3 * eventRings(p, ring3, ud, s);
 		col += lines * (1.0 - 0.0);
-		col *= inLayer * farFade * nearFade * amount;
+		col *= keep;
+		}
 	}
 
 	// her boots are in the water: a band of dark water covers their bottom, with a thin line of light at the edge, a little uneven

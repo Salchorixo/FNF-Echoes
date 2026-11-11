@@ -78,6 +78,7 @@ var ringAge = [0.0, 0.0, 0.0, 0.0, 0.0];
 var ringAmp = [0.0, 0.0, 0.0, 0.0, 0.0];
 var zyraRingT = 99.0;
 var waters = [];                 // the shaders of the water layers
+var waterSprites = [];           // their quads: hidden while there is no water (a full-screen shader that would draw nothing)
 
 var cam3 = null;                 // the chosen entry of CAMERAS
 var lightScreen = null;          // where the light is on the screen (x, y, radius), to place it again when the camera changes
@@ -186,6 +187,7 @@ function makeWater(layerMode, cam) {
 	else state.add(spr);
 	if (layerMode > 0.5) frontLayer = spr;
 	waters.push(sh);
+	waterSprites.push(spr);
 }
 
 function createWaterBack(cam) {
@@ -405,6 +407,7 @@ function update(elapsed) {
 		ring(4, FEET[0], FEET[1], 0.5);
 	}
 	var wl = lightColor;
+	for (spr in waterSprites) spr.visible = waterAmount > 0;
 	for (ws in waters) {
 		ws.hset("time", time);
 		ws.hset("camPos", cam3.pos);
