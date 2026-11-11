@@ -5,7 +5,6 @@ import flixel.math.FlxRect;
 //   images/game/notes/zyra.png/.xml        her four arrows, the dark grey receptors (idle, pressed, confirm) and the hold pieces
 //   the hit is a tape skip: the receptor breaks into bands that jump sideways for three frames and a white line crosses the row
 //   while a long note is held the tracking trembles: a couple of bands slip a few pixels, in steps; on release, a short skip (BE-69)
-//   (images/game/splashes/zyra.*, data/splashes/zyra.xml and images/game/holdfx/*, the old burst, ring and slivers, are no longer used)
 // Everything is drawn here with the receptor's own "confirm" frame cut into bands; nothing in the engine is touched.
 
 var ZYRA_LINE = 1;
