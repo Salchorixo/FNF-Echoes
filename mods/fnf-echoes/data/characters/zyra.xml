@@ -1,5 +1,5 @@
 <!DOCTYPE codename-engine-character>
-<character holdTime="9999" x="0" y="0" sprite="zyra" flipX="true" isPlayer="true" icon="bf" color="#3a3a46" scale="1.2344" antialiasing="true">
+<character holdTime="9999" x="0" y="0" sprite="zyra" flipX="true" isPlayer="true" icon="bf" color="#3a3a46" scale="2.4688" antialiasing="true">
 	<anim name="idle" anim="a_idle" x="0" y="0" fps="24" loop="false"/>
 	<anim name="singUP" anim="a_singUP" x="0" y="0" fps="24" loop="false"/>
 	<anim name="singDOWN" anim="a_singDOWN" x="0" y="0" fps="24" loop="false"/>
