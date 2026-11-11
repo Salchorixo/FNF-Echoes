@@ -2,7 +2,7 @@
 
 // The whole game recorded on a 90s camcorder tape and played back on a worn VCR (BE-59; Zyra, 2026-11-08: "almost real"
 // glitches, the analog fear of the backrooms). A real-time port of the approved mockup (production: 02_Scenes/menu (with the accent)/
-// AI_build_menu_vhs_mockup_v06.py). scripts/effects/vhsShader.hx puts it on every camera of the state; it works in
+// AI_build_menu_vhs_mockup_v06.py). scripts/effects/vhsShader.hx puts it ONCE over the whole game (wholeGame = 1); it works in
 // "tape pixels": the picture is always treated as 1280x720 whatever the window size.
 //
 // What the tape always does
@@ -32,6 +32,7 @@ uniform float trackSeed;
 uniform float pauseOn;
 uniform float roll;
 uniform float satDrop;
+uniform float wholeGame;   // 1: a single pass over the whole game (FlxG.game's filter) instead of one per camera
 
 const vec2 TAPE = vec2(1280.0, 720.0);
 const float TONE_DEN = 0.738154; // 1.0 - exp(-1.34), precomputed
@@ -61,7 +62,8 @@ vec2 barrel(vec2 uv) {
 
 // the camera's picture at a point in tape pixels (textureCam: the camera's texture can be larger than what it shows)
 vec4 tap(vec2 p) {
-	return textureCam(bitmap, clamp(p / TAPE, vec2(0.0), vec2(1.0)));
+	vec2 c = clamp(p / TAPE, vec2(0.0), vec2(1.0));
+	return wholeGame > 0.5 ? texture2D(bitmap, c) : textureCam(bitmap, c);
 }
 
 vec3 toYIQ(vec3 c) {
@@ -79,7 +81,7 @@ float band(float line, float top, float height) {
 
 void main() {
 	float frame = mod(floor(time * 30.0), 4096.0);             // the tape runs at 30 pictures a second (kept small for float precision)
-	vec2 uv = barrel(getCamPos(openfl_TextureCoordv));
+	vec2 uv = barrel(wholeGame > 0.5 ? openfl_TextureCoordv : getCamPos(openfl_TextureCoordv));
 	vec2 p = uv * TAPE;
 
 	// ---- the edit: how strong each part of it is right now
@@ -134,6 +136,12 @@ void main() {
 
 	// ---- luma: soft across with the sharpening halo; chroma: softer and late
 	vec4 c0 = tap(q);
+	// nothing drawn here and no event that paints the empty (bad bands, snow, blanking): the result is transparent anyway (the colour is
+	// multiplied by the alpha at the end), so the other ten reads are skipped. Most of the cameras over the game are empty almost everywhere.
+	if (c0.a <= 0.0 && bad <= 0.0 && editSnow <= 0.0 && !blanking) {
+		gl_FragColor = vec4(0.0);
+		return;
+	}
 	vec3 l1 = tap(q + vec2(-2.0, 0.0)).rgb;
 	vec3 r1 = tap(q + vec2(2.0, 0.0)).rgb;
 	vec3 l2 = tap(q + vec2(-5.0, 0.0)).rgb;
