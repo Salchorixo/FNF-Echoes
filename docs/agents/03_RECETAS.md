@@ -87,7 +87,7 @@ mods/fnf-echoes/songs/<nombre-cancion>/
 1. **Abre `docs/adr/PLANTILLA.md`**, lee sus reglas de escritura y copia su bloque a `docs/adr/NNNN-titulo-en-kebab-case.md`, con el número siguiente al último (el 0004 se saltó a propósito).
 2. Rellena **todas** las secciones: cabecera (estado, fecha, issue, rama, PR, relacionados), Contexto, Decisión, Opciones consideradas, **Problemas encontrados y cómo se resolvieron**, **Cómo se probó**, Consecuencias y Pendiente. Si una no aplica, escribe "Ninguno." en lugar de borrarla.
 3. Los problemas van con su síntoma (error literal), su causa y su arreglo. El detalle técnico va como trampa nueva en `04_TRAMPAS_CONOCIDAS.md`, y el ADR la enlaza por su número.
-4. Estado inicial: **Proposed**. Solo Zyra lo pasa a **Accepted**. Una vez aceptado no se reescribe: se le añade una actualización con fecha, o se reemplaza por un ADR nuevo (Superseded).
+4. Estado: **Accepted** ya en la PR (ADR-0009), porque Zyra sigue la decisión en la sesión. Solo se deja en **Proposed** si algo queda por decidir, y la PR lo dice. Una vez aceptado no se reescribe: se le añade una actualización con fecha, o se reemplaza por un ADR nuevo (Superseded).
 
 ## Receta I — Que el juego mueva su propia ventana (Zyra la lanza desde dentro)
 

@@ -189,12 +189,12 @@ docs: workflow de Linear y PR (BE-40)
      ## Cómo se probó
      (qué ejecutaste y qué viste; si no: "NO PROBADO, porque ...")
      ## ADR
-     (enlace al ADR de esta rama: docs/adr/NNNN-....md)
+     (enlace al ADR de esta rama: docs/adr/NNNN-....md, ya en Accepted)
      ## Notas
      (decisiones, cosas que Zyra debe saber)
      ```
    - **`Closes BE-12`** (o `Fixes`/`Resolves`) en la descripción es lo que mueve la issue a Done al mergear. Si la PR solo hace **parte** de la issue, usa `Part of BE-12` (no la cierra).
-   - **El ADR de la rama va en la misma PR**, escrito con `docs/adr/PLANTILLA.md` (receta H de `docs/agents/03_RECETAS.md`). Siempre, no solo en decisiones grandes: si la rama es pequeña, el ADR es corto, pero existe.
+   - **El ADR de la rama va en la misma PR, ya en Accepted** (ADR-0009), escrito con `docs/adr/PLANTILLA.md` (receta H de `docs/agents/03_RECETAS.md`). Siempre, no solo en decisiones grandes: si la rama es pequeña, el ADR es corto, pero existe.
 4. Si aún no está lista, ábrela como **borrador** (*Draft*): la issue pasa a In Progress y no a In Review.
 5. **Autorrevisión (obligatoria, aunque nadie más lo exija):** en *Files changed*, lee tu propio diff como si fuera de otra persona y comprueba:
    - [ ] Solo hay cambios relacionados con la issue (nada de reformateos ni archivos colados).

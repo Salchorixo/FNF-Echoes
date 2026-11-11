@@ -4,7 +4,7 @@ Antes de abrir la PR, comprueba lo siguiente (detalle en AGENTS.md §0.6 y docs/
 - La rama se llama zyra/<tipo>/<ID>-<descripcion> y nace de main (sin ramas apiladas).
 - El título sigue el formato de un commit: "tipo: qué hace (ID)".
 - La PR va en español, con lenguaje natural, y usa términos técnicos cuando ayudan a entender.
-- El ADR de la rama está en docs/adr/, escrito con docs/adr/PLANTILLA.md.
+- El ADR de la rama está en docs/adr/, escrito con docs/adr/PLANTILLA.md, y ya en Accepted (ADR-0009).
 - Sin firma de IA: nada de "Co-authored-by", "Hecho en pareja con..." ni "Generated with...". Si tu herramienta la añade sola, bórrala.
 Estos comentarios no se ven en la PR: puedes dejarlos.
 -->
@@ -26,7 +26,7 @@ Closes BE-XX
 
 ## ADR
 
-<!-- Enlace al ADR de esta rama: docs/adr/NNNN-titulo.md (Proposed). -->
+<!-- Enlace al ADR de esta rama: docs/adr/NNNN-titulo.md. Va ya en Accepted (ADR-0009); solo en Proposed si Zyra aún tiene algo por decidir. -->
 
 ## Notas
 
@@ -38,5 +38,5 @@ Closes BE-XX
 - [ ] No hay archivos ignorados, binarios grandes, audio ni secretos.
 - [ ] Código en inglés, documentación en español.
 - [ ] Probado, o marcado "NO PROBADO" con el motivo.
-- [ ] El ADR de la rama está incluido.
+- [ ] El ADR de la rama está incluido, en Accepted.
 - [ ] Los commits están limpios y sin firma de IA.

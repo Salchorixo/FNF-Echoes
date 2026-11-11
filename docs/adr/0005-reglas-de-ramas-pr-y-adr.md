@@ -63,3 +63,7 @@ Se descarta: es irreversible, rompe los enlaces a commits que ya existen (Linear
 - [x] `AGENTS.md`, `docs/GIT_WORKFLOW.md`, `docs/agents/01_PROTOCOLO_DE_SESION.md` y la receta H de `docs/agents/03_RECETAS.md` con las reglas nuevas.
 - [x] Quitar la firma de IA de las descripciones de las PR existentes.
 - [x] Zyra pasa este ADR a **Accepted** al aprobar la PR (2026-11-10).
+
+## Actualización 2026-11-10
+
+El estado con el que llega el ADR de cada rama cambió (ADR-0009, BE-67): ya no nace en Proposed para que Zyra lo pase a Accepted al aprobar la PR. Va **ya en Accepted dentro de su PR**, porque Zyra sigue cada decisión entera en la sesión. El resto de la regla 2 sigue igual.
