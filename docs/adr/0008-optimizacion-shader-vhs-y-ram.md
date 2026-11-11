@@ -4,7 +4,7 @@
 **Fecha:** 2026-11-10
 **Decide:** Salchorizo (Zyra)
 **Issue:** Ninguno (tarea de optimización solicitada directamente)
-**Rama:** No creada (entorno sin permisos de escritura en git; cambios sobre `main`)
+**Rama:** `zyra/feature/OPT-shader-ram`
 **PR:** Ninguna aún
 **Relacionados:** `shaders/VHSShader.frag`, `scripts/effects/vhsShader.hx`, ADR-0005, BE-59
 
@@ -42,11 +42,37 @@ Rompe la estética aprobada en BE-59. Descartada.
 
 ## Problemas encontrados y cómo se resolvieron
 
-Ninguno.
+- **El primer `tick()` optimizado solo actualizaba la primera cámara.** Comprobaba y guardaba el valor `last*` dentro del bucle de shaders, así que la segunda y la tercera cámara (camHUD, osdCam) nunca recibían `seed`, `noise`, `cutSeed`, `trackSeed`, `pauseOn` ni `satDrop`, y se quedaban a 0 (una cinta "limpia" en el HUD). Ahora se decide una vez qué mandar, se manda a todos los shaders y se guarda después del bucle; una cámara nueva (`addTo`) fuerza a mandar todo en el siguiente frame (`sendAll`).
+
+## Medición (2026-11-10, macOS Apple Silicon, `footprint`)
+
+Entrando directo a Limbo con un estado temporal (no commiteado), ventana normal:
+
+| Momento | Footprint (lo que muestra el Monitor de Actividad) |
+|---|---|
+| Antes de la canción | ~210 MB |
+| Limbo, ya cargada (30–45 s) | **~2,4 GB** (≈1,0 GB gráficos + ≈1,0 GB `Malloc Large`) |
+| Limbo con `Options.gpuOnlyBitmaps = true` | ~2,3 GB (≈1,6 GB gráficos): en Mac el driver vuelve a copiar; **no sirve** |
+
+**El culpable de la RAM son los atlas de Zyra, no el shader.** Al descomprimirse en RGBA ocupan:
+
+| Atlas | Tamaño | En memoria |
+|---|---|---|
+| `characters/zyra/1.png` | 8170×1024 | 33 MB |
+| `characters/zyra/2.png` | 8140×2986 | 97 MB |
+| `characters/zyra/3.png` | 8055×3500 | 113 MB |
+| `characters/zyra/4.png` | 8039×4135 | 133 MB |
+| `characters/zyra_arm/1.png` | 8163×1876 | 61 MB |
+| `characters/zyra_eyes/1.png` | 8044×5102 | 164 MB |
+| **Total** | | **~600 MB**, una vez en RAM y otra en la gráfica |
+
+Los atlas ya están bien empaquetados (76–92 % de uso, sin fotogramas repetidos por posición). El shader no guarda memoria por frame: su coste es de GPU (11 lecturas de textura por píxel y cámara).
 
 ## Cómo se probó
 
-- **NO PROBADO:** compilación del motor, ejecución del juego, medición de FPS y RAM, comparación visual píxel a píxel. El entorno no permite compilar Haxe ni medir RAM mediante herramientas de sistema (`ps`, `top`, `vmmap` no disponibles en el shell).
+- Juego abierto en Limbo con los cambios (2026-11-10): sin errores nuevos en el log (solo el ya conocido `limboScene.hx:295: Unknown variable: project`). En una captura la cinta (ruido, franjas de color y barras de pausa) cubre todas las cámaras, incluido el HUD.
+- RAM medida con `footprint` (tabla de arriba).
+- **NO PROBADO:** FPS antes/después con la ventana en primer plano, ni comparación píxel a píxel del shader.
 - Los cambios se revisaron leyendo los archivos modificados para confirmar que la semántica del shader no se altera: `l1.r` y `l2.r` ya se leían para luma; `TONE_DEN` es una constante equivalente a `1.0 - exp(-1.34)`; el `tick()` reestructurado solo omite `hset()` cuando el valor es idéntico al último enviado.
 
 ## Consecuencias
@@ -57,10 +83,10 @@ Ninguno.
 
 ## Pendiente
 
-- [ ] Crear rama `zyra/feature/OPT-shader-ram` desde `main` (pendiente de permisos de git).
-- [ ] Medir RAM base y pico al entrar a una canción (macOS).
+- [x] Rama `zyra/feature/OPT-shader-ram`.
+- [x] Medir RAM base y pico al entrar a una canción (macOS).
 - [ ] Medir FPS antes/después en una canción con VHS activo.
 - [ ] Comparación visual (capturas/diff) en Title, MainMenu, EchoSelect, canción y VHSTestState.
-- [ ] Identificar consumidor real de RAM (audio, texturas, atlas de Zyra, notas) y planear reducción si no es el shader.
-- [ ] Si la medición confirma otro consumidor de RAM, acordar con Zyra el siguiente paso.
+- [x] Identificar consumidor real de RAM: los atlas de Zyra (~600 MB ×2).
+- [ ] Zyra decide cómo bajar los atlas (resolución, cargar los sets por partes u otra opción) y se aplica en esta rama.
 - [ ] Zyra pasa este ADR a **Accepted** al aprobar la PR.
