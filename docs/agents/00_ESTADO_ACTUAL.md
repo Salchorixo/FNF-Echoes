@@ -44,6 +44,7 @@ Entre los dos bloques de Kiyu van los crasheos y una cutscene (ver
 
 ## 4. En curso / siguiente paso
 
+0. **Optimización de RAM (rama `zyra/feature/OPT-shader-ram`, ADR-0008, 2026-11-10):** Limbo sube el juego a **~2,4 GB** (medido con `footprint`). La culpa no es del shader: son los atlas de Zyra (`images/characters/zyra*`, ~600 MB al descomprimirse, y en Mac se guardan dos veces: RAM y gráfica; `gpuOnlyBitmaps` no ayuda). El shader ya está optimizado y se arregló un fallo que dejaba sin valores a las cámaras 2 y 3. **Falta:** que Zyra elija cómo bajar los atlas y medir los FPS con la ventana en primer plano.
 0. **Transiciones de la cinta (BE-63, 2026-11-10, decisión de Zyra sobre los mockups del canvas):**
    - **Todos los cambios entre pantallas de la cinta:** el **punto de edición**: salto vertical, franja de arcoíris, color que tarda en fijarse y reloj que salta.
    - **El punto de edición se desgasta con la historia:** `FlxG.save.data.echoesTapeWear`, de 1 a 3. Con 1 es limpio; con 2 hay más salto, el color tarda más y salen dropouts; con 3, además, se cuelan dos fotogramas del lugar vacío. La historia aún no lo cambia; la tecla **5** del menú lo rota para probar.
