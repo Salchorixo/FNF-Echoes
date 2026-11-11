@@ -5,7 +5,7 @@
 **Decide:** Salchorizo (Zyra)
 **Issue:** BE-69
 **Rama:** `zyra/feature/BE-69-notas-sostenidas-temblor`
-**PR:** (se rellena al abrirla)
+**PR:** #52
 **Relacionados:** ADR-0010 (el salto de cinta del acierto), receta S (`docs/agents/03_RECETAS.md`)
 
 ## Contexto
