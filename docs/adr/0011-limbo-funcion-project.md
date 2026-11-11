@@ -5,7 +5,7 @@
 **Decide:** Salchorizo (Zyra)
 **Issue:** BE-68
 **Rama:** `zyra/fix/BE-68-limbo-funcion-project`
-**PR:** (se rellena al abrirla)
+**PR:** #51
 **Relacionados:** ADR-0010 (donde se vio el error), receta V (`docs/agents/03_RECETAS.md`)
 
 ## Contexto
