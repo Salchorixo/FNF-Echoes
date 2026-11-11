@@ -32,7 +32,8 @@
 - El nombre es `NNNN-titulo-en-kebab-case.md`, en español.
 
 **Estados y cambios:**
-- Nace como **Proposed**. **Solo Zyra** lo pasa a **Accepted**, normalmente al aprobar la PR.
+- Va en su PR **ya en Accepted** (ADR-0009): Zyra sigue cada decisión entera en la sesión, así que el ADR llega aceptado. Se escribe `Accepted (Zyra, AAAA-MM-DD)`.
+- Si Zyra todavía no ha decidido algo (por ejemplo, el ADR de una rama a medias), el ADR se queda en **Proposed** hasta que decida, y la PR lo dice.
 - Una vez **Accepted**, no se reescribe. Hay dos excepciones:
   - Una **actualización** pequeña al final, con fecha (`## Actualización AAAA-MM-DD`), cuando se completa algo pendiente o se prueba lo que no se había probado. Ejemplo: ADR-0003.
   - Cambiar el **estado**.
@@ -46,7 +47,7 @@
 ```markdown
 # ADR-NNNN: Título corto de la decisión
 
-**Estado:** Proposed
+**Estado:** Accepted (Zyra, AAAA-MM-DD)
 **Fecha:** AAAA-MM-DD
 **Decide:** Salchorizo (Zyra)
 **Issue:** BE-XX (o DS-XX)
@@ -96,5 +97,5 @@ Solo los que cambiaron una decisión o el diseño. Uno por bloque:
 ## Pendiente
 
 - [ ] Lo que queda por hacer, con su issue si ya existe.
-- [ ] Zyra pasa este ADR a **Accepted** al aprobar la PR.
+- [ ] Lo que Zyra debe ver o probar antes de fusionar (o "Ninguno.").
 ```
