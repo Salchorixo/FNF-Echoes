@@ -77,6 +77,22 @@ var GLOW_LEAD_MS = 350.0;                    // it starts to rise this long befo
 var TREMBLE_END_MS = 4700.0;                 // some of the falling notes tremble in opacity (only the opacity) until the first camera cut
 var TREMBLE_SHARE = 0.25;                    // how many of them (0..1)
 var SOUL_LEAD_MS = 2000.0;                   // Soul's row appears this long before his first note
+// BE-58, the places (scenes 3 and 4 of songs/limboVideo.hx, Blender's Camera.007, Zyra seen from behind): the row stands like in the first shot (tilt 0,
+// the same turn of 24.77 degrees from the camera), 3 m in front of Zyra and 1.3 m to her left, so her arm covers a little of the right arrow (Zyra's
+// choice, mockups AI_mockup_flechas_lugares_v02/v03). limboVideo.hx puts FlxG.save.data.echoesSceneCam = [zoom, x, y, haze r, g, b] while a place
+// is on screen (the scene camera's short hits, so the arrows shake with the world) and Zyra's layer goes above the arrows.
+var PLACE_CAM_POS = [10.7543, 4.57, 0.0574];
+var PLACE_CAM_RIGHT = [-0.52649, 0.85018, 0.0];
+var PLACE_CAM_UP = [0.16714, 0.1035, 0.98049];
+var PLACE_CAM_FWD = [-0.83359, -0.51621, 0.19659];
+var PLACE_FOCAL = 3098.078;                  // lens 58.09 mm on a 36 mm sensor, in pixels of the 1920x1080 render
+var PLACE_PLANE = [-0.2581, -2.5717, 0.85];  // the middle of the receptors (metres)
+var PLACE_YAW = 146.539;                     // the direction of the row: the camera's right turned by 24.77 degrees
+var PLACE_SPACING = 0.7;
+var PLACE_HAZE = 0.45;                       // the far notes take the colour of the place's air: how much at most ...
+var PLACE_HAZE_START = 0.6;                  // ... from this far along the row (metres) ...
+var PLACE_HAZE_END = 6.0;                    // ... to this far
+var GLITCH_SPLIT = 7.0;                      // the colour split of the arrows' glitch at full strength (pixels); the glitch itself comes from limboVideo.hx
 var TUNE = true;                             // the keys that move the plane
 
 var isLimbo = false;
@@ -145,6 +161,13 @@ function postCreate() {
 	warp.hset("shiftPx", [0.0, 0.0]);
 	warp.hset("desat", DESAT);
 	warp.hset("tint", TINT);
+	warp.hset("hazeColor", [0.0, 0.0, 0.0]);
+	warp.hset("hazeAmount", 0.0);
+	warp.hset("hazeStart", PLACE_HAZE_START);
+	warp.hset("hazeEnd", PLACE_HAZE_END);
+	warp.hset("glitch", 0.0);
+	warp.hset("glitchSplit", GLITCH_SPLIT);
+	warp.hset("glitchRed", 0.0);
 	arrowCam.addShader(warp);
 	// the veil of characters over the arrows (a taller camera that sits partly off the screen) and, much lighter, over the world camera
 	if (ASCII_ON) {
@@ -225,6 +248,7 @@ function updateLean(elapsed, set) {
 	front.angle = camGame.angle;
 	front.x = camGame.x;
 	front.y = camGame.y;
+	if (placeView) return;                     // in the places the arrows follow the scene camera's hits instead (updatePlaceWarp)
 	warp.hset("rollRad", camGame.angle * 0.017453292);
 	warp.hset("shiftPx", [camGame.x, camGame.y]);
 }
@@ -283,7 +307,59 @@ function project(px, py, pz) {
 	};
 }
 
+// which Blender camera the warp looks through: Limbo's "Camera" or the places' Camera.007
+var placeView = false;
+function setView(place) {
+	if (place == placeView) return;
+	placeView = place;
+	warp.hset("camPos", place ? PLACE_CAM_POS : CAM_POS);
+	warp.hset("camRight", place ? PLACE_CAM_RIGHT : CAM_RIGHT);
+	warp.hset("camUp", place ? PLACE_CAM_UP : CAM_UP);
+	warp.hset("camFwd", place ? PLACE_CAM_FWD : CAM_FWD);
+	warp.hset("focal", place ? PLACE_FOCAL : FOCAL);
+	warp.hset("mirrorAlpha", place ? 0.0 : MIRROR_ALPHA);           // no water under the places
+	warp.hset("hazeAmount", place ? PLACE_HAZE : 0.0);
+}
+
+// the glitch of the arrows (songs/limboVideo.hx decides it with the scenes: [strength, red], or nothing)
+function updateGlitch() {
+	var g = FlxG.save.data.echoesArrowGlitch;
+	warp.hset("glitch", g == null ? 0.0 : g[0]);
+	warp.hset("glitchRed", g == null ? 0.0 : g[1]);
+}
+
+// the places: the row stands in front of Zyra, seen through Camera.007 and through the scene camera's hits
+function updatePlaceWarp(sc) {
+	var line = strumLines.members[1];
+	var x0 = pivotX(line.members[0]);
+	var x3 = pivotX(line.members[3]);
+	var spacingPx = Math.abs(x3 - x0) / 3.0;
+	if (spacingPx < 1) spacingPx = 112.0;
+	var yaw = PLACE_YAW * 0.017453292;
+	warp.hset("planeO", PLACE_PLANE);
+	warp.hset("planeR", [Math.cos(yaw), Math.sin(yaw), 0.0]);
+	warp.hset("planeU", [0.0, 0.0, 1.0]);
+	warp.hset("flatCentre", [(x0 + x3) * 0.5, pivotY(line.members[0]) + arrowCam.y]);
+	warp.hset("mpp", PLACE_SPACING / spacingPx);
+	// the scene camera's hit: screen = (p - centre) * zoom + centre + d, and the shader undoes the zoom first, then the shift (d / zoom)
+	var z = sc[0];
+	var dx = sc[1] - 640.0 * (1.0 - z);
+	var dy = sc[2] - 360.0 * (1.0 - z);
+	warp.hset("hudZoom", z);
+	warp.hset("shiftPx", [dx / z, dy / z]);
+	warp.hset("rollRad", 0.0);
+	warp.hset("hazeColor", [sc[3], sc[4], sc[5]]);
+	warp.hset("flatMode", 0.0);
+}
+
 function updateWarp(set) {
+	var sc = FlxG.save.data.echoesSceneCam;
+	setView(sc != null);
+	updateGlitch();
+	if (sc != null) {
+		updatePlaceWarp(sc);
+		return;
+	}
 	var line = strumLines.members[1];
 	var x0 = pivotX(line.members[0]);
 	var x3 = pivotX(line.members[3]);
@@ -489,7 +565,8 @@ function postUpdate(elapsed) {
 	}
 
 	// the arm of pose 3: same animation and frame as the body, over the arrows
-	if (set == 3 && cur != null && cur.name != "poseChange" && armSpr.animation.getByName(cur.name) != null) {
+	// while a scene of BE-58 is on screen (songs/limboVideo.hx), Zyra lives inside the scene: Limbo's arm is not seen
+	if (set == 3 && FlxG.save.data.echoesSceneVideo != true && cur != null && cur.name != "poseChange" && armSpr.animation.getByName(cur.name) != null) {
 		if (armSpr.animation.name != cur.name) armSpr.animation.play(cur.name, true);
 		armSpr.animation.curAnim.paused = true;
 		armSpr.animation.curAnim.curFrame = Std.int(Math.min(cur.curFrame, armSpr.animation.curAnim.numFrames - 1));
@@ -507,7 +584,7 @@ function postUpdate(elapsed) {
 
 // where the four receptors are in the scene (metres), for the mist to take their light (songs/limboMist.hx, BE-54); null when the row is not on the plane
 function publishArrowLights(set) {
-	if (set != 0) {
+	if (set != 0 || placeView) {
 		FlxG.save.data.echoesArrowLights = null;
 		return;
 	}

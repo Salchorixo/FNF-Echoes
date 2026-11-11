@@ -11,12 +11,21 @@
 // The images of the menus are released by the engine itself when the song starts (FlxG.bitmap.clearCache on every state switch).
 // Keys are the names given to Paths.image: "characters/zyra/1" is the sheet images/characters/zyra/1.png.
 
+// BE-58, the scenes of Limbo (songs/limboVideo.hx): Zyra's layer of every scene and the front layer. Drawn only between 25.475 s and 37.875 s.
+var LIMBO_SCENES = ["game/limboScenes/front/1", "game/limboScenes/front/2",
+	"game/limboScenes/zyra_s1/1", "game/limboScenes/zyra_s1n/1", "game/limboScenes/zyra_s2/1",
+	"game/limboScenes/zyra_s3_hills2/1", "game/limboScenes/zyra_s3_pool/1", "game/limboScenes/zyra_s3_hall/1",
+	"game/limboScenes/zyra_s1_dark/1", "game/limboScenes/zyra_s1n_dark/1", "game/limboScenes/zyra_s2_dark/1",
+	"game/limboScenes/zyra_s3_hills2_dark/1", "game/limboScenes/zyra_s3_pool_dark/1", "game/limboScenes/zyra_s3_hall_dark/1",
+	"game/limboScenes/zyra_s1_alt/1", "game/limboScenes/zyra_s1n_alt/1", "game/limboScenes/zyra_s2_alt/1",
+	"game/limboScenes/zyra_s1_alt_dark/1", "game/limboScenes/zyra_s1n_alt_dark/1", "game/limboScenes/zyra_s2_alt_dark/1"];
+
 var PARTS = [
 	{song: "limbo", parts: [
 		{
-			images: ["characters/zyra/1", "characters/zyra/2", "characters/zyra/3", "characters/zyra/4", "characters/zyra_arm/1", "characters/zyra_eyes/1"],
-			// the pose change starts at 11.775 s and lasts 0.625 s; a little margin after it
-			release: [{at: 13000.0, images: ["characters/zyra/1", "characters/zyra/2", "characters/zyra/3"]}]
+			images: ["characters/zyra/1", "characters/zyra/2", "characters/zyra/3", "characters/zyra/4", "characters/zyra_arm/1", "characters/zyra_eyes/1"].concat(LIMBO_SCENES),
+			// the pose change starts at 11.775 s and lasts 0.625 s; a little margin after it. The scenes end at 37.875 s
+			release: [{at: 13000.0, images: ["characters/zyra/1", "characters/zyra/2", "characters/zyra/3"]}, {at: 38500.0, images: LIMBO_SCENES}]
 		}
 	]}
 ];
