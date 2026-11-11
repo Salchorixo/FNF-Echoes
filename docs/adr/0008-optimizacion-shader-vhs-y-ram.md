@@ -5,7 +5,7 @@
 **Decide:** Salchorizo (Zyra)
 **Issue:** Ninguno (tarea de optimización solicitada directamente)
 **Rama:** `zyra/feature/OPT-shader-ram`
-**PR:** Ninguna aún
+**PR:** #48
 **Relacionados:** `shaders/VHSShader.frag`, `scripts/effects/vhsShader.hx`, ADR-0005, BE-59
 
 ## Contexto
