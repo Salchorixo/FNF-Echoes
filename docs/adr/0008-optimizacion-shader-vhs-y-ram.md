@@ -19,26 +19,28 @@ BE-59 estableció que el look VHS es la estética aprobada del juego y no debe c
 
 ## Decisión
 
-Optimizar internamente sin alterar el píxel de salida:
+Tres cambios, sin tocar `engine/` ni el look aprobado de la cinta:
 
-1. **`shaders/VHSShader.frag`:** reutilizar `l1.r` y `l2.r` (ya leídos para luma) en los bordes de color (fringe), ahorrando 2 lecturas de textura por píxel; precalcular la constante `1.0 - exp(-1.34)` como `TONE_DEN`.
-2. **`scripts/effects/vhsShader.hx`:** en `tick()`, rastrear el último valor emitido por uniform y saltar `hset()` cuando no cambió (7 de 11 uniforms cambian rara vez: `seed`, `noise`, `cutSeed`, `trackSeed`, `pauseOn`, `satDrop`; solo `time`, `cutAge`, `tracking`, `roll` se actualizan cada frame).
-
-No se toca `engine/`. No se desactiva el VHS en canciones. No se excluyen cámaras que alteren el look visual.
+1. **La cinta se dibuja una sola vez sobre todo el juego** (`scripts/effects/vhsShader.hx`): es un filtro en `FlxG.game` (`setFilters`), recortado a la ventana con `scrollRect`, en vez de un shader en cada cámara. El OSD de la casetera (PLAY, SP), que debe quedar nítido, se saca a una capa justo encima de `FlxG.game` (`exclude` → `lift`). La API para las pantallas no cambia (`attach`, `exclude`, `cut`, `badTracking`...). Por qué antes no funcionaba: trampa nº 30.
+2. **El shader se salta el trabajo donde no hay nada** (`shaders/VHSShader.frag`): si el píxel es transparente y no hay un evento que pinte el vacío (bandas de tracking, nieve, blanking), sale con `vec4(0)` tras 1 lectura en vez de 11. El resultado es idéntico (el color se multiplica por un alfa 0). También se reutilizan `l1.r`/`l2.r` en las franjas de color y se precalcula `TONE_DEN`. Los uniforms que cambian poco solo se mandan cuando cambian.
+3. **Los atlas de Zyra pasan al 50 %** (decisión de Zyra, 2026-11-10, viendo capturas del juego al 100, 75 y 50 %: bajo la cinta no se nota). La escala de `data/characters/zyra.xml` pasa de 1.2344 a 2.4688; los ojos, el brazo y el reflejo copian la escala del personaje. Herramienta privada: `FNF_Echoes_Production/01_Characters/Zyra/sprites/tools/AI_rescale_atlas.py`, que reescala fotograma a fotograma y vuelve a empaquetar.
 
 ## Opciones consideradas
 
-### Opción A: Optimización interna, misma salida (ELEGIDA)
-Menos taps de textura y menos llamadas `hset()` por frame. Look idéntico. Bajo riesgo.
+### Opción A: Una sola cinta sobre el juego + salida temprana + atlas al 50 % (ELEGIDA)
+Ataca las dos causas reales medidas: la cinta repetida en 6 cámaras (FPS) y los atlas gigantes (RAM). El look se mantiene.
 
-### Opción B: Modo "ligero" vinculado al ajuste de calidad
-Menos taps cuando "Calidad de pantalla" = PERFORMANCE o "RUIDO DE LA CINTA" = 0. Requeriría UI y ramas de código; mayor riesgo de divergencia visual. Descartada por ahora: Zyra pidió que se vea igual siempre.
+### Opción B: Solo optimizar el shader por dentro (lo que hizo el primer commit de la rama)
+Menos lecturas y menos `hset()`, pero la cinta seguía 6 veces por frame. Ganancia mínima. Se conserva como parte de A.
 
-### Opción C: Excluir camHUD del shader en canciones
-Ahorra una de las tres cámaras, pero las notas/flechas perderían el look VHS. Cambia la salida visual. Descartada.
+### Opción C: Quitar la cinta del HUD o de las cámaras de encima
+Ahorra, pero las flechas y el texto dejarían de verse grabados. Cambia el look. Descartada.
 
-### Opción D: Desactivar VHS en canciones
-Rompe la estética aprobada en BE-59. Descartada.
+### Opción D: Cargar las poses de Zyra por partes a mitad de canción
+Zyra la descartó: cargar a mitad de canción da tirones. En su lugar irá una caché por partes que carga en momentos seguros (pendiente, ver abajo).
+
+### Opción E: `Options.gpuOnlyBitmaps`
+Medida: en Mac no ahorra (el driver vuelve a copiar las imágenes). Descartada.
 
 ## Problemas encontrados y cómo se resolvieron
 
@@ -68,25 +70,43 @@ Entrando directo a Limbo con un estado temporal (no commiteado), ventana normal:
 
 Los atlas ya están bien empaquetados (76–92 % de uso, sin fotogramas repetidos por posición). El shader no guarda memoria por frame: su coste es de GPU (11 lecturas de textura por píxel y cámara).
 
+## Resultado (Limbo a los ~8 s, Mac en modo ahorro de batería, 5 s de muestra, 2–3 pasadas por caso)
+
+| Versión | FPS | Footprint |
+|---|---|---|
+| Atlas al 100 %, cinta en cada cámara (antes) | — | ~2,4 GB |
+| Atlas al 50 %, cinta en cada cámara | 16 | 1,62 GB |
+| + salida temprana en píxeles vacíos | 22 | 1,62 GB |
+| + una sola cinta sobre el juego (sin recorte) | 35 | 1,62 GB |
+| **+ recorte a la ventana (final)** | **40** | **1,33 GB** |
+| Referencia: sin cinta | 43 | 1,28 GB |
+
+Sin ahorro de batería, la misma prueba daba 32 FPS con la cinta por cámara y 63 sin cinta. En los menús, con la versión final: ~55–64 FPS y 350–550 MB.
+
 ## Cómo se probó
 
-- Juego abierto en Limbo con los cambios (2026-11-10): sin errores nuevos en el log (solo el ya conocido `limboScene.hx:295: Unknown variable: project`). En una captura la cinta (ruido, franjas de color y barras de pausa) cubre todas las cámaras, incluido el HUD.
-- RAM medida con `footprint` (tabla de arriba).
-- **NO PROBADO:** FPS antes/después con la ventana en primer plano, ni comparación píxel a píxel del shader.
-- Los cambios se revisaron leyendo los archivos modificados para confirmar que la semántica del shader no se altera: `l1.r` y `l2.r` ya se leían para luma; `TONE_DEN` es una constante equivalente a `1.0 - exp(-1.34)`; el `tick()` reestructurado solo omite `hset()` cuando el valor es idéntico al último enviado.
+- Un estado temporal (no commiteado) entra directo a Limbo o a una pantalla y una canción temporal congela o sale de la canción en un instante fijo. FPS contados dentro del juego; RAM con `footprint`; capturas con `screencapture -l`. Nada de teclas simuladas. El guardado de Zyra se respaldó y se restauró al terminar.
+- **Visto en capturas, sin errores nuevos en el log** (solo el ya conocido `limboScene.hx:295: Unknown variable: project`): Limbo jugando, la pausa de la cinta (barras y "PAUSE ‖" nítido), la salida de la canción con la cinta mordida hasta el selector, el menú principal, EchoSelect, el selector de canciones, los créditos y `VHSTestState` con la **ventana transparente** (la mitad sin dibujo sale con alfa 0: BE-8 sigue resuelto).
+- Comparación 100/75/50 % de los atlas con el juego congelado en el mismo instante (capturas enviadas a Zyra).
+- **NO PROBADO:** pantalla completa, la coreografía de ventana (`windowFx`) con la cinta puesta, Windows, y el visto bueno de Zyra en su pantalla.
 
 ## Consecuencias
 
-- **A favor:** menos lecturas de textura por píxel (fringe: de 3 a 1 tap), menos reflexión de Haxe por frame (7 `hset()` condicionales en lugar de 11 incondicionales).
-- **En contra o riesgos:** sin medición real no se puede cuantificar la mejora. Si `shader.data` no fuera accesible para cachear `ShaderParameter` (opción no implementada por falta de confirmación), el ahorro de CPU se limita al cambio de valores en `tick()`.
-- **Lo que cambia para quien venga después:** `tick()` de `vhsShader.hx` lleva variables `last*` que deben actualizarse si se añaden nuevos uniforms al bucle.
+- **A favor:** Limbo pasa de ~2,4 GB a 1,33 GB y la cinta cuesta ~3 FPS en vez de la mitad. Toda pantalla que llama a `attach()` gana lo mismo sin cambios.
+- **En contra o riesgos:**
+  - Durante las transiciones de la cinta (`tapeTransition.hx`) el OSD de la casetera también se ondula. La transición busca "las cámaras con filtro" y, como ya ninguna lo tiene, se aplica a todas. Antes el OSD quedaba quieto. Si Zyra lo quiere quieto, la transición debe saltarse las cámaras de `exclude`.
+  - El ruido y las franjas se calculan sobre la imagen ya compuesta, no capa por capa. Es más fiel a una grabación real; en las capturas no se aprecia diferencia.
+  - `FlxG.game.scrollRect` se fija mientras la cinta está puesta y se quita en `detach()`. Si otro código usa `scrollRect` o `setFilters` en `FlxG.game`, chocará con la cinta.
+- **Lo que cambia para quien venga después:** un efecto de pantalla completa va como un filtro en `FlxG.game` (trampa nº 30), no en cada cámara. Al exportar atlas nuevos de Zyra, pasa la herramienta de reescalado al 50 % y deja la escala 2.4688.
 
 ## Pendiente
 
 - [x] Rama `zyra/feature/OPT-shader-ram`.
-- [x] Medir RAM base y pico al entrar a una canción (macOS).
-- [ ] Medir FPS antes/después en una canción con VHS activo.
-- [ ] Comparación visual (capturas/diff) en Title, MainMenu, EchoSelect, canción y VHSTestState.
-- [x] Identificar consumidor real de RAM: los atlas de Zyra (~600 MB ×2).
-- [ ] Zyra decide cómo bajar los atlas (resolución, cargar los sets por partes u otra opción) y se aplica en esta rama.
-- [ ] Zyra pasa este ADR a **Accepted** al aprobar la PR.
+- [x] Medir RAM y FPS en Limbo (macOS, con ahorro de batería).
+- [x] Identificar los consumidores reales: los atlas de Zyra (RAM) y la cinta repetida por cámara (FPS).
+- [x] Atlas al 50 % (decisión de Zyra).
+- [x] La cinta una sola vez sobre el juego.
+- [ ] **Caché por partes** (pedido de Zyra): cada canción carga todo lo de una parte de una vez, en la cutscene del inicio o en la de entre las dos partes, y libera lo que ya no se usa (en Limbo, las hojas 1–3 de Zyra después de 12,4 s). Nunca carga a mitad de música. Liberar al entrar a una canción lo del menú, y viceversa.
+- [ ] La canción carga sin usarlos `characters/dad.png` (22 MB), las salpicaduras y las notas por defecto.
+- [ ] Probar en pantalla completa, con `windowFx` y en Windows.
+- [ ] Zyra lo ve en su pantalla y pasa este ADR a **Accepted** al aprobar la PR.
