@@ -96,6 +96,12 @@ vec4 onPlane(vec3 O, vec3 R, vec3 U, vec3 d, float ripple, float jump) {
 void main() {
 	vec2 q = getCamPos(openfl_TextureCoordv);
 	vec2 scr = q * camSize + camOffset;
+	// this camera is taller than the screen (the notes must exist before they come in): the part of it that falls outside the screen is
+	// never seen, so nothing is worked out there. It is still READ below (the plane brings the far notes in), only not drawn (OPT-shader-ram).
+	if (scr.y < -2.0 || scr.y > hudSize.y + 2.0) {
+		gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
+		return;
+	}
 	scr = (scr - hudSize * 0.5) / hudZoom + hudSize * 0.5;
 	if (flatMode < 0.5) {
 		vec2 dd = scr - hudSize * 0.5 - shiftPx;
