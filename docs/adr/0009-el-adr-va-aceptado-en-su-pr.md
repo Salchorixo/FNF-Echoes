@@ -5,7 +5,7 @@
 **Decide:** Salchorizo (Zyra)
 **Issue:** BE-67
 **Rama:** `zyra/docs/BE-67-adr-aceptado-en-la-pr`
-**PR:** #NN (se rellena al abrirla)
+**PR:** #49
 **Relacionados:** ADR-0005 (reglas de ramas, PR y ADR), ADR-0006 (plantilla de ADR), ADR-0007 (plantilla de PR)
 
 ## Contexto
