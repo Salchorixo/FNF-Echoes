@@ -268,6 +268,21 @@ function slideOffset() {
 	return 0.0 - SLIDE_IN * (1.0 - e);
 }
 
+// where a point of the scene (metres) lands on the 1280x720 screen through the Blender camera of the first shot, and how many screen pixels a
+// metre is at that depth (k). Same projection as shaders/PlaneWarp.frag and scripts/effects/mist.hx; the camera's zoom and lean are left out.
+function project(px, py, pz) {
+	var dx = px - CAM_POS[0];
+	var dy = py - CAM_POS[1];
+	var dz = pz - CAM_POS[2];
+	var depth = Math.max(0.001, dx * CAM_FWD[0] + dy * CAM_FWD[1] + dz * CAM_FWD[2]);
+	var k = FOCAL / depth * HUD_PER_RENDER;
+	return {
+		x: 640.0 + (dx * CAM_RIGHT[0] + dy * CAM_RIGHT[1] + dz * CAM_RIGHT[2]) * k,
+		y: 360.0 - (dx * CAM_UP[0] + dy * CAM_UP[1] + dz * CAM_UP[2]) * k,
+		k: k
+	};
+}
+
 function updateWarp(set) {
 	var line = strumLines.members[1];
 	var x0 = pivotX(line.members[0]);
